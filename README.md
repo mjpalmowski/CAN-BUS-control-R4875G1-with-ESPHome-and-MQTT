@@ -15,6 +15,15 @@ TJA1050 CAN-BUS tranceiver board
 this is connecting 5v logic level from the CAN tranceiver module to the 3.3v ESP input pin.
 the ESP32 I used managed to deal with the 5v input (but it's not designed for that!) and the tranceiver was fine receiving a 3.3v input logic from the ESP32, but you shouldn't rely on that. Add a logic level shifter beween the ESP32 and the tranceiver module.
 
+if you don't want to spend money on the adapter board you can get the module to turn on by shorting these pads to DC-minus: 
+![Screenshot 2024-10-18 164741](https://github.com/user-attachments/assets/edd97e21-da8d-49c3-851b-2305f1d71256)
+![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/8a0f7d83-c754-46e7-8dd0-eef3c1ae49cb)
+
+the free opposing pair of contacts (of the three contacts in the centre) are your CAN-BUS. CAN-High is on the bottom and CAN-High is at the top.
+![can](https://github.com/user-attachments/assets/abf646de-7ed0-40bd-977f-927654330967)
+
+
+
 
 
 
