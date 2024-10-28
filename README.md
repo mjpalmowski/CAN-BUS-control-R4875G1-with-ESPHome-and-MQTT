@@ -27,7 +27,8 @@ You can use Homeassistant's ESPHome plugin to add a new ESPHome device, add the 
 ![Screenshot 2024-10-18 170149](https://github.com/user-attachments/assets/c8e686f8-5a49-41f0-8d6d-133be1017357)
 
 
-
+If you don't need MQTT comment out the "mqtt:" code block
+If you don't need Homeassistant comment out the "api:" code block 
 
 
 
