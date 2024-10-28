@@ -26,15 +26,53 @@ the free opposing pair of contacts (of the three contacts in the centre) are you
 
 You can use Homeassistant's ESPHome plugin to add a new ESPHome device, add the code in the attached YAML file 
 "CAN-R4875G1-ESP32.YAML"
-(just copy and paste all the code that's underneath "captive_portal:" into your new ESPHome device YAML. it will be discovered by Home assistant upon restart, it looks like this: 
+(just copy and paste all the code that's underneath "captive_portal:" into your new ESPHome device YAML.  
+If you don't need MQTT comment out the "mqtt:" code block
+If you don't need Homeassistant comment out the "api:" code block 
+it will be discovered by Home assistant upon restart, it looks like this: 
 ![Screenshot 2024-10-18 170221](https://github.com/user-attachments/assets/00b6da9a-1fe3-4be9-9083-7ba2df3a7ec5)
 ![Screenshot 2024-10-18 170149](https://github.com/user-attachments/assets/c8e686f8-5a49-41f0-8d6d-133be1017357)
 
+MQTT topics look like this:
 
-If you don't need MQTT comment out the "mqtt:" code block
-
-If you don't need Homeassistant comment out the "api:" code block 
-
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'AC Power In':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/ac_power_in/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'DC Power Out':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/dc_power_out/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Grid Frequency':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/grid_frequency/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Input Current':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/input_current/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Voltage':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_voltage/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Set Max Output Current':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/set_max_output_current/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Input Grid Voltage':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/input_grid_voltage/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Temperature':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_temperature/state'
+[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Current':
+[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_current/state'
+[07:19:49][C][mqtt.number:033]: MQTT Number 'CAN Voltage Set':
+[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/can_voltage_set/state'
+[07:19:49][C][mqtt.number:033]: MQTT Number 'CAN Amp Set':
+[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/can_amp_set/state'
+[07:19:49][C][mqtt.number:033]: MQTT Number 'Fallback Amp Set':
+[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/fallback_amp_set/state'
+[07:19:49][C][mqtt.number:033]: MQTT Number 'Fallback Voltage Set':
+[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/fallback_voltage_set/state'
+[07:19:49][C][mqtt.button:029]: MQTT Button 'CAN ON Button': 
+[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/can_on_button/state'
+[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/can_on_button/command'
+[07:19:49][C][mqtt.button:029]: MQTT Button 'CAN OFF Button': 
+[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/can_off_button/state'
+[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/can_off_button/command'
+[07:19:49][C][mqtt.button:029]: MQTT Button 'Fan Full Speed Button': 
+[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/fan_full_speed_button/state'
+[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/fan_full_speed_button/command'
+[07:19:49][C][mqtt.button:029]: MQTT Button 'Fan Auto Mode Button': 
+[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/fan_auto_mode_button/state'
+[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
 
 
