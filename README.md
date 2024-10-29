@@ -22,7 +22,7 @@ if you don't want to spend money on the adapter board you can get the module to 
 the free opposing pair of contacts (of the three contacts in the centre) are your CAN-BUS. CAN-High is on the bottom and CAN-L is at the top, CAN-H is on the other side at the same position:
 ![can](https://github.com/user-attachments/assets/abf646de-7ed0-40bd-977f-927654330967)
 
-#Software:
+# Software:
 
 You can use Homeassistant's ESPHome plugin to add a new ESPHome device, add the code in the attached YAML file 
 "CAN-R4875G1-ESP32.YAML"
