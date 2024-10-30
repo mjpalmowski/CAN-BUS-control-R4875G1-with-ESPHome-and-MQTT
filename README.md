@@ -55,8 +55,11 @@ You can use Homeassistant's ESPHome plugin to add a new ESPHome device, add the 
 (just copy and paste all the code that's underneath "captive_portal:" into your new ESPHome device YAML.  
 If you don't need MQTT comment out the "mqtt:" code block
 If you don't need Homeassistant comment out the "api:" code block 
-it will be discovered by Home assistant upon restart, it looks like this: 
 
+If you keep the "api:" block active it will be discovered by Home assistant upon restart, it looks like this: 
+
+
+The code runs smoother if you keep the debug level to INFO.
 
 ![Screenshot 2024-10-18 170221](https://github.com/user-attachments/assets/00b6da9a-1fe3-4be9-9083-7ba2df3a7ec5)
 
