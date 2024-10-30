@@ -119,21 +119,25 @@ State Topic: 'can-bus01/number/fallback_voltage_set/state'
 MQTT Button 'CAN ON Button': 
 
 State Topic: 'can-bus01/button/can_on_button/state'
+
 Command Topic: 'can-bus01/button/can_on_button/command'
 
 MQTT Button 'CAN OFF Button': 
 
 State Topic: 'can-bus01/button/can_off_button/state'
+
 Command Topic: 'can-bus01/button/can_off_button/command'
  
 MQTT Button 'Fan Full Speed Button': 
 
 State Topic: 'can-bus01/button/fan_full_speed_button/state'
+
 Command Topic: 'can-bus01/button/fan_full_speed_button/command'
 
 MQTT Button 'Fan Auto Mode Button': 
 
 State Topic: 'can-bus01/button/fan_auto_mode_button/state'
+
 Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
 # Software references:
