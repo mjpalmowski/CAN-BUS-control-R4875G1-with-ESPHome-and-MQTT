@@ -43,57 +43,74 @@ it will be discovered by Home assistant upon restart, it looks like this:
 MQTT topics look like this:
 
 MQTT Sensor 'AC Power In':
+
 State Topic: 'can-bus01/sensor/ac_power_in/state'
 
 MQTT Sensor 'DC Power Out':
+
 State Topic: 'can-bus01/sensor/dc_power_out/state'
 
 MQTT Sensor 'Grid Frequency':
+
 State Topic: 'can-bus01/sensor/grid_frequency/state'
 
 MQTT Sensor 'Input Current':
+
 State Topic: 'can-bus01/sensor/input_current/state'
 
 MQTT Sensor 'Output Voltage':
+
 State Topic: 'can-bus01/sensor/output_voltage/state'
 
 MQTT Sensor 'Set Max Output Current':
+
 State Topic: 'can-bus01/sensor/set_max_output_current/state'
 
 MQTT Sensor 'Input Grid Voltage
+
 State Topic: 'can-bus01/sensor/input_grid_voltage/state'
 
 MQTT Sensor 'Output Temperature'
+
 State Topic: 'can-bus01/sensor/output_temperature/state'
 
 MQTT Sensor 'Output Current':
+
 State Topic: 'can-bus01/sensor/output_current/state'
 
 MQTT Number 'CAN Voltage Set':
+
 State Topic: 'can-bus01/number/can_voltage_set/state'
 
 MQTT Number 'CAN Amp Set':
+
 State Topic: 'can-bus01/number/can_amp_set/state'
 
 MQTT Number 'Fallback Amp Set':
+
 State Topic: 'can-bus01/number/fallback_amp_set/state'
 
 MQTT Number 'Fallback Voltage Set':
+
 State Topic: 'can-bus01/number/fallback_voltage_set/state'
 
 MQTT Button 'CAN ON Button': 
+
 State Topic: 'can-bus01/button/can_on_button/state'
 Command Topic: 'can-bus01/button/can_on_button/command'
 
 MQTT Button 'CAN OFF Button': 
+
 State Topic: 'can-bus01/button/can_off_button/state'
 Command Topic: 'can-bus01/button/can_off_button/command'
  
 MQTT Button 'Fan Full Speed Button': 
+
 State Topic: 'can-bus01/button/fan_full_speed_button/state'
 Command Topic: 'can-bus01/button/fan_full_speed_button/command'
 
 MQTT Button 'Fan Auto Mode Button': 
+
 State Topic: 'can-bus01/button/fan_auto_mode_button/state'
 Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
