@@ -34,7 +34,10 @@ You can use Homeassistant's ESPHome plugin to add a new ESPHome device, add the 
 If you don't need MQTT comment out the "mqtt:" code block
 If you don't need Homeassistant comment out the "api:" code block 
 it will be discovered by Home assistant upon restart, it looks like this: 
+
+
 ![Screenshot 2024-10-18 170221](https://github.com/user-attachments/assets/00b6da9a-1fe3-4be9-9083-7ba2df3a7ec5)
+
 ![Screenshot 2024-10-18 170149](https://github.com/user-attachments/assets/c8e686f8-5a49-41f0-8d6d-133be1017357)
 
 MQTT topics look like this:
