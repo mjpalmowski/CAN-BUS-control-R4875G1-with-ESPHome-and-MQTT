@@ -1,3 +1,12 @@
+# Background: 
+Upcycling industrial equipment is an interesting approach for several reasons. Industrial equippment as used in mobile network operator's "cell towers" is designed to run 24/7 under harsh conditions and be compact, reliable, efficient and resilliant at the same time. 
+Here we look at a "48V Rectifier module" that is used to keep cell tower equipment and battery banks supplied with reliable DC power. It is basically a heavy duty Battery charger that can be set from 45V to 58V while beeing fed with dirty AC generator power or fluctuating grid power. "Name Plate Output" of the R4875G is 4000W and "Meantime Between Failure" is an impressive 400.000 hours. Current can also be set and dynamically controlled. It also includes hibernate and wake up functions.
+These specs have incentivised a bunch of people, including myself make the units useful for home Battery charging by reverse engineerig their CAN BUS control.
+So here is my 20cents:
+The ESPHome firmware below is for ESP32 dev board which natively supports CAN BUS. Below is a quick summary on what is necessary to make this work. 
+
+
+
 # Hardware: 
 ![IMG_20241018_141436](https://github.com/user-attachments/assets/c75316e2-48f6-43c9-b544-35b82bb796bc)
 ESP32 board with TJA1050 CAN-BUS tranceiver board. (needs level shifter, but this worked)
