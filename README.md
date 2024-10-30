@@ -134,7 +134,13 @@ State Topic: 'can-bus01/button/fan_auto_mode_button/state'
 Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
 # Software references:
+
 [Protocol_R4875g.xlsx](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
+
+Adopted from: 
+
+https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1805865
+
 
 
 
