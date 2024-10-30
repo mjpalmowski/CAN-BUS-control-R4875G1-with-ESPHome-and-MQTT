@@ -21,9 +21,12 @@ if you don't want to spend money on the adapter board you can get the module to 
 
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/8a0f7d83-c754-46e7-8dd0-eef3c1ae49cb)
 
-References: 
+# Hardware References:
+
 https://www.youtube.com/watch?v=yvtQGEbZ6_c
 https://www.youtube.com/watch?v=Qu5-XbeGiYY
+[ZL1RS Bob Sutton New Zealand - Huawei R4875G1 SMPSU.pdf](https://github.com/user-attachments/files/17571985/ZL1RS.Bob.Sutton.New.Zealand.-.Huawei.R4875G1.SMPSU.pdf)
+
 
 the free opposing pair of contacts (of the three contacts in the centre) are your CAN-BUS. CAN-High is on the bottom and CAN-L is at the top, CAN-H is on the other side at the same position:
 
@@ -117,6 +120,8 @@ MQTT Button 'Fan Auto Mode Button':
 State Topic: 'can-bus01/button/fan_auto_mode_button/state'
 Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
+# Software references:
+[Protocol_R4875g.xlsx](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
 
 
 
