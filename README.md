@@ -18,7 +18,7 @@ the ESP32 I used managed to deal with the 5v input (but it's not designed for th
 if you don't want to spend money on the adapter board you can get the module to turn on by shorting these pads to DC-minus: 
 ![Screenshot 2024-10-18 164741](https://github.com/user-attachments/assets/edd97e21-da8d-49c3-851b-2305f1d71256)
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/8a0f7d83-c754-46e7-8dd0-eef3c1ae49cb)
-
+Reference: https://www.youtube.com/watch?v=yvtQGEbZ6_c
 the free opposing pair of contacts (of the three contacts in the centre) are your CAN-BUS. CAN-High is on the bottom and CAN-L is at the top, CAN-H is on the other side at the same position:
 ![can](https://github.com/user-attachments/assets/abf646de-7ed0-40bd-977f-927654330967)
 
@@ -35,80 +35,60 @@ it will be discovered by Home assistant upon restart, it looks like this:
 
 MQTT topics look like this:
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'AC Power In':
+MQTT Sensor 'AC Power In':
+State Topic: 'can-bus01/sensor/ac_power_in/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/ac_power_in/state'
+MQTT Sensor 'DC Power Out':
+State Topic: 'can-bus01/sensor/dc_power_out/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'DC Power Out':
+MQTT Sensor 'Grid Frequency':
+State Topic: 'can-bus01/sensor/grid_frequency/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/dc_power_out/state'
+MQTT Sensor 'Input Current':
+State Topic: 'can-bus01/sensor/input_current/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Grid Frequency':
+MQTT Sensor 'Output Voltage':
+State Topic: 'can-bus01/sensor/output_voltage/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/grid_frequency/state'
+MQTT Sensor 'Set Max Output Current':
+State Topic: 'can-bus01/sensor/set_max_output_current/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Input Current':
+MQTT Sensor 'Input Grid Voltage
+State Topic: 'can-bus01/sensor/input_grid_voltage/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/input_current/state'
+MQTT Sensor 'Output Temperature'
+State Topic: 'can-bus01/sensor/output_temperature/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Voltage':
+MQTT Sensor 'Output Current':
+State Topic: 'can-bus01/sensor/output_current/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_voltage/state'
+MQTT Number 'CAN Voltage Set':
+State Topic: 'can-bus01/number/can_voltage_set/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Set Max Output Current':
+MQTT Number 'CAN Amp Set':
+State Topic: 'can-bus01/number/can_amp_set/state'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/set_max_output_current/state'
+MQTT Number 'Fallback Amp Set':
+State Topic: 'can-bus01/number/fallback_amp_set/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Input Grid Voltage
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/input_grid_voltage/state'
+MQTT Number 'Fallback Voltage Set':
+State Topic: 'can-bus01/number/fallback_voltage_set/state'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Temperature'
+MQTT Button 'CAN ON Button': 
+State Topic: 'can-bus01/button/can_on_button/state'
+Command Topic: 'can-bus01/button/can_on_button/command'
 
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_temperature/state'
+MQTT Button 'CAN OFF Button': 
+State Topic: 'can-bus01/button/can_off_button/state'
+Command Topic: 'can-bus01/button/can_off_button/command'
+ 
+MQTT Button 'Fan Full Speed Button': 
+State Topic: 'can-bus01/button/fan_full_speed_button/state'
+Command Topic: 'can-bus01/button/fan_full_speed_button/command'
 
-[07:19:49][C][mqtt.sensor:028]: MQTT Sensor 'Output Current':
-
-[07:19:49][C][mqtt.sensor:032]:   State Topic: 'can-bus01/sensor/output_current/state'
-
-[07:19:49][C][mqtt.number:033]: MQTT Number 'CAN Voltage Set':
-
-[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/can_voltage_set/state'
-
-[07:19:49][C][mqtt.number:033]: MQTT Number 'CAN Amp Set':
-
-[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/can_amp_set/state'
-
-[07:19:49][C][mqtt.number:033]: MQTT Number 'Fallback Amp Set':
-
-[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/fallback_amp_set/state'
-
-[07:19:49][C][mqtt.number:033]: MQTT Number 'Fallback Voltage Set':
-
-[07:19:49][C][mqtt.number:034]:   State Topic: 'can-bus01/number/fallback_voltage_set/state'
-
-[07:19:49][C][mqtt.button:029]: MQTT Button 'CAN ON Button': 
-
-[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/can_on_button/state'
-
-[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/can_on_button/command'
-
-[07:19:49][C][mqtt.button:029]: MQTT Button 'CAN OFF Button': 
-
-[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/can_off_button/state'
-
-[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/can_off_button/command'
-
-[07:19:49][C][mqtt.button:029]: MQTT Button 'Fan Full Speed Button': 
-
-[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/fan_full_speed_button/state'
-
-[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/fan_full_speed_button/command'
-
-[07:19:49][C][mqtt.button:029]: MQTT Button 'Fan Auto Mode Button': 
-
-[07:19:49][C][mqtt.button:030]:   State Topic: 'can-bus01/button/fan_auto_mode_button/state'
-
-[07:19:49][C][mqtt.button:030]:   Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
+MQTT Button 'Fan Auto Mode Button': 
+State Topic: 'can-bus01/button/fan_auto_mode_button/state'
+Command Topic: 'can-bus01/button/fan_auto_mode_button/command'
 
 
 
