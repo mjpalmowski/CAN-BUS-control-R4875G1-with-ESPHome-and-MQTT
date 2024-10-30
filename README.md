@@ -1,6 +1,11 @@
 # Background: 
 Upcycling industrial equipment is an interesting approach for several reasons. Industrial equippment as used in mobile network operators' "cell towers" is designed to run 24/7 under harsh conditions and be compact, reliable, efficient and resilliant at the same time. 
-Here we look at a "48V Rectifier module" that is used to keep cell tower equipment and battery banks supplied with reliable DC power. It is basically a heavy duty Battery charger that can be set from 45V to 58V while beeing fed with dirty AC generator power or fluctuating grid power. "Name Plate Output" of the R4875G is 4000W and "Meantime Between Failure" is an impressive 400.000 hours. Current can also be set and dynamically controlled. It also includes hibernate and wake up functions. The thing is 97% efficient and can be kept super quiet if run at 25% max output which is still 1000W.
+Here we look at a "48V Rectifier module" that is used to keep cell tower equipment and battery banks supplied with reliable DC power. It is basically a heavy duty Battery charger that can be set from 45V to 58V while beeing fed with dirty AC generator power or fluctuating grid power. "Name Plate Output" of the R4875G is 4000W and "Meantime Between Failure" is an impressive 400.000 hours. Current can also be set and dynamically controlled. It also includes hibernate and wake up functions. 
+
+[R4975G1 Datasheet.pdf](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
+
+
+The thing is 97% efficient and can be kept super quiet if run at 25% max output which is still 1000W.
 These specs have incentivised a bunch of people, including myself make the units useful for home Battery charging by reverse engineerig their CAN BUS control.
 
 So here is my 20cents:
