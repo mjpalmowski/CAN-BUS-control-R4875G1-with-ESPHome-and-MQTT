@@ -24,7 +24,9 @@ if you don't want to spend money on the adapter board you can get the module to 
 # Hardware References:
 
 https://www.youtube.com/watch?v=yvtQGEbZ6_c
+
 https://www.youtube.com/watch?v=Qu5-XbeGiYY
+
 [ZL1RS Bob Sutton New Zealand - Huawei R4875G1 SMPSU.pdf](https://github.com/user-attachments/files/17571985/ZL1RS.Bob.Sutton.New.Zealand.-.Huawei.R4875G1.SMPSU.pdf)
 
 
