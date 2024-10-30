@@ -23,6 +23,7 @@ if you don't want to spend money on the adapter board you can get the module to 
 
 Reference: https://www.youtube.com/watch?v=yvtQGEbZ6_c
 the free opposing pair of contacts (of the three contacts in the centre) are your CAN-BUS. CAN-High is on the bottom and CAN-L is at the top, CAN-H is on the other side at the same position:
+
 ![can](https://github.com/user-attachments/assets/abf646de-7ed0-40bd-977f-927654330967)
 
 # Software:
