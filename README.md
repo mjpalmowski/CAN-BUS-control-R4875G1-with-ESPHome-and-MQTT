@@ -18,7 +18,9 @@ The ESPHome firmware below is for ESP32 dev board which natively supports CAN BU
 ![IMG_20241018_141436](https://github.com/user-attachments/assets/c75316e2-48f6-43c9-b544-35b82bb796bc)
 ESP32 board with TJA1050 CAN-BUS tranceiver board. (needs level shifter, but this worked)
 
-![IMG_20241018_140009](https://github.com/user-attachments/assets/aedbd152-b3ed-4c68-9e8d-fad47455ab69)
+![IMG_20241018_140009](https://github.com/user-attachments/assets/68757a31-27ee-47f2-8b01-ca278633819a)
+
+
 This is the Huawai R4875G1 power module that we are trying to control the arrows indicate air flow direction inside the unit. if operated at 23C ambient the unit can output 20A at 54V continously without additional cooling and without getting too hot to touch.
 The PCB contact adapter specific for the R4875G1 and R4875G5 series, can be found on AliE.
 ![IMG_20241018_140546](https://github.com/user-attachments/assets/26adaf1d-337f-4390-b8ca-50e13a5c1673)
