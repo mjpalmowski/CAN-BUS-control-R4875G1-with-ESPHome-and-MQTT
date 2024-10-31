@@ -26,7 +26,7 @@ The PCB contact adapter specific for the R4875G1 and R4875G5 series, can be foun
 ![IMG_20241018_140546](https://github.com/user-attachments/assets/26adaf1d-337f-4390-b8ca-50e13a5c1673)
 
 DC Cables shown are 8AWG silicone insulated (good for about 40A continous)
-AC Cables are sized to supply 16A continous
+AC Cables are sized to supply 16A continous.The white Dupont cable is CAN-L the black Dupont Cable is CAN-H. The other two small wires are connected to DC NEG.
 
 ![IMG_20241018_140743](https://github.com/user-attachments/assets/ea1e3ff2-27fd-47af-94fe-055ffd697be8)
 TJA1050 CAN-BUS tranceiver board
