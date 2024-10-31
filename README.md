@@ -6,7 +6,7 @@ Here we look at a "48V Rectifier module" that is used to keep cell tower equipme
 
 
 The thing is 97% efficient and can be kept super quiet if run at 25% max output which is still 1000W.
-These specs have incentivised a bunch of people, including myself make the units useful for home Battery charging by reverse engineerig their CAN BUS control.
+These specs have incentivised a bunch of people, including myself to make these units useful for home Battery charging by reverse engineerig their CAN BUS control.
 
 So here is my 20cents:
 
