@@ -69,7 +69,7 @@ The free opposing pair of contacts (of the three contacts in the center) are you
 
 # Software:
 
-You can use Home Assistant’s ESPHome plugin to add a new ESPHome device and insert the code from the attached YAML file, "CAN-R4875G1-ESP32.YAML" (copy and paste everything under "captive_portal:" into your new ESPHome device YAML).
+You can use Home Assistant’s ESPHome plugin to add a new ESPHome device and insert the code from the attached YAML file, "CAN-R4875G1-ESP32.YAML" (copy and paste everything below "captive_portal:" into your new ESPHome device YAML).
 
 If you don’t need MQTT, comment out the "mqtt:" block.
 If you don’t need Home Assistant, comment out the "api:" block.
