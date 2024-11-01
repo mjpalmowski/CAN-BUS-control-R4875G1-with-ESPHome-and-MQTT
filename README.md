@@ -49,6 +49,11 @@ if you don't want to spend money on the adapter board you can get the module to 
 
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/8a0f7d83-c754-46e7-8dd0-eef3c1ae49cb)
 
+if you want to unlock the full 4kW of DC output follow this guide:
+
+https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290
+
+
 # Hardware References:
 
 https://www.youtube.com/watch?v=yvtQGEbZ6_c
