@@ -15,11 +15,11 @@ The ESPHome firmware below is for an ESP32 dev board, which natively supports CA
 # Use Case:
 This is a battery charger for common 15s and 16s LiFePO4 packs and 14s NMC batteries. It’s ideal for home battery setups used to store solar or off-peak power, as it enables quick battery top-ups. If you back up your solar setup with a generator, these units serve well between the generator and a large battery pack since they’re designed for that purpose. They’re also a great starting point for a bench DC power supply when combined with a robust adjustable buck converter. Due to their power density, some also use them as onboard e-bike chargers.
 
-When used as a battery charger, there’s a product called the "EG4 Chargeverter," essentially two of these telecom units packed into a box with buttons to set max voltage/current. Here’s a teardown showing two standard telecom 48V supplies:
+There’s a product called the "EG4 Chargeverter," The Chargeverter is essentially two of these 48V telecom units packed into a box with buttons to set max voltage/current. Here’s a teardown:
 
 https://www.youtube.com/watch?v=WPEjRtABc2U
 
-If you’re interested in building an "automation-friendly" version, keep reading.
+If you’re interested in building an "automation-friendly" version of this device, keep reading.
 
 
 # Hardware: 
