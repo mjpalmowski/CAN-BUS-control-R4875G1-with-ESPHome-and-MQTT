@@ -13,7 +13,7 @@ So here is my 20cents:
 The ESPHome firmware below is for ESP32 dev board which natively supports CAN BUS. Below is a quick summary on what is necessary to make this work. 
 
 # Use Case:
-Well, it's a Battery charger, carge popular 15s ( and 16s LiFepo4 packs. 14s NMC chemistry Batteries, so if you have a home battery set-up to store solar or off-peak power, these allow you to top up your batteries in a hurry. If you back up your solar with a generator these units fit well between a generator and a large battery pack, since that's what they were designed to do. Also a good starting point for a bench DC Power supply when combined with a meaty adjustable Buck converter.
+Well, it's a Battery charger, carge popular 15s and 16s LiFepo4 packs. 14s NMC chemistry Batteries, so if you have a home battery set-up to store solar or off-peak power, these allow you to top up your batteries in a hurry. If you back up your solar with a generator these units fit well between a generator and a large battery pack, since that's what they were designed to do. Also a good starting point for a bench DC Power supply when combined with a meaty adjustable Buck converter.
 If used as a battery charger, there is a product called "EG4 Chargeverter" which is basically two of these telecom industrial units packaged into a box with some buttons to set the max voltage/current. Here is a teardown showing the two standard issue telecom 48v supplies:
 
 https://www.youtube.com/watch?v=WPEjRtABc2U
