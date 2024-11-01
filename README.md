@@ -1,19 +1,19 @@
 # Background: 
 Upcycling industrial equipment is an interesting approach for several reasons. Industrial equippment as used in mobile network operators' "cell towers" is designed to run 24/7 under harsh conditions and be compact, reliable, efficient and resilliant at the same time. 
-Here we look at a "48V Rectifier module" that is used to keep cell tower equipment and battery banks supplied with reliable DC power. It is basically a heavy duty Battery charger that can be set from 45V to 58V while beeing fed with dirty AC generator power or fluctuating grid power. "Name Plate Output" of the R4875G is 4000W and "Meantime Between Failure" is an impressive 500.000 hours. Current can also be set and dynamically controlled. It also includes hibernate and wake up functions. 
+Here we look at a "48V Rectifier module" that is used to keep cell tower equipment and battery banks supplied with reliable DC power. It is basically a heavy duty battery charger that can be set from 45V to 58V while beeing fed with dirty AC generator power or fluctuating grid power. "Name Plate Output" of the R4875G is 4000W and "Meantime Between Failure" is an impressive 500.000 hours. Current can also be set and dynamically controlled. It also includes hibernate and wake up functions. 
 
 [R4975G1 Datasheet.pdf](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
 
 The thing is 97% efficient and can be kept super quiet if run at 25% max output which is still 1000W.
-These specs have incentivised a bunch of people, including myself to make these units useful for home Battery charging by reverse engineerig their CAN BUS control.
+These specs have incentivised a bunch of people, including myself to make these units useful for home battery charging by reverse engineerig their CAN BUS control.
 
 So here is my 20cents:
 
 The ESPHome firmware below is for ESP32 dev board which natively supports CAN BUS. Below is a quick summary on what is necessary to make this work. 
 
 # Use Case:
-Well, it's a Battery charger, carge popular 15s and 16s LiFepo4 packs. 14s NMC chemistry Batteries, so if you have a home battery set-up to store solar or off-peak power, these allow you to top up your batteries in a hurry. If you back up your solar with a generator these units fit well between a generator and a large battery pack, since that's what they were designed to do. Also a good starting point for a bench DC Power supply when combined with a meaty adjustable Buck converter.
+Well, it's a battery charger, carge popular 15s and 16s LiFepo4 packs. 14s NMC chemistry batteries, so if you have a home battery set-up to store solar or off-peak power, these allow you to top up your batteries in a hurry. If you back up your solar with a generator these units fit well between a generator and a large battery pack, since that's what they were designed to do. Also a good starting point for a bench DC Power supply when combined with a meaty adjustable buck converter.
 If used as a battery charger, there is a product called "EG4 Chargeverter" which is basically two of these telecom industrial units packaged into a box with some buttons to set the max voltage/current. Here is a teardown showing the two standard issue telecom 48v supplies:
 
 https://www.youtube.com/watch?v=WPEjRtABc2U
