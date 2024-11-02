@@ -42,13 +42,13 @@ The ESPHome firmware below is for an ESP32 dev board, which natively supports CA
 - **Fallback Voltage Set**
 
 ### Buttons
-- **CAN ON Button**  
+- **CAN ON Button**  (wake-up feature)
 
-- **CAN OFF Button**  
+- **CAN OFF Button**  (hibernate feature)
 
-- **Fan Full Speed Button**  
+- **Fan Full Speed Button**  (allows for automation that triggers full fan speed at certain temperature range)
 
-- **Fan Auto Mode Button**
+- **Fan Auto Mode Button** 
 
 ### Set Overtemp Shutdown in YAML (does not require HA or NodeRed to be active)
   
