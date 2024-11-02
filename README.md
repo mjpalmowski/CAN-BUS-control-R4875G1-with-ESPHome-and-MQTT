@@ -10,7 +10,48 @@ This module is 97% efficient and can operate almost silently if run at 25% of ma
 
 So here is my 20cents:
 
-The ESPHome firmware below is for an ESP32 dev board, which natively supports CAN BUS. Here’s a quick summary of what is needed to make it work.
+The ESPHome firmware below is for an ESP32 dev board, which natively supports CAN BUS. The ESP32 is hooked up to the R4875G via TJA1050 CAN-BUS transceiver board.  Here’s a quick summary of what is needed to make it work.
+
+## Features supported:
+### Sensors
+- **AC Power In**  
+
+- **DC Power Out**  
+
+- **Grid Frequency**  
+
+- **Input Current**  
+
+- **Output Voltage**  
+
+- **Set Max Output Current**  
+
+- **Input Grid Voltage**  
+
+- **Output Temperature**  
+
+- **Output Current**  
+
+### Settings:
+- **CAN Voltage Set**  
+
+- **CAN Amp Set**  
+
+- **Fallback Amp Set**  
+
+- **Fallback Voltage Set**
+
+### Buttons
+- **CAN ON Button**  
+
+- **CAN OFF Button**  
+
+- **Fan Full Speed Button**  
+
+- **Fan Auto Mode Button**
+
+### Set Overtemp Shutdown in YAML (does not require HA or NodeRed to be active)
+  
 
 # Use Case:
 This is a battery charger for common 15s and 16s LiFePO4 packs and 14s NMC batteries. It’s ideal for home battery setups used to store solar or off-peak power, as it enables quick battery top-ups. If you back up your solar setup with a generator, these units serve well between the generator and a large battery pack since they’re designed for that purpose. They’re also a great starting point for a bench DC power supply when combined with a robust adjustable buck converter. Due to their power density, some also use them as onboard e-bike chargers.
