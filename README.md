@@ -180,7 +180,7 @@ If you keep the "api:" block active, the device will be discovered by Home Assis
   - State Topic: `can-bus01/button/fan_auto_mode_button/state`  
   - Command Topic: `can-bus01/button/fan_auto_mode_button/command`
 
-So as you can see you can hibernate/wake; set fan to auto/full speed using MQTT. 
+So you can read all data and hibernate/wake; set fan to auto/full speed using MQTT. 
 
 
 # Software references:
