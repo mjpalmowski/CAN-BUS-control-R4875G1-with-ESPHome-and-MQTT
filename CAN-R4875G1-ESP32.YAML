@@ -161,7 +161,7 @@ sensor:
       then:
         - if:
             condition:
-              lambda: 'return id(output_temperature_sensor).state > 65.0;'
+              lambda: 'return id(output_temperature_sensor).state > 85.0;'
             then:
               - canbus.send:
                   use_extended_id: true
@@ -169,7 +169,7 @@ sensor:
                   data: [1, 50, 0, 1, 0, 0, 0, 0]
               - logger.log:
                   level: INFO
-                  format: "Temperature exceeded 65°C. Sent CAN OFF message."
+                  format: "Temperature exceeded 85°C. Sent CAN OFF message."
 
 
   - platform: template
