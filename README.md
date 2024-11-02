@@ -32,7 +32,7 @@ The ESPHome firmware below is for an ESP32 dev board, which natively supports CA
 
 - **Output Current**  
 
-### Settings:
+### Settings
 - **CAN Voltage Set**  
 
 - **CAN Amp Set**  
