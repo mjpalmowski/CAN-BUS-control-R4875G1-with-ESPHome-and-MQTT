@@ -120,6 +120,8 @@ If you keep the "api:" block active, the device will be discovered by Home Assis
 
 ![Screenshot 2024-10-18 170149](https://github.com/user-attachments/assets/c8e686f8-5a49-41f0-8d6d-133be1017357)
 
+So you have entities to read all values and set online and offline (fallback) voltages, trigger "Full Fan Speed"; "Auto Fan Speed"; "Hibernate"; "Wake" using HA/NodeRed automations.
+
 ## MQTT Topics
 
 ### Sensors
