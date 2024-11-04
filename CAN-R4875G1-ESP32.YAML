@@ -1,4 +1,3 @@
-
 esphome:
   name: can-bus01
   friendly_name: can-bus01
@@ -9,8 +8,17 @@ esp32:
     type: arduino
 
 logger:
-  level: DEBUG
+  level: INFO
 
+# If you don't have or want to use Home Assistant or do any automation, just need a simple web surface to 
+# set up your R4875G1, just fill out your wifi credentials below, uncomment this webserver section and 
+# comment out the "api:" section and the "mqtt:" section. Compile and upload bin to esp32 
+# using any PC. Instructions here: https://www.youtube.com/watch?v=BX6tDsux_X4 
+
+
+#web_server:
+#  version: 3
+#
 
 # Enable Home Assistant API
 api:
@@ -36,10 +44,10 @@ captive_portal:
 # uncomment mqtt block if you plan to use it. the status and control topics are shown in the Log.
 
 #mqtt:
-#   broker: !secret mqtt_host
-#   username: !secret mqtt_username
-#   password: !secret mqtt_password
-#   id: mqtt_client
+ #  broker: !secret mqtt_host
+  # username: !secret mqtt_username
+  # password: !secret mqtt_password
+ #  id: mqtt_client
 
 canbus:
   - platform: esp32_can
@@ -54,36 +62,36 @@ canbus:
         then:
           - lambda: |-
               if (x.size() >= 8) {
-                uint8_t byte_0 = static_cast<uint8_t>(x[0]);
-                uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
+                const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
+                                       (static_cast<uint32_t>(x[5]) << 16) | 
+                                       (static_cast<uint32_t>(x[6]) << 8) | 
+                                       static_cast<uint32_t>(x[7]);
 
-                uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
-                                 (static_cast<uint32_t>(x[5]) << 16) | 
-                                 (static_cast<uint32_t>(x[6]) << 8) | 
-                                 static_cast<uint32_t>(x[7]);
-
-                if (byte_0 == 0x01 && byte_1 == 0x70) {
-                  id(ac_power_in_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x71) {
-                  id(grid_frequency_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x72) {
-                  id(input_current_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x73) {
-                  id(dc_power_out_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x75) {
-                  id(output_voltage_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x76) {
-                  id(set_max_output_current_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x78) {
-                  id(input_grid_voltage_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x7F) {
-                  id(output_temperature_sensor).publish_state(value);
-                } else if (byte_0 == 0x01 && byte_1 == 0x81) {
-                  id(output_current_sensor).publish_state(value);
+                // Handle sensor publishing using a helper function
+                switch (byte_0) {
+                  case 0x01:
+                    switch (byte_1) {
+                      case 0x70: id(ac_power_in_sensor).publish_state(value); break;
+                      case 0x71: id(grid_frequency_sensor).publish_state(value); break;
+                      case 0x72: id(input_current_sensor).publish_state(value); break;
+                      case 0x73: id(dc_power_out_sensor).publish_state(value); break;
+                      case 0x75: id(output_voltage_sensor).publish_state(value); break;
+                      case 0x76: id(set_max_output_current_sensor).publish_state(value); break;
+                      case 0x78: id(input_grid_voltage_sensor).publish_state(value); break;
+                      case 0x7F: id(output_temperature_sensor).publish_state(value); break;
+                      case 0x81: id(output_current_sensor).publish_state(value); break;
+                    }
+                    break;
                 }
               }
 
 # Define sensors to expose them via API
+
+substitutions:
+  multiplier_default: '0.00097656225' # 1/1020 conversion factor
+  multiplier_current: '0.05'          # 1/20 conversion factor
 
 sensor:
   - platform: template
@@ -92,7 +100,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 2
     filters:
-      - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:power"
 
   - platform: template
@@ -101,7 +109,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 2
     filters:
-      - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:power"
 
   - platform: template
@@ -110,7 +118,7 @@ sensor:
     unit_of_measurement: "Hz"
     accuracy_decimals: 1
     filters:
-    - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:frequency"
 
   - platform: template
@@ -119,7 +127,7 @@ sensor:
     unit_of_measurement: "A"
     accuracy_decimals: 1
     filters:
-    - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:current-ac"
 
   - platform: template
@@ -128,17 +136,8 @@ sensor:
     unit_of_measurement: "V"
     accuracy_decimals: 1
     filters:
-    - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:voltage"
-
-  - platform: template
-    name: "Set Max Output Current"
-    id: set_max_output_current_sensor
-    unit_of_measurement: "A"
-    accuracy_decimals: 1
-    filters:
-    - multiply: 0.05
-    icon: "mdi:current-ac"
 
   - platform: template
     name: "Input Grid Voltage"
@@ -146,22 +145,22 @@ sensor:
     unit_of_measurement: "V"
     accuracy_decimals: 2
     filters:
-    - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:voltage"
-    
+
   - platform: template
     name: "Output Temperature"
     id: output_temperature_sensor
     unit_of_measurement: "°C"
     accuracy_decimals: 1
     filters:
-      - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:thermometer"
     on_value:
       then:
         - if:
             condition:
-              lambda: 'return id(output_temperature_sensor).state > 85.0;' # Set your desired shutdown-temperature here 
+              lambda: 'return id(output_temperature_sensor).state > 90.0;'
             then:
               - canbus.send:
                   use_extended_id: true
@@ -169,8 +168,7 @@ sensor:
                   data: [1, 50, 0, 1, 0, 0, 0, 0]
               - logger.log:
                   level: INFO
-                  format: "Temperature exceeded 85°C. Sent CAN OFF message." # Set your desired sutdown-temperature here
-
+                  format: "Temperature exceeded 90°C. Sent CAN OFF message."
 
   - platform: template
     name: "Output Current"
@@ -178,8 +176,18 @@ sensor:
     unit_of_measurement: "A"
     accuracy_decimals: 1
     filters:
-    - multiply: 0.00097656225
+      - multiply: ${multiplier_default}
     icon: "mdi:current-ac"
+
+  - platform: template
+    name: "Set Max Output Current"
+    id: set_max_output_current_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_current}
+    icon: "mdi:current-ac"
+
 
 number:
   # Voltage Setting
