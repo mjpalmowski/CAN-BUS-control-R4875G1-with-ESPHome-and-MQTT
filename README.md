@@ -114,6 +114,16 @@ You can use Home Assistant’s ESPHome plugin to add a new ESPHome device and in
 
 If you don’t need MQTT, comment out the "mqtt:" block.
 If you don’t need Home Assistant, comment out the "api:" block.
+
+If you just want to have a web page to set up your R4875G1, then comment out the api and the mqtt section, enter your wifi credentials and uncomment the "webserver:" section. You can compile and upload the bin without ever installing Homeassistant also: https://www.youtube.com/watch?v=BX6tDsux_X4
+
+This is how the web page looks like:
+
+![Screenshot 2024-11-04 194658](https://github.com/user-attachments/assets/7bb592bb-c210-440f-ad3e-b862299c11ee)
+
+
+
+
 If you keep the "api:" block active, the device will be discovered by Home Assistant upon restart, appearing like this:
 
 ![Screenshot 2024-10-18 170221](https://github.com/user-attachments/assets/00b6da9a-1fe3-4be9-9083-7ba2df3a7ec5)
