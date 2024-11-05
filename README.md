@@ -126,6 +126,10 @@ This is how the web page looks like:
 
 If you keep the "api:" block active, the device will be discovered by Home Assistant upon restart, appearing like this:
 
+![Screenshot 2024-11-05 095728](https://github.com/user-attachments/assets/0c11c5cd-dbff-4e06-8870-e32d41f5d8e9)
+
+![Screenshot 2024-11-05 095751](https://github.com/user-attachments/assets/42707df7-e443-449d-b715-8ab477cdaf76)
+
 
 
 So you have entities to read all values and set online and offline (fallback) voltages, trigger "Full Fan Speed"; "Auto Fan Speed"; "Hibernate"; "Wake" using HA/NodeRed automations.
