@@ -126,13 +126,15 @@ This is how the web page looks like:
 
 If you keep the "api:" block active, the device will be discovered by Home Assistant upon restart, appearing like this:
 
-![Screenshot 2024-10-18 170221](https://github.com/user-attachments/assets/00b6da9a-1fe3-4be9-9083-7ba2df3a7ec5)
 
-![Screenshot 2024-10-18 170149](https://github.com/user-attachments/assets/c8e686f8-5a49-41f0-8d6d-133be1017357)
 
 So you have entities to read all values and set online and offline (fallback) voltages, trigger "Full Fan Speed"; "Auto Fan Speed"; "Hibernate"; "Wake" using HA/NodeRed automations.
 
-## MQTT Topics
+## MQTT Topics![Screenshot 2024-11-05 095728](https://github.com/user-attachments/assets/49bbec6d-ae4d-466a-a1a1-8c04cc50f270)
+
+![Screenshot 2024-11-05 095751](https://github.com/user-attachments/assets/47a29530-7f72-4c81-862c-ec99d11f5c57)
+
+
 
 ### Sensors
 - **AC Power In**  
