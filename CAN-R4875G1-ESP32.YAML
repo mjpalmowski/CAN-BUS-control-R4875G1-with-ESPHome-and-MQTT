@@ -10,8 +10,8 @@ esp32:
 logger:
   level: INFO
 
-# If you dont have or want to use Home assistant or do any automeation, just need a simple web surface to 
-# control your R4875G1, just fill out your wifi credentials, uncomment this webserver section and 
+# If you dont have or want to use Homeassistant or do any automeation, just need a simple web surface to 
+# control your R4875G1, just fill out your wifi credentials, uncomment this "webserver:" section and 
 # comment out the "api:" section and the "mqtt:" section. and compile and upload bin to esp32 
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 
