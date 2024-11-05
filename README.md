@@ -216,12 +216,22 @@ https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-30
 For more inspiration and lots of info and experimentation around these powerful "rectifiers".
 
 
-(Useful if you have a related rectifier and want to adapt my code (the other varieties like the R4850G and R4850G2 have slightly different CAN messages/factors, easy to change though.)
+(Useful if you have a related rectifier and want to adapt my code (the other varieties like the R4850G and R4850G2 have slightly different CAN message IDs and factors.)
 
 https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/
 
 https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/
 
 https://diysolarforum.com/threads/diy-chargenectifier.56329/
+
+https://github.com/BotoX/huawei-r48xx-esp32
+
+https://github.com/craigpeacock/Huawei_R4850G2_CAN 
+
+https://github.com/haklein/r4850g2_arduino
+
+
+
+
 
 
