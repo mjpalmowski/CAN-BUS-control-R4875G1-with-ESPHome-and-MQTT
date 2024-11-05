@@ -213,8 +213,10 @@ https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-30
 # More References:
 
 
-For more inspiration and lots of info and experimentation around these powerful "rectifiers" 
+For more inspiration and lots of info and experimentation around these powerful "rectifiers".
 
+
+(Useful if you have a related rectifier and want to adapt my code (the other varieties like the R4850G and R4850G2 have slightly different CAN messages/factors, easy to change though.)
 
 https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/
 
