@@ -93,7 +93,7 @@ If you don’t want to buy the adapter board, you can turn on the module by shor
 
 The "Hibernate" and "Wake-UP" Can-messages work just fine with these pads connected to DC-Neg.
 
-To unlock the full 4kW of DC output, follow this guide:
+### To unlock the full 4kW of DC output, follow this guide:
 
 https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290
 
