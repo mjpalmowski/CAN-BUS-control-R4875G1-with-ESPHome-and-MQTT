@@ -210,10 +210,14 @@ https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-30
 
 # More References:
 
+
 For more inspiration and lots of info and experimentation around these powerful "rectifiers" 
 
+
 https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/
+
 https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/
+
 https://diysolarforum.com/threads/diy-chargenectifier.56329/
 
 
