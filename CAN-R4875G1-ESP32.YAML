@@ -10,15 +10,15 @@ esp32:
 logger:
   level: INFO
 
-# If you don't have or want to use Home Assistant or do any automation, just need a simple web surface to 
-# set up your R4875G1, just fill out your wifi credentials below, uncomment this webserver section and 
-# comment out the "api:" section and the "mqtt:" section. Compile and upload bin to esp32 
-# using any PC. Instructions here: https://www.youtube.com/watch?v=BX6tDsux_X4 
+# If you dont have or want to use Home assistant or do any automeation, just need a simple web surface to 
+# control your R4875G1, just fill out your wifi credentials, uncomment this webserver section and 
+# comment out the "api:" section and the "mqtt:" section. and compile and upload bin to esp32 
+# using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 
 
 #web_server:
 #  version: 3
-#
+
 
 # Enable Home Assistant API
 api:
@@ -44,10 +44,10 @@ captive_portal:
 # uncomment mqtt block if you plan to use it. the status and control topics are shown in the Log.
 
 #mqtt:
- #  broker: !secret mqtt_host
-  # username: !secret mqtt_username
-  # password: !secret mqtt_password
- #  id: mqtt_client
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+#   id: mqtt_client
 
 canbus:
   - platform: esp32_can
@@ -101,7 +101,7 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
-    icon: "mdi:power"
+    icon: "mdi:flash"
 
   - platform: template
     name: "DC Power Out"
@@ -110,7 +110,7 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
-    icon: "mdi:power"
+    icon: "mdi:flash"
 
   - platform: template
     name: "Grid Frequency"
@@ -119,7 +119,7 @@ sensor:
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
-    icon: "mdi:frequency"
+    icon: "mdi:transmission-tower-import"
 
   - platform: template
     name: "Input Current"
@@ -137,7 +137,7 @@ sensor:
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
-    icon: "mdi:voltage"
+    icon: "mdi:sine-wave"
 
   - platform: template
     name: "Input Grid Voltage"
@@ -146,7 +146,7 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
-    icon: "mdi:voltage"
+    icon: "mdi:sine-wave"
 
   - platform: template
     name: "Output Temperature"
