@@ -81,7 +81,7 @@ DC cables are 8AWG silicone insulated, capable of carrying 40A continuously. AC 
 TJA1050 CAN-BUS transceiver board
 
  (maybe get a 3.3V one like SN65HVD230 instead of the 5V TJA1050, or get the adafruit version https://www.adafruit.com/product/5708 )
-
+but there is that: https://www.letscontrolit.com/forum/viewtopic.php?t=8845
 
 ![IMG_20241018_141733](https://github.com/user-attachments/assets/909a2692-d080-4f7c-9965-e06ca748c99c)
 
