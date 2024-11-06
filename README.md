@@ -120,7 +120,9 @@ If you don’t need Home Assistant, comment out the "api:" block.
 If you just want to have a web page to set up your R4875G1, then comment out the api and the mqtt section, enter your wifi credentials and uncomment the "webserver:" section. You can compile and upload the bin without ever installing Homeassistant also: https://www.youtube.com/watch?v=BX6tDsux_X4
 
 ### If you'd rather not do any of that and just want a binary that you can upload to an esp32: (ESP32 NodeMcu Development Board WROOM 32 30 pins Dual Core WLAN WiFi Bluetooth) you can:
-download the file r4875g1-can-web-firmware.factory.bin from this repository and upload it to your NodeMcu ESP32 board using Tasmotizer https://tasmota.github.io/docs/Getting-Started/ 
+download the file r4875g1-can-web-firmware.factory.bin from this repository (you get the file by clicking on the green <>CODE button above and download the zip, the file is in there) 
+
+and upload it to your NodeMcu ESP32 board using Tasmotizer https://tasmota.github.io/docs/Getting-Started/ 
 once fashed it should generate a hotspot with 
 
 ssid: "Can-Web-Only Fallback Hotspot"
