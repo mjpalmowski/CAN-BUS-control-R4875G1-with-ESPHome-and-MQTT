@@ -119,10 +119,36 @@ If you don’t need Home Assistant, comment out the "api:" block.
 
 If you just want to have a web page to set up your R4875G1, then comment out the api and the mqtt section, enter your wifi credentials and uncomment the "webserver:" section. You can compile and upload the bin without ever installing Homeassistant also: https://www.youtube.com/watch?v=BX6tDsux_X4
 
+### If you'd rather not do any of that and just want a binary that you can upload to an esp32: (ESP32 NodeMcu Development Board WROOM 32 30 pins Dual Core WLAN WiFi Bluetooth) you can:
+download the file r4875g1-can-web-firmware.factory.bin from this repository and upload it to your NodeMcu ESP32 board using Tasmotizer https://tasmota.github.io/docs/Getting-Started/ 
+once fashed it should generate a hotspot with 
+
+ssid: "Can-Web-Only Fallback Hotspot"
+
+use 12345678 as password
+
+once connected ti the hotspot, open a browser and 
+
+go to: http://192.168.4.1/ 
+
+Here you can select your own wifi and provide your wifi password so the ESP can join your network.
+
+If that was sucessful the ESP32 should no longer provide the Hotspot.
+
+Now join your Wifi and 
+
+navigate to: http://r4875g1-can-web.local/
+
+or whatever IP address your router has provided to the ESP.
+
+If you see the web page it's time to hook up the RX pin to GPIO-19 and TX pin to GPIO-02  of your CAN tranceiver (maybe get a 3.3V one like SN65HVD230 instead of the 5V TJA1050, but they should both work)
+
+then provide ground and 3.3V for the SN65HVD230 or ground and 5V for the TJA1050 and you are good to connect your CAN-H and CAN-L from the R4875G1 and you are good.
+
+
 This is how the web page looks like:
 
 ![Screenshot 2024-11-04 194658](https://github.com/user-attachments/assets/7bb592bb-c210-440f-ad3e-b862299c11ee)
-
 
 
 
