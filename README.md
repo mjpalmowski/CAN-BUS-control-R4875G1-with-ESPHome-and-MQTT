@@ -123,7 +123,7 @@ If you just want to have a web page to set up your R4875G1, then comment out the
 download the file r4875g1-can-web-firmware.factory.bin from this repository (you get the file by clicking on the green <>CODE button above and download the zip, the file is in there) 
 
 and upload it to your NodeMcu ESP32 board using Tasmotizer https://tasmota.github.io/docs/Getting-Started/ 
-once fashed it should generate a hotspot with 
+once flashed it should generate a hotspot with 
 
 ssid: "Can-Web-Only Fallback Hotspot"
 
