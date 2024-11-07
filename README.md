@@ -128,6 +128,9 @@ This is how the web page looks like:
 
 ![Screenshot 2024-11-04 194658](https://github.com/user-attachments/assets/7bb592bb-c210-440f-ad3e-b862299c11ee)
 
+![Screenshot 2024-11-07 133906](https://github.com/user-attachments/assets/fd3215de-3966-4222-b302-595a540ca88b)
+
+
 
 
 If you keep the "api:" block active, the device will be discovered by Home Assistant upon restart, appearing like this:
