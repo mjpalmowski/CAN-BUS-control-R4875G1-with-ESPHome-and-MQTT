@@ -121,7 +121,7 @@ If you don’t need Home Assistant, comment out the "api:" block.
 
 If you just want to have a web page to set up your R4875G1, then comment out the api and the mqtt section, enter your wifi credentials and uncomment the "webserver:" section. You can compile and upload the bin without ever installing Homeassistant also: https://www.youtube.com/watch?v=BX6tDsux_X4
 
-If you just need the web interface and don't care about changing anything don't have or don't care about mqtt or Homeassistant, there is a .bin file that you can directly upload to your ESP32 board... instructions are provided in r4875g1-can-web.0.9 bin release info.txt
+If you just need the web interface and don't care about changing anything in the YAML file don't have or don't care about mqtt or Homeassistant, there is a .bin file that you can directly upload to your ESP32 board... instructions are provided in r4875g1-can-web.0.9 bin release info.txt
 
 
 This is how the web page looks like:
