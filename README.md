@@ -85,7 +85,15 @@ but there is that: https://www.letscontrolit.com/forum/viewtopic.php?t=8845
 
 ![IMG_20241018_141733](https://github.com/user-attachments/assets/909a2692-d080-4f7c-9965-e06ca748c99c)
 
-This connects the 5V logic level from the CAN transceiver module to the 3.3V ESP32 input pin. My ESP32 handled the 5V input (though it’s not designed for that), and the transceiver managed the 3.3V logic input from the ESP32. However, you should ideally add a logic level shifter between the ESP32 and the transceiver module.
+This connects the 5V logic level from the CAN transceiver module to the 3.3V ESP32 input pin. My ESP32 handled the 5V input (though it’s not designed for that), and the transceiver managed the 3.3V logic input from the ESP32. If you'd rather not play with fire, just use this tranceiver instead, it works with the same code, just make sure YAML TX pin is connected to the tranceiver TX.  YAML defined RX is connected to the tranceiver RX: 
+
+![Screenshot 2024-11-11 093708](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
+
+### Here is a pic of the 3.3v CAN tranceiver that you should be using. it is called SN65HVD230: 
+
+![IMG_20241111_093108](https://github.com/user-attachments/assets/d07556bf-98fd-4b8a-a10a-a0638687308f)
+
+
 
 If you don’t want to buy the adapter board, you can turn on the module by shorting these pads to DC-minus:
 
