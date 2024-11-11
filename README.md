@@ -89,7 +89,7 @@ This connects the 5V logic level from the CAN transceiver module to the 3.3V ESP
 
 ![Screenshot 2024-11-11 093708](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
-### Here is a pic of the 3.3v CAN tranceiver that you should be using. it is called SN65HVD230: 
+### Here is a pic of the 3.3v CAN tranceiver that you should be using. it is called "SN65HVD230" also found under "VP230 CAN Board": 
 
 ![IMG_20241111_093108](https://github.com/user-attachments/assets/d07556bf-98fd-4b8a-a10a-a0638687308f)
 
