@@ -16,7 +16,7 @@ This r4875g1-can-web.0.9.bin can be uploaded.
 
 RX  ==== GPIO 21 
 TX  ==== GPIO 19 
-VCC ==== 5V or 3.3V depending on the board
+VCC ==== 5V or 3.3V depending on the CAN tranceiver board
 GND ==== GND
 
 then connect 
