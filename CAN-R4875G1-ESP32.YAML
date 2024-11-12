@@ -90,7 +90,7 @@ canbus:
 # Define sensors to expose them via API
 
 substitutions:
-  multiplier_default: '0.00097656225' # 1/1020 conversion factor
+  multiplier_default: '0.00097656225' # 1/1024 conversion factor
   multiplier_current: '0.05'          # 1/20 conversion factor
 
 sensor:
