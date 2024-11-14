@@ -6,7 +6,7 @@ This project focuses on a "48V Rectifier module" used to supply cell tower equip
 [R4975G1 Datasheet.pdf](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
 
-This module is 97% efficient and can providing up to 4KW of DC power, short circuit and surge protection and CAN BUS. Such specs have led many, including myself, to make these units usable for home battery charging by reverse-engineering their CAN BUS control.
+This module is 97% efficient and can providing up to 4KW of DC power, it is short circuit and surge protected and speaks CAN BUS. Such specs have led many, including myself, to make these units usable for home battery charging by reverse-engineering their CAN BUS control.
 
 So here is my 20cents:
 
