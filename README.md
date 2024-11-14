@@ -78,7 +78,7 @@ DC cables are 8AWG silicone insulated, capable of carrying 40A continuously. AC 
 ![Screenshot 2024-11-14 103724](https://github.com/user-attachments/assets/79ad670a-10e9-404d-9aa6-95732e0d5277)
 
 
-Make sure YAML TX pin is connected to the tranceiver TX.  YAML defined RX is connected to the tranceiver RX: 
+Make sure YAML defined TX pin is connected to the tranceiver TX pin.  YAML defined RX pin is connected to the tranceiver RX pin: 
 
 ![Screenshot 2024-11-11 093708](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
