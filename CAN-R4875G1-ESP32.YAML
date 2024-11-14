@@ -52,7 +52,7 @@ captive_portal:
 canbus:
   - platform: esp32_can
     tx_pin: GPIO19
-    rx_pin: GPIO02
+    rx_pin: GPIO21
     can_id: 0x108180FE
     bit_rate: 125kbps
     use_extended_id: True
