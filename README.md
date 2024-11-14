@@ -85,18 +85,19 @@ Bottom Side view (Details in the "YouTube Hardware Overview" link blow)
 
 ## Software Configuration
 
-You can use the **ESPHome** plugin in Home Assistant to create a new device and paste the provided YAML configuration. If you prefer a standalone setup, you can configure a web server for device management without Home Assistant.
+You can use the **ESPHome** plugin in Home Assistant to create a new device and paste the provided YAML configuration. 
+If you prefer a standalone setup, you can configure the web server component for browser based control.
 
 1. **MQTT**: Uncomment the `mqtt:` block if using MQTT.
 2. **Home Assistant API**: Uncomment the `api:` block for Home Assistant discovery.
-3. **Web Interface**: Uncomment the `webserver:` block if only a web interface is needed.
+3. **Web Interface**: Uncomment the `webserver:` block if a web interface is needed.
 
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 
 https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.9
 
-https://web.esphome.io/?dashboard_wizard to upload the bin
+https://web.esphome.io/?dashboard_wizard to upload the .bin
  
 
 
