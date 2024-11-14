@@ -52,7 +52,8 @@ The **Huawei R4875G1** power module is controlled as shown below. It can output 
 
 PCB contact adapters for the R4875G1 and R4875G5 series are available on AliExpress.
 
-![Screenshot 2024-11-14 103724](https://github.com/user-attachments/assets/5043e65a-0674-4dff-8a67-0821f1380e3c)
+![Designer](https://github.com/user-attachments/assets/c70dea2a-3bfe-4446-9f6f-ea634a3ef5c6)
+
 
 - **ESP32 WROOM** Development Board
 - **VP230** CAN-BUS transceiver Board
