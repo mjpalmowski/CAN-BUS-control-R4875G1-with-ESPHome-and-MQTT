@@ -110,7 +110,8 @@ https://web.esphome.io/?dashboard_wizard to upload the bin
 #### Commands
 - **CAN ON**: `can-bus01/button/can_on_button/command`
 - **CAN OFF**: `can-bus01/button/can_off_button/command`
-- **Fan Speed Control**: Auto and Full Speed via MQTT
+- **Fan Auto**: `can-bus01/button/fan_auto_mode_button/command`
+- **Fan Full Speed**: `can-bus01/button/fan_full_speed_button/command`
 
 ## Additional Resources
 - [Huawei R4875G1 CAN Protocol](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
