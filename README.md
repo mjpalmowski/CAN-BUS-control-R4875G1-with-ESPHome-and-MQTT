@@ -60,7 +60,7 @@ PCB contact adapters for the R4875G1 and R4875G5 series are available on AliExpr
 - **R4875G1/G5 Board Edge Connector**
 - **DC Cables**: 8 AWG silicone-insulated, supporting up to 40A continuously.
 - **AC Cables**: Rated for continuous 16A supply.
-- **CAN BUS Connections**: White (CAN-L) and Black (CAN-H) Dupont cables.
+- **CAN BUS Connections**: White (CAN-L) and Black (CAN-H)
 
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
