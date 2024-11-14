@@ -53,13 +53,16 @@ The **Huawei R4875G1** power module is controlled as shown below. It can output 
 - **AC Cables**: Rated for continuous 16A supply.
 - **CAN BUS Connections**: White (CAN-L) and Black (CAN-H) Dupont cables.
 
-![Module Diagram](https://github.com/user-attachments/assets/68757a31-27ee-47f2-8b01-ca278633819a)
-
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
 ![Wiring Diagram](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
 For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
+
+![Screenshot 2024-10-18 164741](https://github.com/user-attachments/assets/a97b279e-5a78-476c-b4df-c53c6560797c)
+![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
+
+
 
 ### Hardware References
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
