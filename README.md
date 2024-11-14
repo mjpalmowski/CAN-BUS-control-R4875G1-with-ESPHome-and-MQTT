@@ -108,10 +108,10 @@ https://web.esphome.io/?dashboard_wizard to upload the bin
 - `can-bus01/sensor/output_current/state`
 
 #### Commands
-- **CAN ON**: `can-bus01/button/can_on_button/command`
-- **CAN OFF**: `can-bus01/button/can_off_button/command`
-- **Fan Auto**: `can-bus01/button/fan_auto_mode_button/command`
-- **Fan Full Speed**: `can-bus01/button/fan_full_speed_button/command`
+- **wake-up**: `can-bus01/button/can_on_button/command`
+- **hibernate**: `can-bus01/button/can_off_button/command`
+- **fan auto**: `can-bus01/button/fan_auto_mode_button/command`
+- **fan full speed**: `can-bus01/button/fan_full_speed_button/command`
 
 ## Additional Resources
 - [Huawei R4875G1 CAN Protocol](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
