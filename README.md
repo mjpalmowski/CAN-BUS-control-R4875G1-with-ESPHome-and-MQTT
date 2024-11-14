@@ -59,7 +59,10 @@ To connect, ensure the TX pin from the ESP32 is connected to the transceiver's T
 
 For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
 
-![Screenshot 2024-10-18 164741](https://github.com/user-attachments/assets/a97b279e-5a78-476c-b4df-c53c6560797c)
+
+![Screenshot 2024-11-14 111652](https://github.com/user-attachments/assets/7a3fbde8-20d1-4139-a639-aaebd0c17b3e)
+
+
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
 
 
