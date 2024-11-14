@@ -54,6 +54,9 @@ PCB contact adapters for the R4875G1 and R4875G5 series are available on AliExpr
 
 ![Screenshot 2024-11-14 103724](https://github.com/user-attachments/assets/5043e65a-0674-4dff-8a67-0821f1380e3c)
 
+- **ESP32 WROOM** Development Board
+- **VP230** CAN-BUS transceiver Board
+- **R4875G1/G5 Board Edge Connector**
 - **DC Cables**: 8 AWG silicone-insulated, supporting up to 40A continuously.
 - **AC Cables**: Rated for continuous 16A supply.
 - **CAN BUS Connections**: White (CAN-L) and Black (CAN-H) Dupont cables.
