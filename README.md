@@ -31,7 +31,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 ### Control Buttons
 - **CAN ON Button** (Wake-up feature)
 - **CAN OFF Button** (Hibernate feature)
-- **Fan Full Speed Button** (Triggers full fan speed at a specific temperature)
+- **Fan Full Speed Button**
 - **Fan Auto Mode Button**
 
 ### Additional Features
