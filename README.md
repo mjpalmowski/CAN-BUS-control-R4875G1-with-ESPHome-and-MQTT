@@ -105,8 +105,7 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ![Web-Surface Integration](https://github.com/user-attachments/assets/4e74206d-bf3e-473a-ab9f-b4b039914179)
 
-
-![Home Assistant Integration](https://github.com/user-attachments/assets/0c11c5cd-dbff-4e06-8870-e32d41f5d8e9)
+![Screenshot 2024-11-14 150637](https://github.com/user-attachments/assets/ff781577-ade7-4bd4-8a26-ba679e6a9398)
 
 ![Screenshot 2024-11-14 150252](https://github.com/user-attachments/assets/fcf0bd69-1b4e-453c-a8c8-5b66df1f6714)
 
