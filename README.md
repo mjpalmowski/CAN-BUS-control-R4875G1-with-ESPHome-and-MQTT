@@ -6,11 +6,11 @@ This project focuses on a "48V Rectifier module" used to supply cell tower equip
 [R4975G1 Datasheet.pdf](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
 
-This module is 97% efficient and can operate almost silently if run at 25% of max output whilst providing 1000W DC power. Such specs have led many, including myself, to make these units usable for home battery charging by reverse-engineering their CAN BUS control.
+This module is 97% efficient and can providing up to 4KW of DC power, short circuit and surge protection and CAN BUS. Such specs have led many, including myself, to make these units usable for home battery charging by reverse-engineering their CAN BUS control.
 
 So here is my 20cents:
 
-The ESPHome firmware below is for an ESP32 dev board, which natively supports CAN BUS. The ESP32 is hooked up to the R4875G via TJA1050 CAN-BUS transceiver board.  Here’s a quick summary of what is needed to make it work.
+The ESPHome firmware below is for an ESP32 dev board, which natively supports CAN BUS. The ESP32 is hooked up to the R4875G via VP230 CAN-BUS transceiver board.  Here’s a quick summary of what is needed to make it work.
 
 ## Features supported:
 ### Sensors
@@ -64,28 +64,21 @@ If you’re interested in building an "automation-friendly" version of this devi
 
 
 # Hardware: 
-![IMG_20241018_141436](https://github.com/user-attachments/assets/c75316e2-48f6-43c9-b544-35b82bb796bc)
-ESP32 board with TJA1050 CAN-BUS transceiver board (requires a level shifter, but this setup worked).
+
 
 ![IMG_20241018_140009](https://github.com/user-attachments/assets/68757a31-27ee-47f2-8b01-ca278633819a)
 
-
-This is the Huawei R4875G1 power module we're controlling. The arrows indicate airflow direction inside the unit. If operated at 23°C ambient, it can output 20A at 54V continuously without additional cooling or overheating. The PCB contact adapter for the R4875G1 and R4875G5 series is available on AliExpress.
+This is the Huawei R4875G1 power module we're controlling. The arrows indicate airflow direction inside the unit. If operated at 23°C ambient, it can output 35A at 54V continuously without additional cooling or overheating. The PCB contact adapter for the R4875G1 and R4875G5 series is available on AliExpress.
 
 ![IMG_20241018_140546](https://github.com/user-attachments/assets/26adaf1d-337f-4390-b8ca-50e13a5c1673)
 
 DC cables are 8AWG silicone insulated, capable of carrying 40A continuously. AC cables are sized to supply 16A continuously. The white Dupont cable is CAN-L, and the black Dupont cable is CAN-H. The other two small wires connect to DC NEG.
 
-![IMG_20241018_140743](https://github.com/user-attachments/assets/ea1e3ff2-27fd-47af-94fe-055ffd697be8)
 
-TJA1050 CAN-BUS transceiver board
+![Screenshot 2024-11-14 103724](https://github.com/user-attachments/assets/79ad670a-10e9-404d-9aa6-95732e0d5277)
 
- (maybe get a 3.3V one like SN65HVD230 instead of the 5V TJA1050, or get the adafruit version https://www.adafruit.com/product/5708 )
-but there is that: https://www.letscontrolit.com/forum/viewtopic.php?t=8845
 
-![IMG_20241018_141733](https://github.com/user-attachments/assets/909a2692-d080-4f7c-9965-e06ca748c99c)
-
-This connects the 5V logic level from the CAN transceiver module to the 3.3V ESP32 input pin. My ESP32 handled the 5V input (though it’s not designed for that), and the transceiver managed the 3.3V logic input from the ESP32. If you'd rather not play with fire, just use this tranceiver instead, it works with the same code, just make sure YAML TX pin is connected to the tranceiver TX.  YAML defined RX is connected to the tranceiver RX: 
+Make sure YAML TX pin is connected to the tranceiver TX.  YAML defined RX is connected to the tranceiver RX: 
 
 ![Screenshot 2024-11-11 093708](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
