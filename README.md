@@ -92,6 +92,8 @@ If you prefer a standalone setup, you can configure the web server component for
 2. **Home Assistant API**: Uncomment the `api:` block for Home Assistant discovery.
 3. **Web Interface**: Uncomment the `webserver:` block if a web interface is needed.
 
+[View R4875G CAN Control YAML](./CAN-R4875G1-ESP32.YAML)
+
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 
