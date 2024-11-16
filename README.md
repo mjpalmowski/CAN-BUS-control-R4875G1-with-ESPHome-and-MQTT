@@ -1,252 +1,137 @@
-# Background: 
-Upcycling industrial equipment is an appealing approach for several reasons. Industrial equipment used in mobile network operators' cell towers is designed to run 24/7 under harsh conditions, making it compact, reliable, efficient, and resilient.
+# Project Overview
 
-This project focuses on a "48V Rectifier module" used to supply cell tower equipment and battery banks with dependable DC power. Essentially, it's a heavy-duty battery charger that can be set between 45V and 58V while powered by dirty AC generator input or an unstable grid. The R4875G1 module has a "Name Plate Output" of 4000W and an impressive "Mean Time Between Failures" (MTBF) of 500,000 hours. Current levels can also be adjusted and dynamically controlled, and the module features hibernation and wake-up functions.
+Upcycling industrial equipment offers a sustainable approach to reusing highly reliable components. Mobile network operators' cell tower equipment is built to operate 24/7 under harsh conditions, making it compact, efficient, and resilient.
 
-[R4975G1 Datasheet.pdf](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
+This project focuses on the **Huawei R4875G1 48V Rectifier Module**, originally designed to power cell tower equipment and battery banks with dependable DC power. Essentially, this is a robust battery charger that can be adjusted between 45V and 58V, powered by an unstable grid or a dirty AC generator input. The R4875G1 module boasts a "Name Plate Output" of 4000W and an impressive Mean Time Between Failures (MTBF) of 500,000 hours. It supports current adjustments, dynamic control, and features hibernation and wake-up functions.
 
+[View the R4975G1 Datasheet](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
-This module is 97% efficient and can operate almost silently if run at 25% of max output whilst providing 1000W DC power. Such specs have led many, including myself, to make these units usable for home battery charging by reverse-engineering their CAN BUS control.
+This module is 97% efficient, provides up to 4kW of DC power, and includes short circuit and surge protection, communicating via CAN BUS. These capabilities make it suitable for home battery charging, achieved through reverse-engineering its CAN BUS control.
 
-So here is my 20cents:
+## Key Features
+The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. The ESP32 connects to the R4875G1 via a VP230 CAN-BUS transceiver. Below are the main features:
 
-The ESPHome firmware below is for an ESP32 dev board, which natively supports CAN BUS. The ESP32 is hooked up to the R4875G via TJA1050 CAN-BUS transceiver board.  Here’s a quick summary of what is needed to make it work.
+### Supported Sensors
+- **AC Power In**
+- **DC Power Out**
+- **Grid Frequency**
+- **Input Current**
+- **Output Voltage**
+- **Set Maximum Output Current**
+- **Input Grid Voltage**
+- **Output Temperature**
+- **Output Current**
 
-## Features supported:
-### Sensors
-- **AC Power In**  
-
-- **DC Power Out**  
-
-- **Grid Frequency**  
-
-- **Input Current**  
-
-- **Output Voltage**  
-
-- **Set Max Output Current**  
-
-- **Input Grid Voltage**  
-
-- **Output Temperature**  
-
-- **Output Current**  
-
-### Settings
-- **CAN Voltage Set**  
-
-- **CAN Amp Set**  
-
-- **Fallback Amp Set**  
-
+### Configuration Settings
+- **CAN Voltage Set**
+- **CAN Amp Set**
+- **Fallback Amp Set**
 - **Fallback Voltage Set**
 
-### Buttons
-- **CAN ON Button**  (wake-up feature)
+### Control Buttons
+- **CAN ON Button** (Wake-up feature)
+- **CAN OFF Button** (Hibernate feature)
+- **Fan Full Speed Button**
+- **Fan Auto Mode Button**
 
-- **CAN OFF Button**  (hibernate feature)
+### Additional Features
+- **Over-temperature Shutdown** (Configurable in YAML, does not require Home Assistant or Node-RED)
 
-- **Fan Full Speed Button**  (allows for automation that triggers full fan speed at certain temperature range)
+## Use Cases
+This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC batteries, making it useful for home battery systems that store solar or off-peak power. It is particularly useful when backing up solar setups with a generator. Additionally, it can serve as a powerful DC bench power supply when paired with a robust adjustable buck/boost converter, or even as an onboard e-bike charger.
 
-- **Fan Auto Mode Button** 
+For example, the **EG4 Chargeverter** product is essentially two of these 48V telecom units in a single box, with buttons for setting maximum voltage and current. [Watch the Chargeverter Teardown](https://www.youtube.com/watch?v=WPEjRtABc2U).
 
-### Set Overtemp Shutdown in YAML (does not require HA or NodeRed to be active)
-  
+## Hardware Setup
 
-# Use Case:
-This is a battery charger for common 15s and 16s LiFePO4 packs and 14s NMC batteries. It’s ideal for home battery setups used to store solar or off-peak power, as it enables quick battery top-ups. If you back up your solar setup with a generator, these units serve well between the generator and a large battery pack since they’re designed for that purpose. They’re also a great starting point for a bench DC power supply when combined with a robust adjustable buck converter. Due to their power density, some also use them as onboard e-bike chargers.
+### Module and Connections
+The **Huawei R4875G1** power module is controlled as shown below. It can output 35A at 54V continuously at an ambient temperature of 23°C without additional cooling. 
 
-There’s a product called the "EG4 Chargeverter," The Chargeverter is essentially two of these 48V telecom units packed into a box with buttons to set max voltage/current. Here’s a teardown:
+![Screenshot 2024-11-14 111944](https://github.com/user-attachments/assets/c53ce6c9-9675-487b-8b2c-839d39cd7b22)
 
-https://www.youtube.com/watch?v=WPEjRtABc2U
 
-If you’re interested in building an "automation-friendly" version of this device, keep reading.
+PCB contact adapters for the R4875G1 and R4875G5 series are available on AliExpress.
 
+![Designer](https://github.com/user-attachments/assets/c70dea2a-3bfe-4446-9f6f-ea634a3ef5c6)
 
-# Hardware: 
-![IMG_20241018_141436](https://github.com/user-attachments/assets/c75316e2-48f6-43c9-b544-35b82bb796bc)
-ESP32 board with TJA1050 CAN-BUS transceiver board (requires a level shifter, but this setup worked).
 
-![IMG_20241018_140009](https://github.com/user-attachments/assets/68757a31-27ee-47f2-8b01-ca278633819a)
+- **ESP32 WROOM** Development Board
+- **VP230** CAN-BUS transceiver Board (SN65HVD230)
+- **R4875G1/G5 Board Edge Connector**
+- **DC Cables**: 8 AWG silicone-insulated, supporting up to 40A continuously.
+- **AC Cables**: Rated for continuous 16A supply.
+- **CAN BUS Connections**: White (CAN-L) and Black (CAN-H)
 
+To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
-This is the Huawei R4875G1 power module we're controlling. The arrows indicate airflow direction inside the unit. If operated at 23°C ambient, it can output 20A at 54V continuously without additional cooling or overheating. The PCB contact adapter for the R4875G1 and R4875G5 series is available on AliExpress.
+![Wiring Diagram](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
-![IMG_20241018_140546](https://github.com/user-attachments/assets/26adaf1d-337f-4390-b8ca-50e13a5c1673)
+For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
 
-DC cables are 8AWG silicone insulated, capable of carrying 40A continuously. AC cables are sized to supply 16A continuously. The white Dupont cable is CAN-L, and the black Dupont cable is CAN-H. The other two small wires connect to DC NEG.
 
-![IMG_20241018_140743](https://github.com/user-attachments/assets/ea1e3ff2-27fd-47af-94fe-055ffd697be8)
+![Screenshot 2024-11-14 111652](https://github.com/user-attachments/assets/7a3fbde8-20d1-4139-a639-aaebd0c17b3e)
 
-TJA1050 CAN-BUS transceiver board
+Top side view
 
- (maybe get a 3.3V one like SN65HVD230 instead of the 5V TJA1050, or get the adafruit version https://www.adafruit.com/product/5708 )
-but there is that: https://www.letscontrolit.com/forum/viewtopic.php?t=8845
+![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
 
-![IMG_20241018_141733](https://github.com/user-attachments/assets/909a2692-d080-4f7c-9965-e06ca748c99c)
+Bottom Side view (Details in the "YouTube Hardware Overview" link blow)
 
-This connects the 5V logic level from the CAN transceiver module to the 3.3V ESP32 input pin. My ESP32 handled the 5V input (though it’s not designed for that), and the transceiver managed the 3.3V logic input from the ESP32. If you'd rather not play with fire, just use this tranceiver instead, it works with the same code, just make sure YAML TX pin is connected to the tranceiver TX.  YAML defined RX is connected to the tranceiver RX: 
 
-![Screenshot 2024-11-11 093708](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
-### Here is a pic of the 3.3v CAN tranceiver that you should be using. it is called "SN65HVD230" also found under "VP230 CAN Board": 
+### Hardware References
+- [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
+- [YouTube Hardware Overview](https://www.youtube.com/watch?v=yvtQGEbZ6_c)
 
-![IMG_20241111_093108](https://github.com/user-attachments/assets/d07556bf-98fd-4b8a-a10a-a0638687308f)
+## Software Configuration
 
+You can use the **ESPHome** plugin in Home Assistant to create a new device and paste the provided YAML configuration. 
+If you prefer a standalone setup, you can configure the web server component for browser based control.
 
+1. **MQTT**: Uncomment the `mqtt:` block if using MQTT.
+2. **Home Assistant API**: Uncomment the `api:` block for Home Assistant discovery.
+3. **Web Interface**: Uncomment the `webserver:` block if a web interface is needed.
 
-If you don’t want to buy the adapter board, you can turn on the module by shorting these pads to DC-minus:
+## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
-![Screenshot 2024-10-18 164741](https://github.com/user-attachments/assets/edd97e21-da8d-49c3-851b-2305f1d71256)
 
-![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/8a0f7d83-c754-46e7-8dd0-eef3c1ae49cb)
+https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.9
 
-The "Hibernate" and "Wake-UP" Can-messages work just fine with these pads connected to DC-Neg.
+https://web.esphome.io/?dashboard_wizard to upload the .bin
+ 
 
-### To unlock the full 4kW of DC output, follow this guide:
 
-https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290
+### Example Screenshots
 
-# Hardware References:
+![Web-Surface Integration](https://github.com/user-attachments/assets/4e74206d-bf3e-473a-ab9f-b4b039914179)
 
-https://www.youtube.com/watch?v=yvtQGEbZ6_c
+![Screenshot 2024-11-14 153811](https://github.com/user-attachments/assets/4d047509-b9c0-49b8-b7c5-9a71261ee79a)
 
-https://www.youtube.com/watch?v=Qu5-XbeGiYY
 
-[ZL1RS Bob Sutton New Zealand - Huawei R4875G1 SMPSU.pdf](https://github.com/user-attachments/files/17571985/ZL1RS.Bob.Sutton.New.Zealand.-.Huawei.R4875G1.SMPSU.pdf)
+![Screenshot 2024-11-14 150637](https://github.com/user-attachments/assets/ff781577-ade7-4bd4-8a26-ba679e6a9398)
 
+![Screenshot 2024-11-14 150252](https://github.com/user-attachments/assets/fcf0bd69-1b4e-453c-a8c8-5b66df1f6714)
 
-The free opposing pair of contacts (of the three contacts in the center) are your CAN-BUS pins. CAN-High is on the bottom, and CAN-L is at the top:
 
-![can](https://github.com/user-attachments/assets/abf646de-7ed0-40bd-977f-927654330967)
 
-# Software:
+### MQTT Topics
+#### Sensors
+- `can-bus01/sensor/ac_power_in/state`
+- `can-bus01/sensor/dc_power_out/state`
+- `can-bus01/sensor/grid_frequency/state`
+- `can-bus01/sensor/input_current/state`
+- `can-bus01/sensor/output_voltage/state`
+- `can-bus01/sensor/output_temperature/state`
+- `can-bus01/sensor/output_current/state`
 
-You can use Home Assistant’s ESPHome plugin to add a new ESPHome device and insert the code from the attached YAML file, "CAN-R4875G1-ESP32.YAML" (copy and paste everything below "captive_portal:" into your new ESPHome device YAML).
-
-If you don’t need MQTT, comment out the "mqtt:" block.
-If you don’t need Home Assistant, comment out the "api:" block.
-
-If you just want to have a web page to set up your R4875G1, then comment out the api and the mqtt section, enter your wifi credentials and uncomment the "webserver:" section. You can compile and upload the bin without ever installing Homeassistant also: https://www.youtube.com/watch?v=BX6tDsux_X4
-
-If you just need the web interface and don't care about changing anything in the YAML file don't have or don't care about mqtt or Homeassistant, there is a .bin file that you can directly upload to your ESP32 board... instructions are provided in r4875g1-can-web.0.9 bin release info.txt
-
-
-This is how the web page looks like:
-
-![Screenshot 2024-11-04 194658](https://github.com/user-attachments/assets/7bb592bb-c210-440f-ad3e-b862299c11ee)
-
-![Screenshot 2024-11-07 133906](https://github.com/user-attachments/assets/fd3215de-3966-4222-b302-595a540ca88b)
-
-
-
-
-If you keep the "api:" block active, the device will be discovered by Home Assistant upon restart, appearing like this:
-
-![Screenshot 2024-11-05 095728](https://github.com/user-attachments/assets/0c11c5cd-dbff-4e06-8870-e32d41f5d8e9)
-
-![Screenshot 2024-11-05 095751](https://github.com/user-attachments/assets/42707df7-e443-449d-b715-8ab477cdaf76)
-
-
-
-So you have entities to read all values and set online and offline (fallback) voltages, trigger "Full Fan Speed"; "Auto Fan Speed"; "Hibernate"; "Wake" using HA/NodeRed automations.
-
-## MQTT Topics
-
-
-
-### Sensors
-- **AC Power In**  
-  - State Topic: `can-bus01/sensor/ac_power_in/state`
-
-- **DC Power Out**  
-  - State Topic: `can-bus01/sensor/dc_power_out/state`
-
-- **Grid Frequency**  
-  - State Topic: `can-bus01/sensor/grid_frequency/state`
-
-- **Input Current**  
-  - State Topic: `can-bus01/sensor/input_current/state`
-
-- **Output Voltage**  
-  - State Topic: `can-bus01/sensor/output_voltage/state`
-
-- **Set Max Output Current**  
-  - State Topic: `can-bus01/sensor/set_max_output_current/state`
-
-- **Input Grid Voltage**  
-  - State Topic: `can-bus01/sensor/input_grid_voltage/state`
-
-- **Output Temperature**  
-  - State Topic: `can-bus01/sensor/output_temperature/state`
-
-- **Output Current**  
-  - State Topic: `can-bus01/sensor/output_current/state`
-
-### Numbers
-- **CAN Voltage Set**  
-  - State Topic: `can-bus01/number/can_voltage_set/state`
-
-- **CAN Amp Set**  
-  - State Topic: `can-bus01/number/can_amp_set/state`
-
-- **Fallback Amp Set**  
-  - State Topic: `can-bus01/number/fallback_amp_set/state`
-
-- **Fallback Voltage Set**  
-  - State Topic: `can-bus01/number/fallback_voltage_set/state`
-
-### Buttons
-- **CAN ON Button**  
-  - State Topic: `can-bus01/button/can_on_button/state`  
-  - Command Topic: `can-bus01/button/can_on_button/command`
-
-- **CAN OFF Button**  
-  - State Topic: `can-bus01/button/can_off_button/state`  
-  - Command Topic: `can-bus01/button/can_off_button/command`
-
-- **Fan Full Speed Button**  
-  - State Topic: `can-bus01/button/fan_full_speed_button/state`  
-  - Command Topic: `can-bus01/button/fan_full_speed_button/command`
-
-- **Fan Auto Mode Button**  
-  - State Topic: `can-bus01/button/fan_auto_mode_button/state`  
-  - Command Topic: `can-bus01/button/fan_auto_mode_button/command`
-
-So you can read all data and hibernate/wake; set fan to auto/full speed using MQTT. 
-
-
-# Software references:
-
-[Protocol_R4875g.xlsx](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
-
-Adopted from: 
-
-https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1805865
-
-
-# More References:
-
-
-For more inspiration and lots of info and experimentation around these powerful "rectifiers".
-
-
-(Useful if you have a related rectifier and want to adapt my code (the other varieties like the R4850G and R4850G2 have slightly different CAN message IDs and factors.)
-
-https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/
-
-https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/
-
-https://diysolarforum.com/threads/diy-chargenectifier.56329/
-
-https://github.com/BotoX/huawei-r48xx-esp32
-
-https://github.com/craigpeacock/Huawei_R4850G2_CAN 
-
-https://github.com/haklein/r4850g2_arduino
-
-
-
-
-
-
+#### Commands
+- **wake-up**: `can-bus01/button/can_on_button/command`
+- **hibernate**: `can-bus01/button/can_off_button/command`
+- **fan auto**: `can-bus01/button/fan_auto_mode_button/command`
+- **fan full speed**: `can-bus01/button/fan_full_speed_button/command`
+
+## Additional Resources
+- [Huawei R4875G1 CAN Protocol](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
+- [Beyond Logic Review](https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/)
+- [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)
+- [DIY Solar Forum Discussion](https://diysolarforum.com/threads/diy-chargenectifier.56329/)
