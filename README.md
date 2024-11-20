@@ -198,7 +198,7 @@ This document outlines the MQTT sensor, number, and button configurations for th
 - **State Topic:** `r4875g1-can-web/button/fan_auto_mode_button/state`
 - **Command Topic:** `r4875g1-can-web/button/fan_auto_mode_button/command`
 
-## Text Sensors
+## Text Sensors, used to set values by mqtt/NodeRed
 
 ### CAN Voltage MQTT
 - **Name:** `CAN Voltage MQTT`
