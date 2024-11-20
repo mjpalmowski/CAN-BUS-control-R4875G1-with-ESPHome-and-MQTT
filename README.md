@@ -116,7 +116,7 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 
 
-# MQTT Configuration for ESPHome
+# MQTT Configuration
 
 ## Sensors
 
