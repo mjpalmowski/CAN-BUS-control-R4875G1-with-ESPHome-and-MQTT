@@ -198,6 +198,9 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ## Text Sensors, used to set values by mqtt/NodeRed
 
+![Screenshot 2024-11-20 140157](https://github.com/user-attachments/assets/25eee449-0177-4e5f-9a8c-a76bbffcef38)
+
+
 ### CAN Voltage MQTT
 - **Name:** `CAN Voltage MQTT`
 - **Topic:** `home/canbus/voltage_set`
