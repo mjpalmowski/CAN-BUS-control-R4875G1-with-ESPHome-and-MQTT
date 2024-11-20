@@ -179,24 +179,23 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ## Buttons
 
+![Screenshot 2024-11-20 144815](https://github.com/user-attachments/assets/bfa286e8-b760-467e-8e03-3064d890d0f9)
+
+
 ### CAN ON Button
 - **Name:** `001 CAN ON Button`
-- **State Topic:** `r4875g1-can-web/button/001_can_on_button/state`
 - **Command Topic:** `r4875g1-can-web/button/001_can_on_button/command`
 
 ### CAN OFF Button
 - **Name:** `002 CAN OFF Button`
-- **State Topic:** `r4875g1-can-web/button/002_can_off_button/state`
 - **Command Topic:** `r4875g1-can-web/button/002_can_off_button/command`
 
 ### Fan Full Speed Button
 - **Name:** `Fan Full Speed Button`
-- **State Topic:** `r4875g1-can-web/button/fan_full_speed_button/state`
 - **Command Topic:** `r4875g1-can-web/button/fan_full_speed_button/command`
 
 ### Fan Auto Mode Button
 - **Name:** `Fan Auto Mode Button`
-- **State Topic:** `r4875g1-can-web/button/fan_auto_mode_button/state`
 - **Command Topic:** `r4875g1-can-web/button/fan_auto_mode_button/command`
 
 ## Text Sensors, used to set values by mqtt/NodeRed
