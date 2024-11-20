@@ -156,7 +156,10 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 - **Name:** `09 Max Output DC Current`
 - **State Topic:** `r4875g1-can-web/sensor/09_max_output_dc_current/state`
 
-## Numbers
+## Numbers (report human readable value whenever the values are set) 
+
+![Screenshot 2024-11-20 140636](https://github.com/user-attachments/assets/6f592d96-79e6-4d91-bfcd-1ca8331c07e0)
+
 
 ### CAN Voltage Set
 - **Name:** `10 CAN Voltage Set`
