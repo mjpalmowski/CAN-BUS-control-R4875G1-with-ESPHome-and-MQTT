@@ -118,8 +118,6 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 # MQTT Configuration for ESPHome
 
-This document outlines the MQTT sensor, number, and button configurations for the ESPHome project.
-
 ## Sensors
 
 ### Input AC Power
