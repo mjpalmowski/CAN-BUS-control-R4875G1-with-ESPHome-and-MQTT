@@ -116,21 +116,106 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 
 
-### MQTT Topics
-#### Sensors
-- `can-bus01/sensor/ac_power_in/state`
-- `can-bus01/sensor/dc_power_out/state`
-- `can-bus01/sensor/grid_frequency/state`
-- `can-bus01/sensor/input_current/state`
-- `can-bus01/sensor/output_voltage/state`
-- `can-bus01/sensor/output_temperature/state`
-- `can-bus01/sensor/output_current/state`
+# MQTT Configuration for ESPHome
 
-#### Commands
-- **wake-up**: `can-bus01/button/can_on_button/command`
-- **hibernate**: `can-bus01/button/can_off_button/command`
-- **fan auto**: `can-bus01/button/fan_auto_mode_button/command`
-- **fan full speed**: `can-bus01/button/fan_full_speed_button/command`
+This document outlines the MQTT sensor, number, and button configurations for the ESPHome project.
+
+## Sensors
+
+### Input AC Power
+- **Name:** `01 Input AC Power`
+- **State Topic:** `r4875g1-can-web/sensor/01_input_ac_power/state`
+
+### Output DC Power
+- **Name:** `05 Output DC Power`
+- **State Topic:** `r4875g1-can-web/sensor/05_output_dc_power/state`
+
+### Input Grid AC Frequency
+- **Name:** `02 Input Grid AC Frequency`
+- **State Topic:** `r4875g1-can-web/sensor/02_input_grid_ac_frequency/state`
+
+### Input AC Current
+- **Name:** `03 Input AC Current`
+- **State Topic:** `r4875g1-can-web/sensor/03_input_ac_current/state`
+
+### Output DC Voltage
+- **Name:** `07 Output DC Voltage`
+- **State Topic:** `r4875g1-can-web/sensor/07_output_dc_voltage/state`
+
+### Input AC Grid Voltage
+- **Name:** `04 Input AC Grid Voltage`
+- **State Topic:** `r4875g1-can-web/sensor/04_input_ac_grid_voltage/state`
+
+### Output Temperature
+- **Name:** `08 Output Temperature`
+- **State Topic:** `r4875g1-can-web/sensor/08_output_temperature/state`
+
+### Output DC Current
+- **Name:** `06 Output DC Current`
+- **State Topic:** `r4875g1-can-web/sensor/06_output_dc_current/state`
+
+### Max Output DC Current
+- **Name:** `09 Max Output DC Current`
+- **State Topic:** `r4875g1-can-web/sensor/09_max_output_dc_current/state`
+
+## Numbers
+
+### CAN Voltage Set
+- **Name:** `10 CAN Voltage Set`
+- **State Topic:** `r4875g1-can-web/number/10_can_voltage_set/state`
+
+### Set Output DC Current
+- **Name:** `12 Set Output DC Current`
+- **State Topic:** `r4875g1-can-web/number/12_set_output_dc_current/state`
+
+### Set Fallback Output DC Current
+- **Name:** `13 Set Fallback Output DC Current`
+- **State Topic:** `r4875g1-can-web/number/13_set_fallback_output_dc_current/state`
+
+### Set Fallback Output DC Voltage
+- **Name:** `11 Set Fallback Output DC Voltage`
+- **State Topic:** `r4875g1-can-web/number/11_set_fallback_output_dc_voltage/state`
+
+## Buttons
+
+### CAN ON Button
+- **Name:** `001 CAN ON Button`
+- **State Topic:** `r4875g1-can-web/button/001_can_on_button/state`
+- **Command Topic:** `r4875g1-can-web/button/001_can_on_button/command`
+
+### CAN OFF Button
+- **Name:** `002 CAN OFF Button`
+- **State Topic:** `r4875g1-can-web/button/002_can_off_button/state`
+- **Command Topic:** `r4875g1-can-web/button/002_can_off_button/command`
+
+### Fan Full Speed Button
+- **Name:** `Fan Full Speed Button`
+- **State Topic:** `r4875g1-can-web/button/fan_full_speed_button/state`
+- **Command Topic:** `r4875g1-can-web/button/fan_full_speed_button/command`
+
+### Fan Auto Mode Button
+- **Name:** `Fan Auto Mode Button`
+- **State Topic:** `r4875g1-can-web/button/fan_auto_mode_button/state`
+- **Command Topic:** `r4875g1-can-web/button/fan_auto_mode_button/command`
+
+## Text Sensors
+
+### CAN Voltage MQTT
+- **Name:** `CAN Voltage MQTT`
+- **Topic:** `home/canbus/voltage_set`
+
+### CAN Amps MQTT
+- **Name:** `CAN Amps MQTT`
+- **Topic:** `home/canbus/amp_set`
+
+### Fallback Voltage MQTT
+- **Name:** `Fallback Voltage MQTT`
+- **Topic:** `home/canbus/fallback_voltage_set`
+
+### Fallback Amps MQTT
+- **Name:** `Fallback Amps MQTT`
+- **Topic:** `home/canbus/fallback_amp_set`
+
 
 ## Additional Resources
 - [Huawei R4875G1 CAN Protocol](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
