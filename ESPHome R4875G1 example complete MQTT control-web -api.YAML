@@ -1,0 +1,527 @@
+esphome:
+  name: "r4875g1-can-web"
+  friendly_name: "r4875g1-can-web"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+  level: INFO
+
+web_server:
+  version: 3
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
+
+ota:
+  - platform: esphome
+    password: "ec929410663572fa5a48ef35d80bd8b9"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "R4875G1 Fallback Hotspot"
+    password: '12345678'
+
+mqtt:
+   broker: !secret mqtt_host
+   username: !secret mqtt_username
+   password: !secret mqtt_password
+   id: mqtt_client
+
+
+
+captive_portal:
+
+
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO19
+    rx_pin: GPIO21
+    can_id: 0x108180FE
+    bit_rate: 125kbps
+    use_extended_id: True
+    on_frame:
+      - can_id: 0x1081407F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() >= 8) {
+                const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
+                const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
+                                       (static_cast<uint32_t>(x[5]) << 16) | 
+                                       (static_cast<uint32_t>(x[6]) << 8) | 
+                                       static_cast<uint32_t>(x[7]);
+
+                // Handle sensor publishing using a helper function
+                switch (byte_0) {
+                  case 0x01:
+                    switch (byte_1) {
+                      case 0x70: 
+                        id(ac_power_in_sensor).publish_state(value); 
+                        break;
+                      case 0x71: 
+                        id(grid_frequency_sensor).publish_state(value); 
+                        break;
+                      case 0x72: 
+                        id(input_current_sensor).publish_state(value); 
+                        break;
+                      case 0x73: 
+                        ESP_LOGI("can_bus]", "[o_k]");
+                        id(dc_power_out_sensor).publish_state(value);  
+                        break;
+                      case 0x75: 
+                        id(output_voltage_sensor).publish_state(value); 
+                        break;
+                      case 0x76: 
+                        id(set_max_output_current_sensor).publish_state(value); 
+                        break;
+                      case 0x78: 
+                        id(input_grid_voltage_sensor).publish_state(value); 
+                        break;
+                      case 0x7F: 
+                        id(output_temperature_sensor).publish_state(value); 
+                        break;
+                      case 0x81: 
+                        id(output_current_sensor).publish_state(value); 
+                        break;
+                    }
+                    break;
+                }
+              }
+
+
+# Define sensors to expose them via API
+
+substitutions:
+  multiplier_default: '0.0009765625' # 1/1024 conversion factor
+  multiplier_current: '0.05'          # 1/20 conversion factor
+
+sensor:
+  - platform: template
+    name: "01 Input AC Power"
+    id: ac_power_in_sensor
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "05 Output DC Power"
+    id: dc_power_out_sensor
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "02 Input Grid AC Frequency"
+    id: grid_frequency_sensor
+    unit_of_measurement: "Hz"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:transmission-tower-import"
+
+  - platform: template
+    name: "03 Input AC Current"
+    id: input_current_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:current-ac"
+
+  - platform: template
+    name: "07 Output DC Voltage"
+    id: output_voltage_sensor
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:current-dc"
+
+  - platform: template
+    name: "04 Input AC Grid Voltage"
+    id: input_grid_voltage_sensor
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:sine-wave"
+
+  - platform: template
+    name: "08 Output Temperature"
+    id: output_temperature_sensor
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:thermometer"
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(output_temperature_sensor).state > 90.0;'
+            then:
+              - canbus.send:
+                  use_extended_id: true
+                  can_id: 0x108080FE
+                  data: [1, 50, 0, 1, 0, 0, 0, 0]
+              - logger.log:
+                  level: INFO
+                  format: "Temperature exceeded 90°C. Sent CAN OFF message."
+
+  - platform: template
+    name: "06 Output DC Current"
+    id: output_current_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_default}
+    icon: "mdi:current-dc"
+
+  - platform: template
+    name: "09 Max Output DC Current"
+    id: set_max_output_current_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_current}
+    icon: "mdi:current-ac"
+
+
+# Number input for CAN Voltage
+number:
+  - platform: template
+    name: "10 CAN Voltage Set"
+    id: can_voltage_input
+    min_value: 49
+    max_value: 58
+    step: 0.1
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float voltage_value = id(can_voltage_input).state;
+            int scaled_value = (int)(voltage_value * 1020);
+            ESP_LOGI("custom", "Received voltage: %.1fV, Scaled value: %d", voltage_value, scaled_value);
+
+            uint8_t high_byte = (scaled_value >> 8) & 0xFF;
+            uint8_t low_byte = scaled_value & 0xFF;
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              int scaled_value = (int)(id(can_voltage_input).state * 1020);
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+
+  # Amp Setting
+  - platform: template
+    name: "12 Set Output DC Current"
+    id: can_amp_input
+    min_value: 1
+    max_value: 50  # Max value for the Amp input
+    step: 1  # 1 Amp steps
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float amp_value = id(can_amp_input).state;  // Get the current Amp value
+            int scaled_value = (int)(amp_value * 20);  // Scale the Amp value (Amp * 20)
+            ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
+
+            uint8_t high_byte = (scaled_value >> 8) & 0xFF;
+            uint8_t low_byte = scaled_value & 0xFF;
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+              can_data[0] = 0x01;  // First byte is always 0x01
+              can_data[1] = 0x03;  // Second byte is 0x03
+              int scaled_value = (int)(id(can_amp_input).state * 20);  // Scale the Amp value
+              can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+              can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              return can_data;
+  
+
+  # Fallback Amp Setting
+  - platform: template
+    name: "13 Set Fallback Output DC Current"
+    id: fallback_amp_input
+    min_value: 1
+    max_value: 50  # Adjust as needed
+    step: 1  # 1A steps
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
+            int fallback_scaled_value = (int)(fallback_amp_value * 20);  // Scale the Amp value (Amp * 20)
+            ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
+            
+            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
+            uint8_t low_byte = fallback_scaled_value & 0xFF;  // Get low byte
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+              can_data[0] = 0x01;  // First byte is always 0x01
+              can_data[1] = 0x04;  // Second byte is 0x04 for the Fallback Amps setting
+              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 20);  // Scale the Amp value
+              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+              can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              return can_data;
+
+  # Fallback Voltage Setting
+  - platform: template
+    name: "11 Set Fallback Output DC Voltage"
+    id: fallback_voltage_input
+    min_value: 49
+    max_value: 58  # Adjust as needed for your voltage range
+    step: 0.1  # 0.1V steps
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:sine-wave"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float fallback_voltage_value = id(fallback_voltage_input).state;  // Get the fallback voltage value
+            int fallback_scaled_value = (int)(fallback_voltage_value * 1020);  // Scale the voltage value (voltage * 1020)
+            ESP_LOGI("custom", "Fallback Voltage: %.1fV, Scaled value: %d", fallback_voltage_value, fallback_scaled_value);
+            
+            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
+            uint8_t low_byte = fallback_scaled_value & 0xFF;  // Get low byte
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+              can_data[0] = 0x01;  // First byte is always 0x01
+              can_data[1] = 0x01;  // Second byte is 0x01 for the Fallback Voltage setting
+              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * 1020);  // Scale the voltage value
+              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+              can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              return can_data;
+
+
+
+time:
+  - platform: sntp
+    on_time:
+      - seconds: /5
+        then:
+          - canbus.send:
+              use_extended_id: true
+              can_id: 0x108040FE
+              data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+      - seconds: /30  # This will trigger every 30 seconds for voltage
+        then:
+          - canbus.send:
+              use_extended_id: true
+              can_id: 0x108180FE
+              data: !lambda |-
+                std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+                can_data[0] = 0x01;  // First byte is always 0x01
+                int scaled_value = (int)(id(can_voltage_input).state * 1024);  // Scale the voltage value
+                can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+                can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+                return can_data;
+
+      - seconds: /30  # This will trigger every 30 seconds for Amp setting
+        then:
+          - canbus.send:
+              use_extended_id: true
+              can_id: 0x108180FE
+              data: !lambda |-
+                std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+                can_data[0] = 0x01;  // First byte is always 0x01
+                can_data[1] = 0x03;  // Second byte is 0x03
+                int scaled_value = (int)(id(can_amp_input).state * 20);  // Scale the Amp value
+                can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+                can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+                return can_data;
+
+# Define a button component for turning ON
+button:
+  - platform: template
+    name: "001 CAN ON Button"
+    icon: "mdi:album"
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "CAN ON Button pressed, sending message: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for turning OFF
+  - platform: template
+    name: "002 CAN OFF Button"
+    icon: "mdi:album"
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "CAN OFF Button pressed, sending message: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for setting the fan to full speed
+  - platform: template
+    name: "Fan Full Speed Button"
+    icon: "mdi:album"
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "Fan Full Speed Button pressed, sending message: [0x01, 0x34, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for setting the fan to auto mode
+  - platform: template
+    name: "Fan Auto Mode Button"
+    icon: "mdi:album"
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "Fan Auto Mode Button pressed, sending message: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+
+
+# Subscribe to MQTT topic to update CAN voltage
+text_sensor:
+  - platform: mqtt_subscribe
+    name: "CAN Voltage MQTT"
+    id: mqtt_voltage_input
+    topic: "home/canbus/voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_voltage = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
+              id(can_voltage_input).publish_state(mqtt_voltage);
+              ESP_LOGI("custom", "MQTT Voltage Set to: %.1fV", mqtt_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
+            }
+    # Subscribe to MQTT topic to update CAN amps
+  - platform: mqtt_subscribe
+    name: "CAN Amps MQTT"
+    id: mqtt_amp_input
+    topic: "home/canbus/amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_amp = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (mqtt_amp >= 1.0 && mqtt_amp <= 50.0) {
+              id(can_amp_input).publish_state(mqtt_amp);
+              ESP_LOGI("custom", "MQTT Amp Set to: %.1fA", mqtt_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
+            }
+    # Subscribe to MQTT topic to update Fallback Voltage
+  - platform: mqtt_subscribe
+    name: "Fallback Voltage MQTT"
+    id: mqtt_fallback_voltage
+    topic: "home/canbus/fallback_voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_voltage = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
+              id(fallback_voltage_input).publish_state(fallback_voltage);
+              ESP_LOGI("custom", "Fallback Voltage Set to: %.1fV", fallback_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
+            }
+
+ # Subscribe to MQTT topic to update Fallback Amps
+  - platform: mqtt_subscribe
+    name: "Fallback Amps MQTT"
+    id: mqtt_fallback_amp
+    topic: "home/canbus/fallback_amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_amp = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (fallback_amp >= 1.0 && fallback_amp <= 50.0) {
+              id(fallback_amp_input).publish_state(fallback_amp);
+              ESP_LOGI("custom", "Fallback Amps Set to: %.1fA", fallback_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
+            } 
