@@ -354,6 +354,8 @@ number:
 ################################################################################################################################  
  # this block can be enabled to set up a simple time for dayly charging, this is useful if used with the web_server component
  # the function can be disabled on the web interface by simply entering identical ON and OFF times.
+
+  # Inputs for scheduled time 1
   - platform: template
     name: "Switch ON Hour"
     id: msg_a_hour
@@ -363,9 +365,15 @@ number:
     initial_value: 0
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:power"
-    
+    on_value:
+      then:
+        - lambda: |-
+            ESP_LOGI("Switch ON Hour", "New value: %d", (int)x);
+            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+            }
 
   - platform: template
     name: "Switch ON Minute"
@@ -376,10 +384,17 @@ number:
     initial_value: 0
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:power"
+    on_value:
+      then:
+        - lambda: |-
+            ESP_LOGI("Switch ON Minute", "New value: %d", (int)x);
+            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+            }
 
-# Inputs for scheduled time 2 
+  # Inputs for scheduled time 2
   - platform: template
     name: "Switch OFF Hour"
     id: msg_b_hour
@@ -389,8 +404,15 @@ number:
     initial_value: 0
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:power"
+    on_value:
+      then:
+        - lambda: |-
+            ESP_LOGI("Switch OFF Hour", "New value: %d", (int)x);
+            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+            }
 
   - platform: template
     name: "Switch OFF Minute"
@@ -401,8 +423,17 @@ number:
     initial_value: 0
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:power"
+    on_value:
+      then:
+        - lambda: |-
+            ESP_LOGI("Switch OFF Minute", "New value: %d", (int)x);
+            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+            }
+
+
 
 interval:
   - interval: 1min
