@@ -99,6 +99,8 @@ If you prefer a standalone setup, you can configure the web server component for
 
 https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.9
 
+https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.91
+
 https://web.esphome.io/?dashboard_wizard to upload the .bin
  
 
