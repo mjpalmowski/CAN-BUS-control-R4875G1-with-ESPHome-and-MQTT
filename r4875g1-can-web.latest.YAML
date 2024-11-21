@@ -9,22 +9,24 @@ esp32:
 
 logger:
   level: INFO
-
+##################################################################################################################
 # Uncomment this webserver block if you want to control the device via webpage
 web_server:
   version: 3
-
+##################################################################################################################
 ## Enable Home Assistant API if you are using Home Assistant
 #api:
 #  encryption:
 #    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
+
+##################################################################################################################
 ## Enable the mqtt block if you are using NodeRed also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt 
 #mqtt:
 #   broker: !secret mqtt_host
 #   username: !secret mqtt_username
 #   password: !secret mqtt_password
 #   id: mqtt_client
-
+##################################################################################################################
 ota:
   - platform: esphome
     password: "ec929410663572fa5a48ef35d80bd8b9"
@@ -351,13 +353,14 @@ number:
               return can_data;
 ################################################################################################################################  
  # this block can be enabled to set up a simple time for dayly charging, this is useful if used with the web_server component
+ # the function can be disabled on the web interface by simply entering identical ON and OFF times.
   - platform: template
     name: "Switch ON Hour"
     id: msg_a_hour
     min_value: 0
     max_value: 23
     step: 1
-    initial_value: 23
+    initial_value: 0
     optimistic: true
     mode: BOX
     restore_value: True
@@ -370,20 +373,20 @@ number:
     min_value: 0
     max_value: 59
     step: 1
-    initial_value: 30
+    initial_value: 0
     optimistic: true
     mode: BOX
     restore_value: True
     icon: "mdi:power"
 
-# Inputs for scheduled time 2 (05:30)
+# Inputs for scheduled time 2 
   - platform: template
     name: "Switch OFF Hour"
     id: msg_b_hour
     min_value: 0
     max_value: 23
     step: 1
-    initial_value: 5
+    initial_value: 0
     optimistic: true
     mode: BOX
     restore_value: True
@@ -395,7 +398,7 @@ number:
     min_value: 0
     max_value: 59
     step: 1
-    initial_value: 30
+    initial_value: 0
     optimistic: true
     mode: BOX
     restore_value: True
@@ -414,7 +417,10 @@ interval:
           condition:
             lambda: |-
               auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_a_hour).state) && (now.minute == (int)id(msg_a_minute).state);
+              return (now.hour == (int)id(msg_a_hour).state) && 
+                     (now.minute == (int)id(msg_a_minute).state) &&
+                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
+                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
           then:
             - lambda: |-
                 ESP_LOGI("custom", "Sending CAN Message ON at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
@@ -428,7 +434,10 @@ interval:
           condition:
             lambda: |-
               auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_b_hour).state) && (now.minute == (int)id(msg_b_minute).state);
+              return (now.hour == (int)id(msg_b_hour).state) && 
+                     (now.minute == (int)id(msg_b_minute).state) &&
+                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
+                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
           then:
             - lambda: |-
                 ESP_LOGI("custom", "Sending CAN Message OFF at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
@@ -436,6 +445,7 @@ interval:
                 use_extended_id: true
                 can_id: 0x108080FE
                 data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
 ####################################################################################################################################################
 time:
   - platform: sntp
