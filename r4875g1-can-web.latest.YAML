@@ -14,13 +14,13 @@ logger:
 web_server:
   version: 3
 ##################################################################################################################
-## Enable Home Assistant API if you are using Home Assistant
+## If you are using Home Assistant uncomment this section
 #api:
 #  encryption:
 #    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
 
 ##################################################################################################################
-## Enable the mqtt block if you are using NodeRed also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt 
+## uncomment this block to enable mqtt if you are using NodeRed or other MQTT software !also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt! 
 #mqtt:
 #   broker: !secret mqtt_host
 #   username: !secret mqtt_username
@@ -104,7 +104,7 @@ canbus:
               }
 
 
-# Define sensors to expose them via API
+# Define sensors
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
@@ -208,6 +208,33 @@ sensor:
 
 # Number input for CAN Voltage
 number:
+  # Number inputs for setting ON and OFF voltage thresholds
+  - platform: template
+    name: "Auto-ON if Output DC below:"
+    id: can_on_voltage_threshold
+    unit_of_measurement: "V"
+    min_value: 0.0
+    max_value: 48.9
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    initial_value: 0.0
+    step: 0.1
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "Auto-OFF if Output DC above:"
+    id: can_off_voltage_threshold
+    unit_of_measurement: "V"
+    min_value: 51.0
+    max_value: 58.0
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    initial_value: 58.0
+    step: 0.1
+    icon: "mdi:flash"
+
   - platform: template
     name: "10 CAN Voltage Set"
     id: can_voltage_input
@@ -477,6 +504,44 @@ interval:
                 can_id: 0x108080FE
                 data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
 
+# low voltage-wake and high-voltage-hibernate function
+  - interval: 30s
+    then:
+      - lambda: |-
+          float output_voltage = id(output_voltage_sensor).state;
+          float on_threshold = id(can_on_voltage_threshold).state;
+          float off_threshold = id(can_off_voltage_threshold).state;
+
+          if (output_voltage <= on_threshold) {
+            ESP_LOGI("custom", "Voltage below ON threshold. Sending CAN ON message.");
+          } else if (output_voltage >= off_threshold) {
+            ESP_LOGI("custom", "Voltage above OFF threshold. Sending CAN OFF message.");          
+          }
+
+      # Send CAN ON message
+      - if:
+          condition:
+            lambda: |-
+              return id(output_voltage_sensor).state <= id(can_on_voltage_threshold).state;
+          then:
+            - canbus.send:
+                use_extended_id: true
+                can_id: 0x108080FE
+                data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+      # Send CAN OFF message
+      - if:
+          condition:
+            lambda: |-
+              return id(output_voltage_sensor).state >= id(can_off_voltage_threshold).state;
+          then:
+            - canbus.send:
+                use_extended_id: true
+                can_id: 0x108080FE
+                data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+
+
 ####################################################################################################################################################
 time:
   - platform: sntp
@@ -570,7 +635,7 @@ button:
             can_id: 0x108080FE
             data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 ###################################################################################################################################
-#This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
+##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
 ## Subscribe to MQTT topic to update CAN voltage
 # text_sensor:
 #   - platform: mqtt_subscribe
