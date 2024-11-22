@@ -77,7 +77,7 @@ Top side view, with CAN-L indicated. CAN-H is at the same position on the bottom
 
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
 
-Bottom Side view (Details in the "YouTube Hardware Overview" link blow)
+Bottom Side view (Details in the "YouTube Hardware Overview" link below)
 
 
 
