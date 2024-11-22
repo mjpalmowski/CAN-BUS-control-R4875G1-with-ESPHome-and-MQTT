@@ -73,7 +73,7 @@ For those not using the adapter board, the module can be manually turned on by s
 
 ![Screenshot 2024-11-14 111652](https://github.com/user-attachments/assets/7a3fbde8-20d1-4139-a639-aaebd0c17b3e)
 
-Top side view
+Top side view, with CAN-L indicated. CAN-H is at the same position on the bottom side. 
 
 ![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
 
