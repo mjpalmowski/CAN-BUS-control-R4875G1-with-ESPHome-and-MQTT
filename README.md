@@ -27,7 +27,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **CAN Amp Set**
 - **Fallback Amp Set**
 - **Fallback Voltage Set**
-- **Charge Timer**
+- **Simple Dayly Charge Timer**
 - **LOW and HIGH Voltage Set for auto Wake/Hibernate**
 
 ### Control Buttons
