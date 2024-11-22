@@ -378,10 +378,10 @@ number:
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
-################################################################################################################################  
- # this block can be enabled to set up a simple time for dayly charging, this is useful if used with the web_server component
- # the function can be disabled on the web interface by simply entering identical ON and OFF times.
 
+################################################################################################################################  
+ # this block can be enabled to set up a simple time for daily charging, this is useful if used with the web_server component
+ # the function can be disabled on the web interface by simply entering identical ON and OFF times.
   # Inputs for scheduled time 1
   - platform: template
     name: "Switch ON Hour"
