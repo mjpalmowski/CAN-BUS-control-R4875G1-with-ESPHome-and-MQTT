@@ -9,24 +9,15 @@ esp32:
 
 logger:
   level: INFO
-##################################################################################################################
-# Uncomment this webserver block if you want to control the device via webpage
+
 web_server:
   version: 3
-##################################################################################################################
-## If you are using Home Assistant uncomment this section
-#api:
-#  encryption:
-#    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
 
-##################################################################################################################
-## uncomment this block to enable mqtt if you are using NodeRed or other MQTT software !also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt! 
-#mqtt:
-#   broker: !secret mqtt_host
-#   username: !secret mqtt_username
-#   password: !secret mqtt_password
-#   id: mqtt_client
-##################################################################################################################
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
+
 ota:
   - platform: esphome
     password: "ec929410663572fa5a48ef35d80bd8b9"
@@ -36,11 +27,17 @@ wifi:
   password: !secret wifi_password
 
 
-
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "R4875G1 Fallback Hotspot"
     password: '12345678'
+
+mqtt:
+   broker: !secret mqtt_host
+   username: !secret mqtt_username
+   password: !secret mqtt_password
+   id: mqtt_client
+
 
 
 captive_portal:
@@ -104,7 +101,7 @@ canbus:
               }
 
 
-# Define sensors
+# Define sensors to expose them via API
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
@@ -208,33 +205,6 @@ sensor:
 
 # Number input for CAN Voltage
 number:
-  # Number inputs for setting ON and OFF voltage thresholds
-  - platform: template
-    name: "Auto-ON if Output DC below:"
-    id: can_on_voltage_threshold
-    unit_of_measurement: "V"
-    min_value: 0.0
-    max_value: 48.9
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    initial_value: 0.0
-    step: 0.1
-    icon: "mdi:flash"
-
-  - platform: template
-    name: "Auto-OFF if Output DC above:"
-    id: can_off_voltage_threshold
-    unit_of_measurement: "V"
-    min_value: 51.0
-    max_value: 58.0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    initial_value: 58.0
-    step: 0.1
-    icon: "mdi:flash"
-
   - platform: template
     name: "10 CAN Voltage Set"
     id: can_voltage_input
@@ -379,174 +349,10 @@ number:
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
 
-################################################################################################################################  
- # this block can be enabled to set up a simple time for daily charging, this is useful if used with the web_server component
- # the function can be disabled on the web interface by simply entering identical ON and OFF times.
-  # Inputs for scheduled time 1
-  - platform: template
-    name: "Switch ON Hour"
-    id: msg_a_hour
-    min_value: 0
-    max_value: 23
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch ON Hour", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
-
-  - platform: template
-    name: "Switch ON Minute"
-    id: msg_a_minute
-    min_value: 0
-    max_value: 59
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch ON Minute", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
-
-  # Inputs for scheduled time 2
-  - platform: template
-    name: "Switch OFF Hour"
-    id: msg_b_hour
-    min_value: 0
-    max_value: 23
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch OFF Hour", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
-
-  - platform: template
-    name: "Switch OFF Minute"
-    id: msg_b_minute
-    min_value: 0
-    max_value: 59
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch OFF Minute", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
 
 
-
-interval:
-  - interval: 1min
-    then:
-      # Log current time every minute
-      - lambda: |-
-          auto now = id(sntp_time).now();
-          ESP_LOGI("custom", "Current time: %02d:%02d:%02d", now.hour, now.minute, now.second);
-
-      # Check Message A Time and send CAN message
-      - if:
-          condition:
-            lambda: |-
-              auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_a_hour).state) && 
-                     (now.minute == (int)id(msg_a_minute).state) &&
-                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
-                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
-          then:
-            - lambda: |-
-                ESP_LOGI("custom", "Sending CAN Message ON at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-      # Check Message B Time and send CAN message
-      - if:
-          condition:
-            lambda: |-
-              auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_b_hour).state) && 
-                     (now.minute == (int)id(msg_b_minute).state) &&
-                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
-                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
-          then:
-            - lambda: |-
-                ESP_LOGI("custom", "Sending CAN Message OFF at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
-
-# low voltage-wake and high-voltage-hibernate function
-  - interval: 30s
-    then:
-      - lambda: |-
-          float output_voltage = id(output_voltage_sensor).state;
-          float on_threshold = id(can_on_voltage_threshold).state;
-          float off_threshold = id(can_off_voltage_threshold).state;
-
-          if (output_voltage <= on_threshold) {
-            ESP_LOGI("custom", "Voltage below ON threshold. Sending CAN ON message.");
-          } else if (output_voltage >= off_threshold) {
-            ESP_LOGI("custom", "Voltage above OFF threshold. Sending CAN OFF message.");          
-          }
-
-      # Send CAN ON message
-      - if:
-          condition:
-            lambda: |-
-              return id(output_voltage_sensor).state <= id(can_on_voltage_threshold).state;
-          then:
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-      # Send CAN OFF message
-      - if:
-          condition:
-            lambda: |-
-              return id(output_voltage_sensor).state >= id(can_off_voltage_threshold).state;
-          then:
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
-
-
-
-####################################################################################################################################################
 time:
   - platform: sntp
-    id: sntp_time
-    timezone: "Europe/London"  # Set your "TZ Identifier" timezone here find yours here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
     on_time:
       - seconds: /5
         then:
@@ -586,7 +392,7 @@ time:
 button:
   - platform: template
     name: "001 CAN ON Button"
-    icon: "mdi:button"
+    icon: "mdi:album"
     on_press:
       then:
         - lambda: |-
@@ -599,7 +405,7 @@ button:
 # Define a button component for turning OFF
   - platform: template
     name: "002 CAN OFF Button"
-    icon: "mdi:button"
+    icon: "mdi:album"
     on_press:
       then:
         - lambda: |-
@@ -612,7 +418,7 @@ button:
 # Define a button component for setting the fan to full speed
   - platform: template
     name: "Fan Full Speed Button"
-    icon: "mdi:button"
+    icon: "mdi:album"
     on_press:
       then:
         - lambda: |-
@@ -625,7 +431,7 @@ button:
 # Define a button component for setting the fan to auto mode
   - platform: template
     name: "Fan Auto Mode Button"
-    icon: "mdi:button"
+    icon: "mdi:album"
     on_press:
       then:
         - lambda: |-
@@ -634,88 +440,88 @@ button:
             use_extended_id: true
             can_id: 0x108080FE
             data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-###################################################################################################################################
-##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
-## Subscribe to MQTT topic to update CAN voltage
-# text_sensor:
-#   - platform: mqtt_subscribe
-#     name: "CAN Voltage MQTT"
-#     id: mqtt_voltage_input
-#     topic: "home/canbus/voltage_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float mqtt_voltage = atof(x.c_str());
-            
-#             // Update the number input with the new value
-#             if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
-#               id(can_voltage_input).publish_state(mqtt_voltage);
-#               ESP_LOGI("custom", "MQTT Voltage Set to: %.1fV", mqtt_voltage);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
-#             }
-#     # Subscribe to MQTT topic to update CAN amps
-#   - platform: mqtt_subscribe
-#     name: "CAN Amps MQTT"
-#     id: mqtt_amp_input
-#     topic: "home/canbus/amp_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float mqtt_amp = atof(x.c_str());
-            
-#             // Update the number input with the new value
-#             if (mqtt_amp >= 1.0 && mqtt_amp <= 50.0) {
-#               id(can_amp_input).publish_state(mqtt_amp);
-#               ESP_LOGI("custom", "MQTT Amp Set to: %.1fA", mqtt_amp);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
-#             }
-#     # Subscribe to MQTT topic to update Fallback Voltage
-#   - platform: mqtt_subscribe
-#     name: "Fallback Voltage MQTT"
-#     id: mqtt_fallback_voltage
-#     topic: "home/canbus/fallback_voltage_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float fallback_voltage = atof(x.c_str());
-            
-#             // Update the number input with the new value
-#             if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
-#               id(fallback_voltage_input).publish_state(fallback_voltage);
-#               ESP_LOGI("custom", "Fallback Voltage Set to: %.1fV", fallback_voltage);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
-#             }
 
-#  # Subscribe to MQTT topic to update Fallback Amps
-#   - platform: mqtt_subscribe
-#     name: "Fallback Amps MQTT"
-#     id: mqtt_fallback_amp
-#     topic: "home/canbus/fallback_amp_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float fallback_amp = atof(x.c_str());
+
+
+# Subscribe to MQTT topic to update CAN voltage
+text_sensor:
+  - platform: mqtt_subscribe
+    name: "CAN Voltage MQTT"
+    id: mqtt_voltage_input
+    topic: "home/canbus/voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_voltage = atof(x.c_str());
             
-#             // Update the number input with the new value
-#             if (fallback_amp >= 1.0 && fallback_amp <= 50.0) {
-#               id(fallback_amp_input).publish_state(fallback_amp);
-#               ESP_LOGI("custom", "Fallback Amps Set to: %.1fA", fallback_amp);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
-#             } 
-###############################################################################################################################
+            // Update the number input with the new value
+            if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
+              id(can_voltage_input).publish_state(mqtt_voltage);
+              ESP_LOGI("custom", "MQTT Voltage Set to: %.1fV", mqtt_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
+            }
+    # Subscribe to MQTT topic to update CAN amps
+  - platform: mqtt_subscribe
+    name: "CAN Amps MQTT"
+    id: mqtt_amp_input
+    topic: "home/canbus/amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_amp = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (mqtt_amp >= 1.0 && mqtt_amp <= 50.0) {
+              id(can_amp_input).publish_state(mqtt_amp);
+              ESP_LOGI("custom", "MQTT Amp Set to: %.1fA", mqtt_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
+            }
+    # Subscribe to MQTT topic to update Fallback Voltage
+  - platform: mqtt_subscribe
+    name: "Fallback Voltage MQTT"
+    id: mqtt_fallback_voltage
+    topic: "home/canbus/fallback_voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_voltage = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
+              id(fallback_voltage_input).publish_state(fallback_voltage);
+              ESP_LOGI("custom", "Fallback Voltage Set to: %.1fV", fallback_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
+            }
+
+ # Subscribe to MQTT topic to update Fallback Amps
+  - platform: mqtt_subscribe
+    name: "Fallback Amps MQTT"
+    id: mqtt_fallback_amp
+    topic: "home/canbus/fallback_amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_amp = atof(x.c_str());
+            
+            // Update the number input with the new value
+            if (fallback_amp >= 1.0 && fallback_amp <= 50.0) {
+              id(fallback_amp_input).publish_state(fallback_amp);
+              ESP_LOGI("custom", "Fallback Amps Set to: %.1fA", fallback_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
+            } 
