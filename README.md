@@ -230,3 +230,5 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 - [Beyond Logic Review](https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/)
 - [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)
 - [DIY Solar Forum Discussion](https://diysolarforum.com/threads/diy-chargenectifier.56329/)
+- [R4875G5 Rectifier User Manual V2.3.pdf](https://github.com/user-attachments/files/17949610/R4875G5.Rectifier.User.Manual.V2.3.pdf)
+
