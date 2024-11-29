@@ -116,6 +116,8 @@ https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/rel
 https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.91
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
+
+- please note that the Amp settings using these pre-compiled files work only if pin9 and pin10 on the R4875G are NOT connected to each other. 
  
 
 
