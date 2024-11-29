@@ -88,6 +88,8 @@ Bottom Side view (Details in the "YouTube Hardware Overview" link below)
 
 ### Important Detail about the Edge Connector/Pins
 
+![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
+
 Connect the following pins together
 1,5
 
@@ -105,7 +107,7 @@ please adjust here in the YAML code accordingly:
 <img width="1088" alt="Screenshot 2024-11-29 154336" src="https://github.com/user-attachments/assets/c712da96-e6ad-499c-9828-dc9fd6dcd715">
 
 
-![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
+
 
 
 
