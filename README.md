@@ -88,8 +88,9 @@ Connect the following Pins to DC- (Pin 1):
 Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
 9,10 
 
-If pin 9 and 10 are not connected together the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
-If pins 9 and 10 are connected together the CAN message for setting "Current" has a scaling factor of `* 30` and the 4875G can be stet to a max of 75A.
+- If pin 9 and 10 are not connected together the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
+  
+- If pins 9 and 10 are connected together the CAN message for setting "Current" has a scaling factor of `* 30` and the 4875G can be stet to a max of 75A.
 
 please adjust here in the YAML code accordingly:
 
