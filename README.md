@@ -71,21 +71,6 @@ To connect, ensure the TX pin from the ESP32 is connected to the transceiver's T
 For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
 
 
-![Screenshot 2024-11-14 111652](https://github.com/user-attachments/assets/7a3fbde8-20d1-4139-a639-aaebd0c17b3e)
-
-Top side view, with CAN-L indicated. CAN-H is at the same position on the bottom side. 
-
-![Screenshot 2024-10-18 165143](https://github.com/user-attachments/assets/ba84a6bc-31b6-4bc0-912d-8995dfcbe027)
-
-Bottom Side view (Details in the "YouTube Hardware Overview" link below)
-
-
-
-### Hardware References
-- [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
-- [YouTube Hardware Overview](https://www.youtube.com/watch?v=yvtQGEbZ6_c)
-
-
 ### Important Detail about the Edge Connector/Pins
 
 ![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
@@ -107,7 +92,8 @@ please adjust here in the YAML code accordingly:
 <img width="1088" alt="Screenshot 2024-11-29 154336" src="https://github.com/user-attachments/assets/c712da96-e6ad-499c-9828-dc9fd6dcd715">
 
 
-
+### Hardware Reference:
+- [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
 
 
 
