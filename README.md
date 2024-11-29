@@ -81,7 +81,7 @@ Connect the following pins together
 Connect the following Pins to DC- (Pin 1):
 11,12
 
-Connect the folowing pins together:
+Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
 9,10 
 
 If pin 9 and 10 are not connected together the CAN message for setting "Current" has a factor of `* 20` and the R4875G can only be set to a maximum of 50A.
