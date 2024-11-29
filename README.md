@@ -78,7 +78,7 @@ For those not using the adapter board, the module can be manually turned on by s
 Connect the following pins together
 1,5
 
-Connect the following Pins to DC-:
+Connect the following Pins to DC- (Pin 1):
 11,12
 
 Connect the folowing pins together:
