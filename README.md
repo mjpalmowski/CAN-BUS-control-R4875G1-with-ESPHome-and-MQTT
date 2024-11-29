@@ -85,6 +85,30 @@ Bottom Side view (Details in the "YouTube Hardware Overview" link below)
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
 - [YouTube Hardware Overview](https://www.youtube.com/watch?v=yvtQGEbZ6_c)
 
+
+### Important Detail about the Edge Connector/Pins
+
+Connect the following pins together
+1,5
+
+Connect the following Pins to DC Ground:
+11,12
+
+Connect the folowing pins together:
+9,10 
+
+if pin 9 and 10 are not connected together the CAN message for setting "Current" has a factor of 20 and the R4875G can only be set to a maximum of 50A.
+if pins 9 and 10 are connected together the CAN message ofr setting "Current" has a factor of 30 and the 4875G can be stet to a max of 75A.
+
+please adjust here in the YAML code accordingly:
+
+<img width="1088" alt="Screenshot 2024-11-29 154336" src="https://github.com/user-attachments/assets/c712da96-e6ad-499c-9828-dc9fd6dcd715">
+
+
+![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
+
+
+
 ## Software Configuration
 
 You can use the **ESPHome** plugin in Home Assistant to create a new device and paste the provided YAML configuration. 
