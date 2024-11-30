@@ -50,7 +50,7 @@ canbus:
   - platform: esp32_can
     tx_pin: GPIO19
     rx_pin: GPIO21
-    can_id: 0x108180FE
+    can_id: 0xE5F32E5
     bit_rate: 125kbps
     use_extended_id: True
     on_frame:
