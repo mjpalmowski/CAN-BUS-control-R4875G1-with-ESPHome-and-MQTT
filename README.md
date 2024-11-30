@@ -97,7 +97,7 @@ here:
 
 <img width="1088" alt="Screenshot 2024-11-29 154336" src="https://github.com/user-attachments/assets/c712da96-e6ad-499c-9828-dc9fd6dcd715">
 
-and here (use 0,06666 instead of 0.05: 
+and here (use 0,06666 instead of 0.05): 
 
 <img width="434" alt="Screenshot 2024-11-30 085217" src="https://github.com/user-attachments/assets/3cfe67d4-8377-4913-a433-c30fc00e7a20">
 
