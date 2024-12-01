@@ -461,7 +461,7 @@ time:
         then:
           - canbus.send:
               use_extended_id: true
-              can_id: 0x108240FE
+              can_id: 0x108040FE
               data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
       - seconds: /30  # This will trigger every 30 seconds for voltage
