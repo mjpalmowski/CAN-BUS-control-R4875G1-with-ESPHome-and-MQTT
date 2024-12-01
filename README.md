@@ -102,9 +102,7 @@ here:
 
 # -----------------------------------------
 
-## and here (use 0,06666 instead of 0.05):
-
-# ----------------------------------------
+### and here (use 0,06666 instead of 0.05):
 
 <img width="434" alt="Screenshot 2024-11-30 085217" src="https://github.com/user-attachments/assets/3cfe67d4-8377-4913-a433-c30fc00e7a20">
 
