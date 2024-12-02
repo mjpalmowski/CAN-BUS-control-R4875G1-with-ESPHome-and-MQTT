@@ -2,6 +2,9 @@ esphome:
   name: "r4875g1-can-web-ha-mqtt"
   friendly_name: "r4875g1-can-web-ha-mqtt"
 
+esphome:
+  name: can-bus02
+  friendly_name: can-bus02
 esp32:
   board: esp32dev
   framework:
@@ -17,7 +20,7 @@ web_server:
 ## If you are using Home Assistant uncomment this section
 #api:
 #  encryption:
-#    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
+#    key: "4taaK4Kn+NZNAyA8/RM+YaFkwiyy/gTorr4XlwfThQE="
 
 ##################################################################################################################
 ## uncomment this block to enable mqtt if you are using NodeRed or other MQTT software !also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt! 
@@ -29,7 +32,7 @@ web_server:
 ##################################################################################################################
 ota:
   - platform: esphome
-    password: "ec929410663572fa5a48ef35d80bd8b9"
+    password: "f8ab526ee137e5bef0fd65e50a223861"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -368,173 +371,87 @@ number:
               return can_data;
 
 ################################################################################################################################  
- # this block can be enabled to set up a simple time for daily charging, this is useful if used with the web_server component
- # the function can be disabled on the web interface by simply entering identical ON and OFF times.
-  # Inputs for scheduled time 1
-  - platform: template
-    name: "Switch ON Hour"
-    id: msg_a_hour
-    min_value: 0
-    max_value: 23
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch ON Hour", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
+#  # this block can be enabled to set up a simple time for daily charging, this is useful if used with the web_server component
+#  # the function can be disabled on the web interface by simply entering identical ON and OFF times.
+#   # Inputs for scheduled time 1
+#   - platform: template
+#     name: "Switch ON Hour"
+#     id: msg_a_hour
+#     min_value: 0
+#     max_value: 23
+#     step: 1
+#     initial_value: 0
+#     optimistic: true
+#     mode: BOX
+#     restore_value: true
+#     icon: "mdi:power"
+#     on_value:
+#       then:
+#         - lambda: |-
+#             ESP_LOGI("Switch ON Hour", "New value: %d", (int)x);
+#             if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+#               ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+#             }
 
-  - platform: template
-    name: "Switch ON Minute"
-    id: msg_a_minute
-    min_value: 0
-    max_value: 59
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch ON Minute", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
+#   - platform: template
+#     name: "Switch ON Minute"
+#     id: msg_a_minute
+#     min_value: 0
+#     max_value: 59
+#     step: 1
+#     initial_value: 0
+#     optimistic: true
+#     mode: BOX
+#     restore_value: true
+#     icon: "mdi:power"
+#     on_value:
+#       then:
+#         - lambda: |-
+#             ESP_LOGI("Switch ON Minute", "New value: %d", (int)x);
+#             if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+#               ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+#             }
 
-  # Inputs for scheduled time 2
-  - platform: template
-    name: "Switch OFF Hour"
-    id: msg_b_hour
-    min_value: 0
-    max_value: 23
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch OFF Hour", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
+#   # Inputs for scheduled time 2
+#   - platform: template
+#     name: "Switch OFF Hour"
+#     id: msg_b_hour
+#     min_value: 0
+#     max_value: 23
+#     step: 1
+#     initial_value: 0
+#     optimistic: true
+#     mode: BOX
+#     restore_value: true
+#     icon: "mdi:power"
+#     on_value:
+#       then:
+#         - lambda: |-
+#             ESP_LOGI("Switch OFF Hour", "New value: %d", (int)x);
+#             if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+#               ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+#             }
 
-  - platform: template
-    name: "Switch OFF Minute"
-    id: msg_b_minute
-    min_value: 0
-    max_value: 59
-    step: 1
-    initial_value: 0
-    optimistic: true
-    mode: BOX
-    restore_value: true
-    icon: "mdi:power"
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("Switch OFF Minute", "New value: %d", (int)x);
-            if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
-              ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
-            }
-
-
-
-interval:
-  - interval: 1min
-    then:
-      # Log current time every minute
-      - lambda: |-
-          auto now = id(sntp_time).now();
-          ESP_LOGI("custom", "Current time: %02d:%02d:%02d", now.hour, now.minute, now.second);
-
-      # Check Message A Time and send CAN message
-      - if:
-          condition:
-            lambda: |-
-              auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_a_hour).state) && 
-                     (now.minute == (int)id(msg_a_minute).state) &&
-                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
-                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
-          then:
-            - lambda: |-
-                ESP_LOGI("custom", "Sending CAN Message ON at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-      # Check Message B Time and send CAN message
-      - if:
-          condition:
-            lambda: |-
-              auto now = id(sntp_time).now();
-              return (now.hour == (int)id(msg_b_hour).state) && 
-                     (now.minute == (int)id(msg_b_minute).state) &&
-                     !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
-                       (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
-          then:
-            - lambda: |-
-                ESP_LOGI("custom", "Sending CAN Message OFF at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
-
-# low voltage-wake and high-voltage-hibernate function
-  - interval: 30s
-    then:
-      - lambda: |-
-          float output_voltage = id(output_voltage_sensor).state;
-          float on_threshold = id(can_on_voltage_threshold).state;
-          float off_threshold = id(can_off_voltage_threshold).state;
-
-          if (output_voltage <= on_threshold) {
-            ESP_LOGI("custom", "Voltage below ON threshold. Sending CAN ON message.");
-          } else if (output_voltage >= off_threshold) {
-            ESP_LOGI("custom", "Voltage above OFF threshold. Sending CAN OFF message.");          
-          }
-
-      # Send CAN ON message
-      - if:
-          condition:
-            lambda: |-
-              return id(output_voltage_sensor).state <= id(can_on_voltage_threshold).state;
-          then:
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-      # Send CAN OFF message
-      - if:
-          condition:
-            lambda: |-
-              return id(output_voltage_sensor).state >= id(can_off_voltage_threshold).state;
-          then:
-            - canbus.send:
-                use_extended_id: true
-                can_id: 0x108080FE
-                data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+#   - platform: template
+#     name: "Switch OFF Minute"
+#     id: msg_b_minute
+#     min_value: 0
+#     max_value: 59
+#     step: 1
+#     initial_value: 0
+#     optimistic: true
+#     mode: BOX
+#     restore_value: true
+#     icon: "mdi:power"
+#     on_value:
+#       then:
+#         - lambda: |-
+#             ESP_LOGI("Switch OFF Minute", "New value: %d", (int)x);
+#             if (id(msg_a_hour).state == id(msg_b_hour).state && id(msg_a_minute).state == id(msg_b_minute).state) {
+#               ESP_LOGI("Timer Function", "TIMER FUNCTION DISABLED");
+#             }
 
 
-
-####################################################################################################################################################
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/London"  # Set your "TZ Identifier" timezone here find yours here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 
 interval:
   - interval: 30s
@@ -548,7 +465,7 @@ interval:
           }
 
   # Interval for sending the first CAN message every 30 seconds
-  - interval: 50ms
+  - interval: 500ms
     then:
       - canbus.send:
           use_extended_id: true
@@ -583,6 +500,95 @@ interval:
             can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
             can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
             return can_data;
+
+  # - interval: 1min
+  #   then:
+  #     # Log current time every minute
+  #     - lambda: |-
+  #         auto now = id(sntp_time).now();
+  #         ESP_LOGI("custom", "Current time: %02d:%02d:%02d", now.hour, now.minute, now.second);
+
+  #     # Check Message A Time and send CAN message
+  #     - if:
+  #         condition:
+  #           lambda: |-
+  #             auto now = id(sntp_time).now();
+  #             return (now.hour == (int)id(msg_a_hour).state) && 
+  #                    (now.minute == (int)id(msg_a_minute).state) &&
+  #                    !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
+  #                      (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
+  #         then:
+  #           - lambda: |-
+  #               ESP_LOGI("custom", "Sending CAN Message ON at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
+  #           - canbus.send:
+  #               use_extended_id: true
+  #               can_id: 0x108080FE
+  #               data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  #     # Check Message B Time and send CAN message
+  #     - if:
+  #         condition:
+  #           lambda: |-
+  #             auto now = id(sntp_time).now();
+  #             return (now.hour == (int)id(msg_b_hour).state) && 
+  #                    (now.minute == (int)id(msg_b_minute).state) &&
+  #                    !((int)id(msg_a_hour).state == (int)id(msg_b_hour).state &&
+  #                      (int)id(msg_a_minute).state == (int)id(msg_b_minute).state);
+  #         then:
+  #           - lambda: |-
+  #               ESP_LOGI("custom", "Sending CAN Message OFF at time %02d:%02d", id(sntp_time).now().hour, id(sntp_time).now().minute);
+  #           - canbus.send:
+  #               use_extended_id: true
+  #               can_id: 0x108080FE
+  #               data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+
+
+# # low voltage-wake and high-voltage-hibernate function
+#   - interval: 30s
+#     then:
+#       - lambda: |-
+#           float output_voltage = id(output_voltage_sensor).state;
+#           float on_threshold = id(can_on_voltage_threshold).state;
+#           float off_threshold = id(can_off_voltage_threshold).state;
+
+#           if (output_voltage <= on_threshold) {
+#             ESP_LOGI("custom", "Voltage below ON threshold. Sending CAN ON message.");
+#           } else if (output_voltage >= off_threshold) {
+#             ESP_LOGI("custom", "Voltage above OFF threshold. Sending CAN OFF message.");          
+#           }
+
+#       # Send CAN ON message
+#       - if:
+#           condition:
+#             lambda: |-
+#               return id(output_voltage_sensor).state <= id(can_on_voltage_threshold).state;
+#           then:
+#             - canbus.send:
+#                 use_extended_id: true
+#                 can_id: 0x108080FE
+#                 data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+#       # Send CAN OFF message
+#       - if:
+#           condition:
+#             lambda: |-
+#               return id(output_voltage_sensor).state >= id(can_off_voltage_threshold).state;
+#           then:
+#             - canbus.send:
+#                 use_extended_id: true
+#                 can_id: 0x108080FE
+#                 data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+
+
+####################################################################################################################################################
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/London"  # Set your "TZ Identifier" timezone here find yours here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+
 
 # Define a button component for turning ON
 button:
