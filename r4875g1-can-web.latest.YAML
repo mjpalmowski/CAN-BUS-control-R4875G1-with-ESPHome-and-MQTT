@@ -46,6 +46,7 @@ wifi:
 captive_portal:
 
 
+
 canbus:
   - platform: esp32_can
     tx_pin: GPIO19
@@ -80,7 +81,6 @@ canbus:
                         id(input_current_sensor).publish_state(value); 
                         break;
                       case 0x73: 
-                        ESP_LOGI("can_bus]", "[o_k]");
                         id(dc_power_out_sensor).publish_state(value);  
                         break;
                       case 0x75: 
@@ -104,6 +104,7 @@ canbus:
               }
 
 
+
 # Define sensors
 
 substitutions:
@@ -116,6 +117,7 @@ sensor:
     name: "01 Input AC Power"
     id: ac_power_in_sensor
     unit_of_measurement: "W"
+    state_class: "measurement"
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
@@ -125,6 +127,7 @@ sensor:
     name: "05 Output DC Power"
     id: dc_power_out_sensor
     unit_of_measurement: "W"
+    state_class: "measurement"
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
@@ -134,6 +137,7 @@ sensor:
     name: "02 Input Grid AC Frequency"
     id: grid_frequency_sensor
     unit_of_measurement: "Hz"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
@@ -143,6 +147,7 @@ sensor:
     name: "03 Input AC Current"
     id: input_current_sensor
     unit_of_measurement: "A"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
@@ -152,6 +157,7 @@ sensor:
     name: "07 Output DC Voltage"
     id: output_voltage_sensor
     unit_of_measurement: "V"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
@@ -161,6 +167,7 @@ sensor:
     name: "04 Input AC Grid Voltage"
     id: input_grid_voltage_sensor
     unit_of_measurement: "V"
+    state_class: "measurement"
     accuracy_decimals: 2
     filters:
       - multiply: ${multiplier_default}
@@ -170,6 +177,7 @@ sensor:
     name: "08 Output Temperature"
     id: output_temperature_sensor
     unit_of_measurement: "°C"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
@@ -192,6 +200,7 @@ sensor:
     name: "06 Output DC Current"
     id: output_current_sensor
     unit_of_measurement: "A"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_default}
@@ -201,6 +210,7 @@ sensor:
     name: "09 Max Output DC Current"
     id: set_max_output_current_sensor
     unit_of_measurement: "A"
+    state_class: "measurement"
     accuracy_decimals: 1
     filters:
       - multiply: ${multiplier_current}
@@ -211,7 +221,7 @@ sensor:
 number:
   # Number inputs for setting ON and OFF voltage thresholds
   - platform: template
-    name: "Auto-ON if Output DC below:"
+    name: "003 Wake-up if Battery below:"
     id: can_on_voltage_threshold
     unit_of_measurement: "V"
     min_value: 0.0
@@ -224,7 +234,7 @@ number:
     icon: "mdi:flash"
 
   - platform: template
-    name: "Auto-OFF if Output DC above:"
+    name: "004 Hibernate if Battery above:"
     id: can_off_voltage_threshold
     unit_of_measurement: "V"
     min_value: 51.0
@@ -237,7 +247,7 @@ number:
     icon: "mdi:flash"
 
   - platform: template
-    name: "10 CAN Voltage Set"
+    name: "10 Set Voltage"
     id: can_voltage_input
     min_value: 49
     max_value: 58
@@ -246,7 +256,7 @@ number:
     optimistic: true
     mode: BOX
     restore_value: true
-    icon: "mdi:current-dc"
+    icon: "mdi:sine-wave"
     on_value:
       then:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
@@ -273,7 +283,7 @@ number:
 
   # Amp Setting
   - platform: template
-    name: "12 Set Output DC Current"
+    name: "12 Set Current"
     id: can_amp_input
     min_value: 1
     max_value: 50  # Max value for the Amp input, if you have pin 9 and 10 connected you can change this value to 75
@@ -310,7 +320,7 @@ number:
 
   # Fallback Amp Setting
   - platform: template
-    name: "13 Set Fallback Output DC Current"
+    name: "13 Set Fallback Current"
     id: fallback_amp_input
     min_value: 1
     max_value: 50  # Max value for the Amp input, if you have pin 9 and 10 connected you can change this value to 75
@@ -346,7 +356,7 @@ number:
 
   # Fallback Voltage Setting
   - platform: template
-    name: "11 Set Fallback Output DC Voltage"
+    name: "11 Set Fallback Voltage"
     id: fallback_voltage_input
     min_value: 49
     max_value: 58  # Adjust as needed for your voltage range
@@ -464,6 +474,14 @@ number:
 
 
 interval:
+
+  - interval: 600ms
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108040FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
   - interval: 1min
     then:
       # Log current time every minute
@@ -543,18 +561,13 @@ interval:
 
 
 
+
 ####################################################################################################################################################
 time:
   - platform: sntp
     id: sntp_time
     timezone: "Europe/London"  # Set your "TZ Identifier" timezone here find yours here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
     on_time:
-      - seconds: /5
-        then:
-          - canbus.send:
-              use_extended_id: true
-              can_id: 0x108040FE
-              data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
       - seconds: /30  # This will trigger every 30 seconds for voltage
         then:
