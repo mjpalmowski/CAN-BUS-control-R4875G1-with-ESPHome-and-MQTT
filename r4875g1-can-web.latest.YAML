@@ -10,7 +10,7 @@ esp32:
 logger:
   level: INFO
 ##################################################################################################################
-# Uncomment this webserver block if you want to control the device via webpage
+# Uncomment this webserver block if you want to control the device via webpage, this version has the timer and the wake/hibernate on voltage functions.
 web_server:
   version: 3
 ##################################################################################################################
