@@ -636,7 +636,7 @@ button:
             data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 ###################################################################################################################################
 ##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
-## Subscribe to MQTT topic to update CAN voltage
+## to set values simply publish a value (number) to MQTT topic to update CAN voltage or current.
 # text_sensor:
 #   - platform: mqtt_subscribe
 #     name: "CAN Voltage MQTT"
