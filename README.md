@@ -127,6 +127,9 @@ If you prefer a standalone setup, you can configure the web server component for
 If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](./discussions/4) to your CAN BUS [here is an example YAML](./Control-two-R4875G1-with-one-ESP32-example.YAML) that allows you to set values for all units simultaneously and receive the sensor data separately:
 
 
+And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
+
+
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 
