@@ -197,7 +197,7 @@ sensor:
     icon: "mdi:current-ac"
 
 
-# Number input for CAN Voltage
+
 number:
   # Number inputs for setting ON and OFF voltage thresholds
   - platform: template
