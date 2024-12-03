@@ -44,7 +44,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Over-temperature Shutdown** (Configurable in YAML, does not require Home Assistant or Node-RED)
 
 ## Use Cases
-This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC batteries, making it useful for home battery systems that store solar or off-peak power. It is particularly useful when backing up solar setups with a generator. Additionally, it can serve as a powerful DC bench power supply when paired with a robust [adjustable](https://github.com/mjpalmowski/esphome-juntek-DPM8650-mqtt-http-tool) buck/boost converter, as an onboard fast-charger for boats that encounter different supply voltages or as a charger for Ebikes, [here is a guy that runs his HAM radio amp equippment](https://qsl.net/zl1rs/old/r4875g1.html) with it (clean DC indeed) 
+This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC batteries, making it useful for home battery systems that store solar or off-peak power. It is particularly useful when backing up solar setups with a generator. Additionally, it can serve as a powerful DC bench power supply when paired with a robust [adjustable](https://github.com/mjpalmowski/esphome-juntek-DPM8650-mqtt-http-tool) buck/boost converter, as an onboard fast-charger for boats that encounter different supply voltages or as a rapid charger for Ebikes, [here is a guy that runs his HAM radio amp equippment](https://qsl.net/zl1rs/old/r4875g1.html) with it (clean DC indeed) 
 
 For example, the **EG4 Chargeverter** product is essentially two of these 48V telecom units in a box, with buttons for setting maximum voltage and current. [Watch the Chargeverter Teardown](https://www.youtube.com/watch?v=WPEjRtABc2U).
 
