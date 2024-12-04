@@ -48,6 +48,8 @@ This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC ba
 
 For example, the **EG4 Chargeverter** product is essentially two of these 48V telecom units in a box, with buttons for setting maximum voltage and current. [Watch the Chargeverter Teardown](https://www.youtube.com/watch?v=WPEjRtABc2U).
 
+So, if you want to build an automation-friendly Chargeverter alternative, you are in the right place.
+
 ## Hardware Setup
 
 ### Module and Connections
