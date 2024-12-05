@@ -118,6 +118,28 @@ canbus:
                     break;
                 }
               }
+      - can_id: 0x1001117E #!EXPERIMENTAL! to determine wake/hibernate state
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() == 8) {
+                // Extract relevant data to check "ON" or "OFF" state
+                if (x[3] == 0x00) {
+                  // "ON" state detected
+                  id(on_off_state).publish_state(true);
+                } else if (x[3] == 0x01) {
+                  // "OFF" state detected
+                  id(on_off_state).publish_state(false);
+                }
+              }
+
+# Define binary sensor for "ON/OFF" state
+binary_sensor:
+  - platform: template
+    name: "Device ON/OFF State"
+    id: on_off_state
+    device_class: power
+
 
 # Define sensors to expose them via API
 
