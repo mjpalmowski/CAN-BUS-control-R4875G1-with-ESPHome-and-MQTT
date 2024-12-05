@@ -164,11 +164,11 @@ substitutions:
 # Define binary sensor for "ON/OFF" state
 binary_sensor:
   - platform: template
-    name: "Device 1 ON/OFF State Device 1"
+    name: "Device 1 ON/OFF State"
     id: on_off_state1
     device_class: power
   - platform: template
-    name: "Device 1 ON/OFF State Device 2"
+    name: "Device 2 ON/OFF State"
     id: on_off_state2
     device_class: power
 
