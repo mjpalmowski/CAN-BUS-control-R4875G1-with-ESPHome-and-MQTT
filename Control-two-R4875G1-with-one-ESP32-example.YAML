@@ -93,7 +93,7 @@ canbus:
                     break;
                 }
               }
-      - can_id: 0x1001117E
+      - can_id: 0x1001117E   #!EXPERIMENTAL!
         use_extended_id: true
         then:
           - lambda: |-
@@ -139,7 +139,7 @@ canbus:
                     break;
                 }
               }
-      - can_id: 0x1002117E
+      - can_id: 0x1002117E #!EXPERIMENTAL!
         use_extended_id: true
         then:
           - lambda: |-
