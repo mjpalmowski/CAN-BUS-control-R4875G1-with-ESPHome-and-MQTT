@@ -49,19 +49,27 @@ captive_portal:
 #   password: !secret mqtt_password
 #   id: mqtt_client
 
+globals:
+  - id: can_message_received
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
 canbus:
   - platform: esp32_can
     tx_pin: GPIO19
     rx_pin: GPIO02
     can_id: 0xE5F32E5
     bit_rate: 125kbps
-    use_extended_id: True
+    use_extended_id: true
     on_frame:
-      # Handle messages from the first device
       - can_id: 0x1081407F
         use_extended_id: true
         then:
           - lambda: |-
+              // Set the flag to true whenever a CAN message is received
+              id(can_message_received) = true;
+
               if (x.size() >= 8) {
                 const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
                 const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
@@ -69,8 +77,6 @@ canbus:
                                        (static_cast<uint32_t>(x[5]) << 16) | 
                                        (static_cast<uint32_t>(x[6]) << 8) | 
                                        static_cast<uint32_t>(x[7]);
-
-                ESP_LOGI("custom", "Received message from 0x1082407F");
                 switch (byte_0) {
                   case 0x01:
                     switch (byte_1) {
@@ -87,6 +93,23 @@ canbus:
                     break;
                 }
               }
+      - can_id: 0x1001117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() == 8) {
+                // Extract relevant data to check "ON" or "OFF" state
+                if (x[3] == 0x00) {
+                  // "ON" state detected
+                  id(on_off_state1).publish_state(true);
+                } else if (x[3] == 0x01) {
+                  // "OFF" state detected
+                  id(on_off_state1).publish_state(false);
+                }
+              }
+
+
+
 
       # Handle messages from the second device
       - can_id: 0x1082407F
@@ -100,8 +123,6 @@ canbus:
                                        (static_cast<uint32_t>(x[5]) << 16) | 
                                        (static_cast<uint32_t>(x[6]) << 8) | 
                                        static_cast<uint32_t>(x[7]);
-
-                ESP_LOGI("custom", "Received message from 0x1081407F");
                 switch (byte_0) {
                   case 0x01:
                     switch (byte_1) {
@@ -118,7 +139,7 @@ canbus:
                     break;
                 }
               }
-      - can_id: 0x1001117E #!EXPERIMENTAL! to determine wake/hibernate state
+      - can_id: 0x1002117E
         use_extended_id: true
         then:
           - lambda: |-
@@ -126,20 +147,12 @@ canbus:
                 // Extract relevant data to check "ON" or "OFF" state
                 if (x[3] == 0x00) {
                   // "ON" state detected
-                  id(on_off_state).publish_state(true);
+                  id(on_off_state2).publish_state(true);
                 } else if (x[3] == 0x01) {
                   // "OFF" state detected
-                  id(on_off_state).publish_state(false);
+                  id(on_off_state2).publish_state(false);
                 }
               }
-
-# Define binary sensor for "ON/OFF" state
-binary_sensor:
-  - platform: template
-    name: "Device ON/OFF State"
-    id: on_off_state
-    device_class: power
-
 
 # Define sensors to expose them via API
 
@@ -147,6 +160,17 @@ substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
   multiplier_current: '0.05'   #1/20 conversion factor
   multiplier_current_set: '0.06666'     # 1/15 conversion factor
+
+# Define binary sensor for "ON/OFF" state
+binary_sensor:
+  - platform: template
+    name: "Device 1 ON/OFF State Device 1"
+    id: on_off_state1
+    device_class: power
+  - platform: template
+    name: "Device 1 ON/OFF State Device 2"
+    id: on_off_state2
+    device_class: power
 
 sensor:
   - platform: template
@@ -474,44 +498,54 @@ number:
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
 
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          if (id(can_message_received)) {
+            ESP_LOGI("can_bus", "CAN BUS OK");
+            id(can_message_received) = false; // Reset the flag
+          } else {
+            ESP_LOGI("can_bus", "CAN BUS inactive");
+          }
 
+  # Interval for sending the first CAN message every 30 seconds
+  - interval: 300ms
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108040FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-time:
-  - platform: sntp
-    on_time:
-      - seconds: /5
-        then:
-          - canbus.send:
-              use_extended_id: true
-              can_id: 0x108040FE
-              data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+  # Interval for sending voltage CAN message every 30 seconds
+  - interval: 30s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+            can_data[0] = 0x01;  // First byte is always 0x01
+            int scaled_value = (int)(id(can_voltage_input).state * 1020);  // Scale the voltage value
+            can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+            can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+            return can_data;
 
-      - seconds: /30  # This will trigger every 30 seconds for voltage
-        then:
-          - canbus.send:
-              use_extended_id: true
-              can_id: 0x108080FE
-              data: !lambda |-
-                std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-                can_data[0] = 0x01;  // First byte is always 0x01
-                int scaled_value = (int)(id(can_voltage_input).state * 1020);  // Scale the voltage value
-                can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-                can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
-                return can_data;
+  # Interval for sending Amp setting CAN message every 10 seconds
+  - interval: 30s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+            can_data[0] = 0x01;  // First byte is always 0x01
+            can_data[1] = 0x03;  // Second byte is 0x03
+            int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
+            can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+            can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+            return can_data;
 
-      - seconds: /30  # This will trigger every 30 seconds for Amp setting
-        then:
-          - canbus.send:
-              use_extended_id: true
-              can_id: 0x108080FE
-              data: !lambda |-
-                std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-                can_data[0] = 0x01;  // First byte is always 0x01
-                can_data[1] = 0x03;  // Second byte is 0x03
-                int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
-                can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-                can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
-                return can_data;
 
 # Define a button component for turning ON
 button:
