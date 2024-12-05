@@ -8,7 +8,7 @@ esp32:
     type: arduino
 
 logger:
-  level: INFO
+  level: DEBUG
 
 # If you dont have or want to use Home assistant or do any automation, just need a simple web surface to 
 # control your R4875G1, just fill out your wifi credentials, uncomment this webserver section and 
@@ -43,11 +43,11 @@ captive_portal:
 
 # Uncomment this mqtt block AND the mqtt block at the bottom of this file if you plan to use it. The status and control topics are shown in the Log also.
 
-#mqtt:
-#   broker: !secret mqtt_host
-#   username: !secret mqtt_username
-#   password: !secret mqtt_password
-#   id: mqtt_client
+mqtt:
+  broker: !secret mqtt_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  id: mqtt_client
 
 globals:
   - id: can_message_received
@@ -93,7 +93,7 @@ canbus:
                     break;
                 }
               }
-      - can_id: 0x1001117E   #!EXPERIMENTAL!
+      - can_id: 0x1001117E
         use_extended_id: true
         then:
           - lambda: |-
@@ -139,7 +139,7 @@ canbus:
                     break;
                 }
               }
-      - can_id: 0x1002117E #!EXPERIMENTAL!
+      - can_id: 0x1002117E
         use_extended_id: true
         then:
           - lambda: |-
@@ -599,85 +599,85 @@ button:
 ###################################################################################################################################
 ##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
 ## Subscribe to MQTT topic to update CAN voltage
-# text_sensor:
-#   - platform: mqtt_subscribe
-#     name: "CAN Voltage MQTT"
-#     id: mqtt_voltage_input
-#     topic: "home/canbus/voltage_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float mqtt_voltage = atof(x.c_str());
+text_sensor:
+  - platform: mqtt_subscribe
+    name: "CAN Voltage MQTT"
+    id: mqtt_voltage_input
+    topic: "home/canbus/voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_voltage = atof(x.c_str());
             
-#             // Update the number input with the new value
-#             if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
-#               id(can_voltage_input).publish_state(mqtt_voltage);
-#               ESP_LOGI("custom", "MQTT Voltage Set to: %.1fV", mqtt_voltage);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
-#             }
-#     # Subscribe to MQTT topic to update CAN amps
-#   - platform: mqtt_subscribe
-#     name: "CAN Amps MQTT"
-#     id: mqtt_amp_input
-#     topic: "home/canbus/amp_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float mqtt_amp = atof(x.c_str());
+            // Update the number input with the new value
+            if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
+              id(can_voltage_input).publish_state(mqtt_voltage);
+              ESP_LOGI("custom", "MQTT Voltage Set to: %.1fV", mqtt_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
+            }
+    # Subscribe to MQTT topic to update CAN amps
+  - platform: mqtt_subscribe
+    name: "CAN Amps MQTT"
+    id: mqtt_amp_input
+    topic: "home/canbus/amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float mqtt_amp = atof(x.c_str());
             
-#             // Update the number input with the new value
-#             if (mqtt_amp >= 1.0 && mqtt_amp <= 50.0) {
-#               id(can_amp_input).publish_state(mqtt_amp);
-#               ESP_LOGI("custom", "MQTT Amp Set to: %.1fA", mqtt_amp);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
-#             }
-#     # Subscribe to MQTT topic to update Fallback Voltage
-#   - platform: mqtt_subscribe
-#     name: "Fallback Voltage MQTT"
-#     id: mqtt_fallback_voltage
-#     topic: "home/canbus/fallback_voltage_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float fallback_voltage = atof(x.c_str());
+            // Update the number input with the new value
+            if (mqtt_amp >= 1.0 && mqtt_amp <= 50.0) {
+              id(can_amp_input).publish_state(mqtt_amp);
+              ESP_LOGI("custom", "MQTT Amp Set to: %.1fA", mqtt_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
+            }
+    # Subscribe to MQTT topic to update Fallback Voltage
+  - platform: mqtt_subscribe
+    name: "Fallback Voltage MQTT"
+    id: mqtt_fallback_voltage
+    topic: "home/canbus/fallback_voltage_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_voltage = atof(x.c_str());
             
-#             // Update the number input with the new value
-#             if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
-#               id(fallback_voltage_input).publish_state(fallback_voltage);
-#               ESP_LOGI("custom", "Fallback Voltage Set to: %.1fV", fallback_voltage);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
-#             }
+            // Update the number input with the new value
+            if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
+              id(fallback_voltage_input).publish_state(fallback_voltage);
+              ESP_LOGI("custom", "Fallback Voltage Set to: %.1fV", fallback_voltage);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
+            }
 
-#  # Subscribe to MQTT topic to update Fallback Amps
-#   - platform: mqtt_subscribe
-#     name: "Fallback Amps MQTT"
-#     id: mqtt_fallback_amp
-#     topic: "home/canbus/fallback_amp_set"
-#     internal: true  # This makes the sensor internal
-#     on_value:
-#       then:
-#         - delay: 0.01s  # Small delay to ensure the value is properly updated
-#         - lambda: |-
-#             // Convert MQTT message to float
-#             float fallback_amp = atof(x.c_str());
+ # Subscribe to MQTT topic to update Fallback Amps
+  - platform: mqtt_subscribe
+    name: "Fallback Amps MQTT"
+    id: mqtt_fallback_amp
+    topic: "home/canbus/fallback_amp_set"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            // Convert MQTT message to float
+            float fallback_amp = atof(x.c_str());
             
-#             // Update the number input with the new value
-#             if (fallback_amp >= 1.0 && fallback_amp <= 50.0) {
-#               id(fallback_amp_input).publish_state(fallback_amp);
-#               ESP_LOGI("custom", "Fallback Amps Set to: %.1fA", fallback_amp);
-#             } else {
-#               ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
-#             } 
-###############################################################################################################################
+            // Update the number input with the new value
+            if (fallback_amp >= 1.0 && fallback_amp <= 50.0) {
+              id(fallback_amp_input).publish_state(fallback_amp);
+              ESP_LOGI("custom", "Fallback Amps Set to: %.1fA", fallback_amp);
+            } else {
+              ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
+            } 
+##############################################################################################################################
