@@ -93,6 +93,23 @@ canbus:
                     break;
                 }
               }
+      - can_id: 0x1001117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() == 8) {
+                // Extract the state byte (x[3]) and last four bytes for Wh
+                const uint8_t state_byte = x[3];
+                const uint32_t meter_value = 
+                  (static_cast<uint32_t>(x[4]) << 24) | 
+                  (static_cast<uint32_t>(x[5]) << 16) | 
+                  (static_cast<uint32_t>(x[6]) << 8)  | 
+                  static_cast<uint32_t>(x[7]);
+
+                // Publish Power state and alt AMP values
+                id(alt_amp_sensor).publish_state(meter_value);
+                id(power_state_sensor).publish_state(state_byte == 0);
+              }
 
 
 # Define sensors
@@ -101,7 +118,25 @@ substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
   multiplier_current: '0.05'          # 1/20 conversion factor
 
+binary_sensor:
+  - platform: template
+    id: power_state_sensor
+    name: "Charger Power State"
+    device_class: power
+
+
+
 sensor:
+
+  - platform: template
+    name: "Output Current alt"
+    id: alt_amp_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_current_set}
+    icon: "mdi:current-dc"
+
   - platform: template
     name: "01 Input AC Power"
     id: ac_power_in_sensor
@@ -195,6 +230,22 @@ sensor:
     filters:
       - multiply: ${multiplier_current}
     icon: "mdi:current-ac"
+
+#  # AC Power In kWh sensor
+#  - platform: total_daily_energy
+#    name: "AC Daily Energy (kWh)"
+#    power_id: ac_power_in_sensor
+#    unit_of_measurement: "kWh"
+#    accuracy_decimals: 3
+#    icon: "mdi:counter"
+
+#  # DC Power Out kWh sensor
+#  - platform: total_daily_energy
+#    name: "DC Daily Energy (kWh)"
+#    power_id: dc_power_out_sensor
+#    unit_of_measurement: "kWh"
+#    accuracy_decimals: 3
+#    icon: "mdi:counter"
 
 
 
