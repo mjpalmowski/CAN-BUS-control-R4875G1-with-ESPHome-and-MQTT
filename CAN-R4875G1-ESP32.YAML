@@ -116,7 +116,7 @@ canbus:
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.05'          # 1/20 conversion factor
+  multiplier_current: '0.06666666'          # 1/15 conversion factor
 
 binary_sensor:
   - platform: template
@@ -304,7 +304,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float amp_value = id(can_amp_input).state;  // Get the current Amp value
-            int scaled_value = (int)(amp_value * 20);  // Scale the Amp value (Amp * 20)
+            int scaled_value = (int)(amp_value * 15);  // Scale the Amp value (Amp * 15)
             ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
@@ -318,7 +318,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x03;  // Second byte is 0x03
-              int scaled_value = (int)(id(can_amp_input).state * 20);  // Scale the Amp value
+              int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
               can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
@@ -341,7 +341,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
-            int fallback_scaled_value = (int)(fallback_amp_value * 20);  // Scale the Amp value (Amp * 20)
+            int fallback_scaled_value = (int)(fallback_amp_value * 15);  // Scale the Amp value (Amp * 15)
             ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
             
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
@@ -355,7 +355,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x04;  // Second byte is 0x04 for the Fallback Amps setting
-              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 20);  // Scale the Amp value
+              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 15);  // Scale the Amp value
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
