@@ -245,9 +245,9 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
   - Command Topic: `can-bus01/button/fan_full_speed_button/command`
  
 
-## The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+### The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
 
-## Subscribe Text Sensor Topics
+## Text Sensor Topics
 - **CAN Voltage MQTT**
   - **Description**: Subscribes to this topic to monitor voltage setpoints. Expects text input.
   - **Topic**: `home/canbus/voltage_set`
