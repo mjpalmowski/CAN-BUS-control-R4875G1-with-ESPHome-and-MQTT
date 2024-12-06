@@ -35,7 +35,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Simple Daily Charge Timer**
 - **LOW and HIGH Voltage Set for auto Wake/Hibernate**
 
-### Control Buttons
+### Control Buttons, send Text string **PRESS** to activate
 - **CAN ON Button** (Wake-up feature)
 - **CAN OFF Button** (Hibernate feature)
 - **Fan Full Speed Button**
