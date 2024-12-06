@@ -235,7 +235,7 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ## Buttons
 
-How to use: send Text string **PRESS** to activate
+How to use: send Text string: `PRESS` to activate
 
 - **CAN ON Button**
   - State Topic: `can-bus01/button/can_on_button/state
