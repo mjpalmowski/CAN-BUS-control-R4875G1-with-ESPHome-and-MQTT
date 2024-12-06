@@ -251,19 +251,19 @@ How to use: send Text string: `PRESS` to activate
 ### The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
 
 ## Text Sensor Topics
-- **CAN Voltage MQTT**
+- **Set MAX Voltage**
   - **Description**: The R4875G1s subscribe to this topic to read voltage setpoints. Expects number input.
   - **Topic**: `home/canbus/voltage_set`
 
-- **CAN Amps MQTT**
+- **Set MAX Amps**
   - **Description**: The R4875G1s subscribe to this topic to read current (amperage) setpoints. Expects number input.
   - **Topic**: `home/canbus/amp_set`
 
-- **Fallback Voltage MQTT**
+- **Set MAX Fallback Voltage**
   - **Description**: The R4875G1s subscribe to this topic to read fallback voltage settings. Expects number input.
   - **Topic**: `home/canbus/fallback_voltage_set`
 
-- **Fallback Amps MQTT**
+- **Set MAX Fallback Amps**
   - **Description**: The R4875G1s subscribe to this topic to read fallback amperage settings. Expects number input.
   - **Topic**: `home/canbus/fallback_amp_set`
 
