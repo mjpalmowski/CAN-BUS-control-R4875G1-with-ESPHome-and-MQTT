@@ -271,7 +271,7 @@ How to use: send Text string: `PRESS` to activate
 
 
 ## Additional Resources
-- [Huawei R4875G1 CAN Protocol](https://github.com/user-attachments/files/17571999/Protocol_R4875g.xlsx)
+- [Huawei R4875G1 CAN Protocol](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Protocol_R4875g.xlsx)
 - [Beyond Logic Review](https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/)
 - [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)
 - [DIY Solar Forum Discussion](https://diysolarforum.com/threads/diy-chargenectifier.56329/)
