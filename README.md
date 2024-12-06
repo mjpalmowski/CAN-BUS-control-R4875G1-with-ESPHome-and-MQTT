@@ -147,11 +147,10 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ### Example Screenshots
 
-![web surface intigration](https://github.com/user-attachments/assets/7f90e032-bb3e-404d-9eb4-069bbf0200c4)
 
+![web surface intigration](https://github.com/user-attachments/assets/8f8a1d15-0d97-484c-a825-1dc12245aaed)
 
 ![Screenshot 2024-11-14 153811](https://github.com/user-attachments/assets/4d047509-b9c0-49b8-b7c5-9a71261ee79a)
-
 
 ![Screenshot 2024-11-14 150637](https://github.com/user-attachments/assets/ff781577-ade7-4bd4-8a26-ba679e6a9398)
 
