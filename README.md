@@ -157,110 +157,90 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ![Screenshot 2024-11-14 150252](https://github.com/user-attachments/assets/fcf0bd69-1b4e-453c-a8c8-5b66df1f6714)
 
-
-
-# MQTT Configuration
-
-## Sensors
-
-### Input AC Power
-- **Name:** `01 Input AC Power`
-- **State Topic:** `r4875g1-can-web/sensor/01_input_ac_power/state`
-
-### Output DC Power
-- **Name:** `05 Output DC Power`
-- **State Topic:** `r4875g1-can-web/sensor/05_output_dc_power/state`
-
-### Input Grid AC Frequency
-- **Name:** `02 Input Grid AC Frequency`
-- **State Topic:** `r4875g1-can-web/sensor/02_input_grid_ac_frequency/state`
-
-### Input AC Current
-- **Name:** `03 Input AC Current`
-- **State Topic:** `r4875g1-can-web/sensor/03_input_ac_current/state`
-
-### Output DC Voltage
-- **Name:** `07 Output DC Voltage`
-- **State Topic:** `r4875g1-can-web/sensor/07_output_dc_voltage/state`
-
-### Input AC Grid Voltage
-- **Name:** `04 Input AC Grid Voltage`
-- **State Topic:** `r4875g1-can-web/sensor/04_input_ac_grid_voltage/state`
-
-### Output Temperature
-- **Name:** `08 Output Temperature`
-- **State Topic:** `r4875g1-can-web/sensor/08_output_temperature/state`
-
-### Output DC Current
-- **Name:** `06 Output DC Current`
-- **State Topic:** `r4875g1-can-web/sensor/06_output_dc_current/state`
-
-### Max Output DC Current
-- **Name:** `09 Max Output DC Current`
-- **State Topic:** `r4875g1-can-web/sensor/09_max_output_dc_current/state`
-
-## Numbers (report human readable value whenever the values are set) 
-
 ![Screenshot 2024-11-20 140636](https://github.com/user-attachments/assets/6f592d96-79e6-4d91-bfcd-1ca8331c07e0)
-
-
-### CAN Voltage Set
-- **Name:** `10 CAN Voltage Set`
-- **State Topic:** `r4875g1-can-web/number/10_can_voltage_set/state`
-
-### Set Output DC Current
-- **Name:** `12 Set Output DC Current`
-- **State Topic:** `r4875g1-can-web/number/12_set_output_dc_current/state`
-
-### Set Fallback Output DC Current
-- **Name:** `13 Set Fallback Output DC Current`
-- **State Topic:** `r4875g1-can-web/number/13_set_fallback_output_dc_current/state`
-
-### Set Fallback Output DC Voltage
-- **Name:** `11 Set Fallback Output DC Voltage`
-- **State Topic:** `r4875g1-can-web/number/11_set_fallback_output_dc_voltage/state`
-
-## Buttons
 
 ![Screenshot 2024-11-20 144815](https://github.com/user-attachments/assets/bfa286e8-b760-467e-8e03-3064d890d0f9)
 
-
-### CAN ON Button
-- **Name:** `001 CAN ON Button`
-- **Command Topic:** `r4875g1-can-web/button/001_can_on_button/command`
-
-### CAN OFF Button
-- **Name:** `002 CAN OFF Button`
-- **Command Topic:** `r4875g1-can-web/button/002_can_off_button/command`
-
-### Fan Full Speed Button
-- **Name:** `Fan Full Speed Button`
-- **Command Topic:** `r4875g1-can-web/button/fan_full_speed_button/command`
-
-### Fan Auto Mode Button
-- **Name:** `Fan Auto Mode Button`
-- **Command Topic:** `r4875g1-can-web/button/fan_auto_mode_button/command`
-
-## Text Sensors, used to set values by mqtt/NodeRed
-
 ![Screenshot 2024-11-20 140157](https://github.com/user-attachments/assets/25eee449-0177-4e5f-9a8c-a76bbffcef38)
 
+# MQTT Topics
 
-### CAN Voltage MQTT
-- **Name:** `CAN Voltage MQTT`
-- **Topic:** `home/canbus/voltage_set`
+## Binary Sensors
+- **Charger Power State2**
+  - State Topic: `can-bus01/binary_sensor/charger_power_state2/state`
 
-### CAN Amps MQTT
-- **Name:** `CAN Amps MQTT`
-- **Topic:** `home/canbus/amp_set`
+## Sensors
+- **Output Current alt**
+  - State Topic: `can-bus01/sensor/output_current_alt/state`
+- **Output Current alt2**
+  - State Topic: `can-bus01/sensor/output_current_alt2/state`
+- **AC Power In**
+  - State Topic: `can-bus01/sensor/ac_power_in/state`
+- **DC Power Out**
+  - State Topic: `can-bus01/sensor/dc_power_out/state`
+- **Grid Frequency**
+  - State Topic: `can-bus01/sensor/grid_frequency/state`
+- **Input Current**
+  - State Topic: `can-bus01/sensor/input_current/state`
+- **Output Voltage**
+  - State Topic: `can-bus01/sensor/output_voltage/state`
+- **Input Grid Voltage**
+  - State Topic: `can-bus01/sensor/input_grid_voltage/state`
+- **Output Temperature**
+  - State Topic: `can-bus01/sensor/output_temperature/state`
+- **Output Current**
+  - State Topic: `can-bus01/sensor/output_current/state`
+- **Set Max Output Current**
+  - State Topic: `can-bus01/sensor/set_max_output_current/state`
+- **AC Power In2**
+  - State Topic: `can-bus01/sensor/ac_power_in2/state`
+- **Combined AC Power**
+  - State Topic: `can-bus01/sensor/combined_ac_power/state`
+- **DC Power Out2**
+  - State Topic: `can-bus01/sensor/dc_power_out2/state`
+- **Combined DC Power**
+  - State Topic: `can-bus01/sensor/combined_dc_power/state`
+- **AC Power In Total (kWh)**
+  - State Topic: `can-bus01/sensor/ac_power_in_total__kwh_/state`
+- **DC Power Out Total (kWh)**
+  - State Topic: `can-bus01/sensor/dc_power_out_total__kwh_/state`
+- **Grid Frequency2**
+  - State Topic: `can-bus01/sensor/grid_frequency2/state`
+- **Input Current2**
+  - State Topic: `can-bus01/sensor/input_current2/state`
+- **Output Voltage2**
+  - State Topic: `can-bus01/sensor/output_voltage2/state`
+- **Input Grid Voltage2**
+  - State Topic: `can-bus01/sensor/input_grid_voltage2/state`
+- **Output Temperature2**
+  - State Topic: `can-bus01/sensor/output_temperature2/state`
+- **Output Current2**
+  - State Topic: `can-bus01/sensor/output_current2/state`
+- **Set Max Output Current2**
+  - State Topic: `can-bus01/sensor/set_max_output_current2/state`
 
-### Fallback Voltage MQTT
-- **Name:** `Fallback Voltage MQTT`
-- **Topic:** `home/canbus/fallback_voltage_set`
+## Numbers
+- **CAN Voltage Set**
+  - State Topic: `can-bus01/number/can_voltage_set/state`
+- **CAN Amp Set**
+  - State Topic: `can-bus01/number/can_amp_set/state`
+- **Fallback Amp Set**
+  - State Topic: `can-bus01/number/fallback_amp_set/state`
+- **Fallback Voltage Set**
+  - State Topic: `can-bus01/number/fallback_voltage_set/state`
 
-### Fallback Amps MQTT
-- **Name:** `Fallback Amps MQTT`
-- **Topic:** `home/canbus/fallback_amp_set`
+## Buttons
+- **CAN ON Button**
+  - State Topic: `can-bus01/button/can_on_button/state`
+  - Command Topic: `can-bus01/button/can_on_button/command`
+- **CAN OFF Button**
+  - State Topic: `can-bus01/button/can_off_button/state`
+  - Command Topic: `can-bus01/button/can_off_button/command`
+- **Fan Full Speed Button**
+  - State Topic: `can-bus01/button/fan_full_speed_button/state`
+  - Command Topic: `can-bus01/button/fan_full_speed_button/command`
+
+
 
 
 ## Additional Resources
