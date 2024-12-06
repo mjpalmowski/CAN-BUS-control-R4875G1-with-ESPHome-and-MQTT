@@ -231,21 +231,23 @@ sensor:
       - multiply: ${multiplier_current}
     icon: "mdi:current-ac"
 
-#  # AC Power In kWh sensor
-#  - platform: total_daily_energy
-#    name: "AC Daily Energy (kWh)"
-#    power_id: ac_power_in_sensor
-#    unit_of_measurement: "kWh"
-#    accuracy_decimals: 3
-#    icon: "mdi:counter"
+  # AC Power In kWh sensor
+  - platform: total_daily_energy
+    name: "AC Daily Energy (kWh)"
+    power_id: ac_power_in_sensor
+    unit_of_measurement: "kWh"
+    restore_value: true
+    accuracy_decimals: 3
+    icon: "mdi:counter"
 
-#  # DC Power Out kWh sensor
-#  - platform: total_daily_energy
-#    name: "DC Daily Energy (kWh)"
-#    power_id: dc_power_out_sensor
-#    unit_of_measurement: "kWh"
-#    accuracy_decimals: 3
-#    icon: "mdi:counter"
+  # DC Power Out kWh sensor
+  - platform: total_daily_energy
+    name: "DC Daily Energy (kWh)"
+    power_id: dc_power_out_sensor
+    unit_of_measurement: "kWh"
+    restore_value: true
+    accuracy_decimals: 3
+    icon: "mdi:counter"
 
 
 
