@@ -249,19 +249,19 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ## Text Sensor Topics
 - **CAN Voltage MQTT**
-  - **Description**: Subscribes to this topic to monitor voltage setpoints. Expects text input.
+  - **Description**: The R4875G1s subscribe to this topic to read voltage setpoints. Expects number input.
   - **Topic**: `home/canbus/voltage_set`
 
 - **CAN Amps MQTT**
-  - **Description**: Subscribes to this topic to monitor current (amperage) setpoints. Expects text input.
+  - **Description**: The R4875G1s subscribe to this topic to read current (amperage) setpoints. Expects number input.
   - **Topic**: `home/canbus/amp_set`
 
 - **Fallback Voltage MQTT**
-  - **Description**: Subscribes to this topic to monitor fallback voltage settings. Expects text input.
+  - **Description**: The R4875G1s subscribe to this topic to read fallback voltage settings. Expects number input.
   - **Topic**: `home/canbus/fallback_voltage_set`
 
 - **Fallback Amps MQTT**
-  - **Description**: Subscribes to this topic to monitor fallback amperage settings. Expects text input.
+  - **Description**: The R4875G1s subscribe to this topic to read fallback amperage settings. Expects number input.
   - **Topic**: `home/canbus/fallback_amp_set`
 
 
