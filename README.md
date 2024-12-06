@@ -35,7 +35,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Simple Daily Charge Timer**
 - **LOW and HIGH Voltage Set for auto Wake/Hibernate**
 
-### Control Buttons, send Text string **PRESS** to activate
+### Control Buttons
 - **CAN ON Button** (Wake-up feature)
 - **CAN OFF Button** (Hibernate feature)
 - **Fan Full Speed Button**
@@ -233,7 +233,7 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 - **Fallback Voltage Set**
   - State Topic: `can-bus01/number/fallback_voltage_set/state`
 
-## Buttons
+## Buttons, send Text string **PRESS** to activate
 - **CAN ON Button**
   - State Topic: `can-bus01/button/can_on_button/state`
   - Command Topic: `can-bus01/button/can_on_button/command`
