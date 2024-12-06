@@ -166,6 +166,8 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 # MQTT Topics
 
 ## Binary Sensors
+- **Charger Power State ON/Hibernate**
+  - State Topic: `can-bus01/binary_sensor/charger_power_state/state`
 - **Charger Power State2**
   - State Topic: `can-bus01/binary_sensor/charger_power_state2/state`
 
