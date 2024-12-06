@@ -98,7 +98,7 @@ canbus:
         then:
           - lambda: |-
               if (x.size() == 8) {
-                // Extract the state byte (x[3]) and last four bytes for Wh
+                // Extract the state byte (x[3]) and last four bytes for alt Amps
                 const uint8_t state_byte = x[3];
                 const uint32_t meter_value = 
                   (static_cast<uint32_t>(x[4]) << 24) | 
