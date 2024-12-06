@@ -66,41 +66,39 @@ canbus:
                                        (static_cast<uint32_t>(x[5]) << 16) | 
                                        (static_cast<uint32_t>(x[6]) << 8) | 
                                        static_cast<uint32_t>(x[7]);
-
-                // Handle sensor publishing using a helper function
                 switch (byte_0) {
                   case 0x01:
                     switch (byte_1) {
-                      case 0x70: 
-                        id(ac_power_in_sensor).publish_state(value); 
-                        break;
-                      case 0x71: 
-                        id(grid_frequency_sensor).publish_state(value); 
-                        break;
-                      case 0x72: 
-                        id(input_current_sensor).publish_state(value); 
-                        break;
-                      case 0x73: 
-                        id(dc_power_out_sensor).publish_state(value);  
-                        break;
-                      case 0x75: 
-                        id(output_voltage_sensor).publish_state(value); 
-                        break;
-                      case 0x76: 
-                        id(set_max_output_current_sensor).publish_state(value); 
-                        break;
-                      case 0x78: 
-                        id(input_grid_voltage_sensor).publish_state(value); 
-                        break;
-                      case 0x7F: 
-                        id(output_temperature_sensor).publish_state(value); 
-                        break;
-                      case 0x81: 
-                        id(output_current_sensor).publish_state(value); 
-                        break;
+                      case 0x70: id(ac_power_in_sensor).publish_state(value); break;
+                      case 0x71: id(grid_frequency_sensor).publish_state(value); break;
+                      case 0x72: id(input_current_sensor).publish_state(value); break;
+                      case 0x73: id(dc_power_out_sensor).publish_state(value); break;
+                      case 0x75: id(output_voltage_sensor).publish_state(value); break;
+                      case 0x76: id(set_max_output_current_sensor).publish_state(value); break;
+                      case 0x78: id(input_grid_voltage_sensor).publish_state(value); break;
+                      case 0x7F: id(output_temperature_sensor).publish_state(value); break;
+                      case 0x81: id(output_current_sensor).publish_state(value); break;
                     }
                     break;
                 }
+              }
+
+      - can_id: 0x1001117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() == 8) {
+                // Extract the state byte (x[3]) and last four bytes for Wh
+                const uint8_t state_byte = x[3];
+                const uint32_t meter_value = 
+                  (static_cast<uint32_t>(x[4]) << 24) | 
+                  (static_cast<uint32_t>(x[5]) << 16) | 
+                  (static_cast<uint32_t>(x[6]) << 8)  | 
+                  static_cast<uint32_t>(x[7]);
+
+                // Publish Power state and alt AMP values
+                id(alt_amp_sensor).publish_state(meter_value);
+                id(power_state_sensor).publish_state(state_byte == 0);
               }
 
 
@@ -109,10 +107,47 @@ canbus:
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.0666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected
+  multiplier_current: '0.05'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected
 
- 
+binary_sensor:
+  - platform: template
+    id: power_state_sensor
+    name: "003 Charger Power State"
+    device_class: power
+
+
 sensor:
+  - platform: template
+    name: "06a Output DC Current alt"
+    id: alt_amp_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_current}
+    icon: "mdi:current-dc"
+
+  # AC Power In kWh sensor
+  - platform: total_daily_energy
+    name: "14 AC Daily Energy (kWh)"
+    power_id: ac_power_in_sensor
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    restore: True
+    icon: "mdi:counter"
+
+  # DC Power Out kWh sensor
+  - platform: total_daily_energy
+    name: "15 DC Daily Energy (kWh)"
+    power_id: dc_power_out_sensor
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    restore: True
+    icon: "mdi:counter"
+ 
   - platform: template
     name: "01 Input AC Power"
     id: ac_power_in_sensor
@@ -221,7 +256,7 @@ sensor:
 number:
   # Number inputs for setting ON and OFF voltage thresholds
   - platform: template
-    name: "003 Wake-up if Battery below:"
+    name: "004 Wake-up if Battery below:"
     id: can_on_voltage_threshold
     unit_of_measurement: "V"
     min_value: 0.0
@@ -231,10 +266,10 @@ number:
     restore_value: true
     initial_value: 0.0
     step: 0.1
-    icon: "mdi:flash"
+    icon: "mdi:power"
 
   - platform: template
-    name: "004 Hibernate if Battery above:"
+    name: "005 Hibernate if Battery above:"
     id: can_off_voltage_threshold
     unit_of_measurement: "V"
     min_value: 51.0
@@ -244,7 +279,7 @@ number:
     restore_value: true
     initial_value: 58.0
     step: 0.1
-    icon: "mdi:flash"
+    icon: "mdi:power"
 
   - platform: template
     name: "10 Set Voltage"
@@ -298,7 +333,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float amp_value = id(can_amp_input).state;  // Get the current Amp value
-            int scaled_value = (int)(amp_value * 15);  // Scale the Amp value (Amp * 15)
+            int scaled_value = (int)(amp_value * 20);  // Scale the Amp value (Amp * 20)
             ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
@@ -312,7 +347,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x03;  // Second byte is 0x03
-              int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
+              int scaled_value = (int)(id(can_amp_input).state * 20);  // Scale the Amp value
               can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
@@ -335,7 +370,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
-            int fallback_scaled_value = (int)(fallback_amp_value * 15);  // Scale the Amp value (Amp * 15)
+            int fallback_scaled_value = (int)(fallback_amp_value * 20);  // Scale the Amp value (Amp * 20)
             ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
             
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
@@ -349,7 +384,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x04;  // Second byte is 0x04 for the Fallback Amps setting
-              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 15);  // Scale the Amp value
+              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 20);  // Scale the Amp value
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
@@ -395,7 +430,7 @@ number:
  # the function can be disabled on the web interface by simply entering identical ON and OFF times.
   # Inputs for scheduled time 1
   - platform: template
-    name: "Switch ON Hour"
+    name: "006 Switch ON Hour"
     id: msg_a_hour
     min_value: 0
     max_value: 23
@@ -414,7 +449,7 @@ number:
             }
 
   - platform: template
-    name: "Switch ON Minute"
+    name: "007 Switch ON Minute"
     id: msg_a_minute
     min_value: 0
     max_value: 59
@@ -434,7 +469,7 @@ number:
 
   # Inputs for scheduled time 2
   - platform: template
-    name: "Switch OFF Hour"
+    name: "008 Switch OFF Hour"
     id: msg_b_hour
     min_value: 0
     max_value: 23
@@ -453,7 +488,7 @@ number:
             }
 
   - platform: template
-    name: "Switch OFF Minute"
+    name: "009 Switch OFF Minute"
     id: msg_b_minute
     min_value: 0
     max_value: 59
@@ -566,7 +601,6 @@ interval:
 time:
   - platform: sntp
     id: sntp_time
-    timezone: "Europe/London"  # Set your "TZ Identifier" timezone here find yours here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
     on_time:
 
       - seconds: /30  # This will trigger every 30 seconds for voltage
@@ -600,7 +634,7 @@ time:
 button:
   - platform: template
     name: "001 CAN ON Button"
-    icon: "mdi:button"
+    icon: "mdi:power"
     on_press:
       then:
         - lambda: |-
@@ -613,7 +647,7 @@ button:
 # Define a button component for turning OFF
   - platform: template
     name: "002 CAN OFF Button"
-    icon: "mdi:button"
+    icon: "mdi:power"
     on_press:
       then:
         - lambda: |-
@@ -625,8 +659,8 @@ button:
 
 # Define a button component for setting the fan to full speed
   - platform: template
-    name: "Fan Full Speed Button"
-    icon: "mdi:button"
+    name: "16 Fan Full Speed Button"
+    icon: "mdi:power"
     on_press:
       then:
         - lambda: |-
@@ -638,8 +672,8 @@ button:
 
 # Define a button component for setting the fan to auto mode
   - platform: template
-    name: "Fan Auto Mode Button"
-    icon: "mdi:button"
+    name: "17 Fan Auto Mode Button"
+    icon: "mdi:power"
     on_press:
       then:
         - lambda: |-
