@@ -139,14 +139,10 @@ And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YA
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 
-https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.9
-
-https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.91
+[latest release 0.9.3](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.93)
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
 
-- please note that the Amp settings using these pre-compiled files work only if pin9 and pin10 on the R4875G are NOT connected to each other. 
- 
 
 
 ### Example Screenshots
