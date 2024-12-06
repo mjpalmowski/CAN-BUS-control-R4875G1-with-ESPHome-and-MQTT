@@ -18,6 +18,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 ### Supported Sensors
 - **AC Power In**
 - **DC Power Out**
+- **Power State ON/Hibernate**
 - **Grid Frequency**
 - **Input Current**
 - **Output Voltage**
