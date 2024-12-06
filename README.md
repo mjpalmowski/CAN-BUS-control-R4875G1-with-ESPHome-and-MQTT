@@ -241,6 +241,26 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 - **Fan Full Speed Button**
   - State Topic: `can-bus01/button/fan_full_speed_button/state`
   - Command Topic: `can-bus01/button/fan_full_speed_button/command`
+ 
+
+# The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+
+## Subscribe Text Sensor Topics
+- **CAN Voltage MQTT**
+  - **Description**: Subscribes to this topic to monitor voltage setpoints. Expects text input.
+  - **Topic**: `home/canbus/voltage_set`
+
+- **CAN Amps MQTT**
+  - **Description**: Subscribes to this topic to monitor current (amperage) setpoints. Expects text input.
+  - **Topic**: `home/canbus/amp_set`
+
+- **Fallback Voltage MQTT**
+  - **Description**: Subscribes to this topic to monitor fallback voltage settings. Expects text input.
+  - **Topic**: `home/canbus/fallback_voltage_set`
+
+- **Fallback Amps MQTT**
+  - **Description**: Subscribes to this topic to monitor fallback amperage settings. Expects text input.
+  - **Topic**: `home/canbus/fallback_amp_set`
 
 
 
