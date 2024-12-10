@@ -100,12 +100,6 @@ Connect the folowing pins together (this will allow the full 75A max output curr
 
 please adjust the scaling factor in the YAML code if you have not connected pin 9 with pin 10. 
 
-you can do that here: 
-
-![Screenshot 2024-12-10 192140](https://github.com/user-attachments/assets/f8b96429-33b6-4356-b1cd-fb64917a7805)
-
-
-
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
 
