@@ -212,7 +212,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float voltage_value = id(can_voltage_input).state;
-            int scaled_value = (int)(voltage_value * 1020);
+            int scaled_value = (int)(voltage_value * 1024);
             ESP_LOGI("custom", "Received voltage: %.1fV, Scaled value: %d", voltage_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
@@ -225,7 +225,7 @@ number:
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);
               can_data[0] = 0x01;
-              int scaled_value = (int)(id(can_voltage_input).state * 1020);
+              int scaled_value = (int)(id(can_voltage_input).state * 1024);
               can_data[6] = (scaled_value >> 8) & 0xFF;
               can_data[7] = scaled_value & 0xFF;
               return can_data;
@@ -285,7 +285,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
-            int fallback_scaled_value = (int)(fallback_amp_value * 30);  // Scale the Amp value (Amp * 20)
+            int fallback_scaled_value = (int)(fallback_amp_value * 30);  // Scale the Amp value (Amp * 30)
             ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
             
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
@@ -321,7 +321,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float fallback_voltage_value = id(fallback_voltage_input).state;  // Get the fallback voltage value
-            int fallback_scaled_value = (int)(fallback_voltage_value * 1020);  // Scale the voltage value (voltage * 1020)
+            int fallback_scaled_value = (int)(fallback_voltage_value * 1024);  // Scale the voltage value (voltage * 1024)
             ESP_LOGI("custom", "Fallback Voltage: %.1fV, Scaled value: %d", fallback_voltage_value, fallback_scaled_value);
             
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
@@ -335,7 +335,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x01;  // Second byte is 0x01 for the Fallback Voltage setting
-              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * 1020);  // Scale the voltage value
+              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * 1024);  // Scale the voltage value
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
@@ -371,7 +371,7 @@ interval:
           data: !lambda |-
             std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
             can_data[0] = 0x01;  // First byte is always 0x01
-            int scaled_value = (int)(id(can_voltage_input).state * 1020);  // Scale the voltage value
+            int scaled_value = (int)(id(can_voltage_input).state * 1024);  // Scale the voltage value
             can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
             can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
             return can_data;
@@ -386,7 +386,7 @@ interval:
             std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
             can_data[0] = 0x01;  // First byte is always 0x01
             can_data[1] = 0x03;  // Second byte is 0x03
-            int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
+            int scaled_value = (int)(id(can_amp_input).state * 30);  // Scale the Amp value
             can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
             can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
             return can_data;
