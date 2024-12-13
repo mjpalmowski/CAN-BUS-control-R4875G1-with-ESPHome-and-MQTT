@@ -86,19 +86,19 @@ For those not using the adapter board, the module can be manually turned on by s
 ![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
 
 Connect the following pins together
-1,5
+Pin1 to Pin5
 
-Connect the following Pins to DC- (Pin 1):
+Connect the following Pins to DC- (Pin1):
 11,12
 
 Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
-9,10 
+Pin9 to Pin10 
 
-- If pin 9 and 10 are not connected together the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
+- If Pin9 and Pin10 are not connected the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
   
-- If pins 9 and 10 are connected together the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
+- If Pin9 is connected to Pin10 the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
 
-please adjust the scaling factor in the YAML code if you have not connected pin 9 with pin 10. 
+please adjust the scaling factor in the YAML code if you have not connected Pin9 to Pin10. 
 
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
