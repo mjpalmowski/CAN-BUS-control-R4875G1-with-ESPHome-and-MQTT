@@ -48,7 +48,7 @@ captive_portal:
 globals:
   - id: amp_scaling_factor
     type: int
-    initial_value: "30"
+    initial_value: "20"
   - id: voltage_scaling_factor
     type: int
     initial_value: "1024"
