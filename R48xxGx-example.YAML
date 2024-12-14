@@ -10,7 +10,7 @@ esp32:
 globals:
   - id: amp_scaling_factor 
     type: int
-    initial_value: "15" #use a value of 30, 20, or 15 here. (try 30 or 20 for the R4850G2 versions and 20 or 15 for the R4875G1 and R4875G5 versions)
+    initial_value: "15" #use a value of 30, 20, or 15 here. (try 30 for R4830G version, 20 for the R4850G versions and 15 for the R4875G version)
 
 
   - id: voltage_scaling_factor # universal scaling factor (should be left at 1024 for all flavours of the R48xxGx family)
