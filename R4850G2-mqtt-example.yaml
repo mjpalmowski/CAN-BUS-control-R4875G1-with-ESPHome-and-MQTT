@@ -113,7 +113,7 @@ canbus:
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.0333333333'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected   #1/30 for the r4850g2
+  multiplier_current: '0.05'          # 1/20 conversion factor           #1/20 for the r4850g2
 
 binary_sensor:
   - platform: template
