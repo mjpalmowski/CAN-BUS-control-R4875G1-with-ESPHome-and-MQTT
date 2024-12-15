@@ -157,10 +157,6 @@ canbus:
 
 # Define sensors
 
-substitutions:
-  multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.066666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected   #1/30 for the r4850g2
-
 binary_sensor:
   - platform: template
     id: power_state_sensor
@@ -201,7 +197,8 @@ sensor:
     unit_of_measurement: "A"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_current}
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
     icon: "mdi:current-dc"
 
   # AC Power In kWh sensor
@@ -233,7 +230,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:flash"
 
   - platform: template
@@ -243,7 +241,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:flash"
 
   - platform: template
@@ -253,7 +252,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:transmission-tower-import"
 
   - platform: template
@@ -263,7 +263,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-ac"
 
   - platform: template
@@ -273,7 +274,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-dc"
 
   - platform: template
@@ -283,7 +285,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:sine-wave"
 
   - platform: template
@@ -293,7 +296,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:thermometer"
     on_value:
       then:
@@ -316,7 +320,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-dc"
 
   - platform: template
@@ -326,7 +331,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_current}
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
     icon: "mdi:current-ac"
 
 
