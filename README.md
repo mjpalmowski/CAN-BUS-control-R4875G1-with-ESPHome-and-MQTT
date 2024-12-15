@@ -122,7 +122,9 @@ If you prefer a standalone setup, you can configure the web server component for
 If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
 
 Here is a YAML example to [control two R4875G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4875G%20on%20one%20CAN-BUS-MQTT_example.YAML)
+
 Here is a YAML example to [control two R4850G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4850G%20on%20one%20CAN-BUS-MQTT_example.YAML)
+
 Here is a YAML example to [control two R4830G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4830G%20on%20one%20CAN-BUS-MQTT_example.YAML)
 
 And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
