@@ -1,6 +1,6 @@
 esphome:
-  name: "r4875g1-can-web"
-  friendly_name: "r4875g1-can-web"
+  name: "r48xxgx-can-web"
+  friendly_name: "R48xxGx-can-web"
 
 esp32:
   board: esp32dev
@@ -45,6 +45,37 @@ wifi:
 
 captive_portal:
 
+globals:
+  - id: amp_scaling_factor
+    type: int
+    initial_value: "15"
+    restore_value: true
+    
+  - id: voltage_scaling_factor
+    type: int
+    initial_value: "1024"
+    restore_value: true
+
+select:
+  - platform: template
+    id: model_selection
+    name: "Model Selection"
+    options:
+      - "R4830G"
+      - "R4850G"
+      - "R4875G"
+      - "Select different model"
+    initial_option: "Select different model"
+    icon: "mdi:chip"
+    set_action:
+      - lambda: |-
+          if (x == "R4830G") {
+            id(amp_scaling_factor) = 30;
+          } else if (x == "R4850G") {
+            id(amp_scaling_factor) = 20;
+          } else if (x == "R4875G") {
+            id(amp_scaling_factor) = 15;
+          }
 
 
 canbus:
@@ -107,7 +138,7 @@ canbus:
 
 substitutions:
   multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.0666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected
+  multiplier_current: '0.066666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected   #1/30 for the r4850g2
 
 binary_sensor:
   - platform: template
@@ -116,7 +147,33 @@ binary_sensor:
     device_class: power
 
 
+# Create a text sensor to show the current model
+text_sensor:
+  - platform: template
+    name: "Current Model Selection"
+    lambda: |-
+      if (id(amp_scaling_factor) == 30) {
+        return {"R4830G"};
+      } else if (id(amp_scaling_factor) == 20) {
+        return {"R4850G"};
+      } else {
+        return {"R4875G"};
+      }
+    update_interval: 10s
+    icon: "mdi:chip"
+
+
+
+
 sensor:
+
+  - platform: template
+    name: "Amp Scaling Factor"
+    lambda: |-
+      return id(amp_scaling_factor);
+    update_interval: 10s
+    internal: true
+
   - platform: template
     name: "06a Output DC Current alt"
     id: alt_amp_sensor
@@ -297,7 +354,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float voltage_value = id(can_voltage_input).state;
-            int scaled_value = (int)(voltage_value * 1020);
+            int scaled_value = (int)(voltage_value * id(voltage_scaling_factor));
             ESP_LOGI("custom", "Received voltage: %.1fV, Scaled value: %d", voltage_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
@@ -310,47 +367,48 @@ number:
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);
               can_data[0] = 0x01;
-              int scaled_value = (int)(id(can_voltage_input).state * 1020);
+              int scaled_value = (int)(id(can_voltage_input).state *  id(voltage_scaling_factor));
               can_data[6] = (scaled_value >> 8) & 0xFF;
               can_data[7] = scaled_value & 0xFF;
               return can_data;
 
 
-  # Amp Setting
+
   - platform: template
     name: "12 Set Current"
     id: can_amp_input
     min_value: 1
-    max_value: 50  # Max value for the Amp input, if you have pin 9 and 10 connected you can change this value to 75
-    step: 1  # 1 Amp steps
+    max_value: 50
+    step: 1
     unit_of_measurement: "A"
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:current-dc"
     on_value:
       then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - delay: 0.01s
         - lambda: |-
-            float amp_value = id(can_amp_input).state;  // Get the current Amp value
-            int scaled_value = (int)(amp_value * 15);  // Scale the Amp value (Amp * 15)
+            float amp_value = id(can_amp_input).state;
+            int scaled_value = (int)(amp_value * id(amp_scaling_factor));
             ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
             uint8_t low_byte = scaled_value & 0xFF;
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
 
         - canbus.send:
             use_extended_id: true
             can_id: 0x108180FE
             data: !lambda |-
-              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-              can_data[0] = 0x01;  // First byte is always 0x01
-              can_data[1] = 0x03;  // Second byte is 0x03
-              int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
-              can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-              can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              can_data[1] = 0x03;
+              int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
               return can_data;
+
   
 
   # Fallback Amp Setting
@@ -358,36 +416,37 @@ number:
     name: "13 Set Fallback Current"
     id: fallback_amp_input
     min_value: 1
-    max_value: 50  # Max value for the Amp input, if you have pin 9 and 10 connected you can change this value to 75
-    step: 1  # 1A steps
+    max_value: 50
+    step: 1
     unit_of_measurement: "A"
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
     icon: "mdi:current-dc"
     on_value:
       then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - delay: 0.01s
         - lambda: |-
-            float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
-            int fallback_scaled_value = (int)(fallback_amp_value * 15);  // Scale the Amp value (Amp * 15)
+            float fallback_amp_value = id(fallback_amp_input).state;
+            int fallback_scaled_value = (int)(fallback_amp_value * id(amp_scaling_factor));
             ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
-            
-            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
-            uint8_t low_byte = fallback_scaled_value & 0xFF;  // Get low byte
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+
+            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;
+            uint8_t low_byte = fallback_scaled_value & 0xFF;
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
 
         - canbus.send:
             use_extended_id: true
             can_id: 0x108180FE
             data: !lambda |-
-              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-              can_data[0] = 0x01;  // First byte is always 0x01
-              can_data[1] = 0x04;  // Second byte is 0x04 for the Fallback Amps setting
-              int fallback_scaled_value = (int)(id(fallback_amp_input).state * 15);  // Scale the Amp value
-              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-              can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              can_data[1] = 0x04;
+              int fallback_scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
+              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;
+              can_data[7] = fallback_scaled_value & 0xFF;
               return can_data;
+
 
   # Fallback Voltage Setting
   - platform: template
@@ -406,7 +465,7 @@ number:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
         - lambda: |-
             float fallback_voltage_value = id(fallback_voltage_input).state;  // Get the fallback voltage value
-            int fallback_scaled_value = (int)(fallback_voltage_value * 1020);  // Scale the voltage value (voltage * 1020)
+            int fallback_scaled_value = (int)(fallback_voltage_value * id(voltage_scaling_factor));  // Scale the voltage value (voltage * 1020)
             ESP_LOGI("custom", "Fallback Voltage: %.1fV, Scaled value: %d", fallback_voltage_value, fallback_scaled_value);
             
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
@@ -420,7 +479,7 @@ number:
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
               can_data[1] = 0x01;  // Second byte is 0x01 for the Fallback Voltage setting
-              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * 1020);  // Scale the voltage value
+              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * id(voltage_scaling_factor));  // Scale the voltage value
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
               can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
               return can_data;
@@ -597,12 +656,16 @@ interval:
 
 
 
+
+
+
 ####################################################################################################################################################
 time:
   - platform: sntp
     id: sntp_time
     on_time:
 
+      # Voltage Setting
       - seconds: /30  # This will trigger every 30 seconds for voltage
         then:
           - canbus.send:
@@ -611,11 +674,12 @@ time:
               data: !lambda |-
                 std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
                 can_data[0] = 0x01;  // First byte is always 0x01
-                int scaled_value = (int)(id(can_voltage_input).state * 1024);  // Scale the voltage value
+                int scaled_value = (int)(id(can_voltage_input).state * id(voltage_scaling_factor));  // Scale the voltage value
                 can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
                 can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
                 return can_data;
 
+      # Amp Setting
       - seconds: /30  # This will trigger every 30 seconds for Amp setting
         then:
           - canbus.send:
@@ -625,7 +689,7 @@ time:
                 std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
                 can_data[0] = 0x01;  // First byte is always 0x01
                 can_data[1] = 0x03;  // Second byte is 0x03
-                int scaled_value = (int)(id(can_amp_input).state * 15);  // Scale the Amp value
+                int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));  // Scale the Amp value
                 can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
                 can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
                 return can_data;
