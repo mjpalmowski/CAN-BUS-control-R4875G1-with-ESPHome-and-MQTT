@@ -251,19 +251,19 @@ How to use: send Text string: `PRESS` to activate
 How to use: The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
 
 - **Set MAX Voltage**
-  - **Description**: The R4875G1s subscribe to this topic to read voltage setpoints. Expects number input.
+  - **Description**: Publish to this topic to SET MAX voltage. Expects number input.
   - **Topic**: `home/canbus/voltage_set`
 
 - **Set MAX Amps**
-  - **Description**: The R4875G1s subscribe to this topic to read current (amperage) setpoints. Expects number input.
+  - **Description**: Publish to this topic to SET MAX current (amperage). Expects number input.
   - **Topic**: `home/canbus/amp_set`
 
 - **Set MAX Fallback Voltage**
-  - **Description**: The R4875G1s subscribe to this topic to read fallback voltage settings. Expects number input.
+  - **Description**: Publish to this topic to SET MAX fallback voltage. Expects number input.
   - **Topic**: `home/canbus/fallback_voltage_set`
 
 - **Set MAX Fallback Amps**
-  - **Description**: The R4875G1s subscribe to this topic to read fallback amperage settings. Expects number input.
+  - **Description**: Publish to this topic to SET MAX fallback amperage. Expects number input.
   - **Topic**: `home/canbus/fallback_amp_set`
 
 
