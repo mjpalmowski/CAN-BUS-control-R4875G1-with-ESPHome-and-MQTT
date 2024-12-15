@@ -15,6 +15,11 @@ This module is 97% efficient, provides up to 4kW of DC power, and includes short
 ## Key Features
 The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. The ESP32 connects to the R4875G1 via a VP230 CAN-BUS transceiver. Below are the main features:
 
+### Supported Hardware:
+- **R4875G**
+- **R4850G**
+- **R4830G**
+
 ### Supported Sensors
 - **Power State ON/Hibernate**
 - **AC Power In**
@@ -86,19 +91,19 @@ For those not using the adapter board, the module can be manually turned on by s
 ![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
 
 Connect the following pins together
-1,5
+Pin1 to Pin5
 
-Connect the following Pins to DC- (Pin 1):
+Connect the following Pins to DC- (Pin1):
 11,12
 
 Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
-9,10 
+Pin9 to Pin10 
 
-- If pin 9 and 10 are not connected together the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
+- If Pin9 and Pin10 are not connected the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
   
-- If pins 9 and 10 are connected together the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
+- If Pin9 is connected to Pin10 the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
 
-please adjust the scaling factor in the YAML code if you have not connected pin 9 with pin 10. 
+please adjust the scaling factor in the YAML code if you have not connected Pin9 to Pin10. 
 
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
@@ -118,6 +123,11 @@ If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and 
 
 
 And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
+
+And here you can find [a version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
+
+![Screenshot 2024-12-15 075408](https://github.com/user-attachments/assets/94dee625-c55a-4b92-9047-dd49d9215d8f)
+
 
 
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
