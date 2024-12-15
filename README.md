@@ -121,6 +121,9 @@ And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YA
 
 And here you can find [a version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
 
+![Screenshot 2024-12-15 075408](https://github.com/user-attachments/assets/94dee625-c55a-4b92-9047-dd49d9215d8f)
+
+
 
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
