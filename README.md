@@ -15,6 +15,11 @@ This module is 97% efficient, provides up to 4kW of DC power, and includes short
 ## Key Features
 The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. The ESP32 connects to the R4875G1 via a VP230 CAN-BUS transceiver. Below are the main features:
 
+### Supported Hardware:
+- **R4875G**
+- **R4850G**
+- **R4830G**
+
 ### Supported Sensors
 - **Power State ON/Hibernate**
 - **AC Power In**
