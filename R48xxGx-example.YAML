@@ -1,33 +1,23 @@
 esphome:
-  name: r48xxgx-control
-  friendly_name: r48xxgx-control
+  name: "r48xxgx-can-web"
+  friendly_name: "R48xxGx-can-web"
 
 esp32:
   board: esp32dev
   framework:
     type: arduino
 
-globals:
-  - id: amp_scaling_factor 
-    type: int
-    initial_value: "15" #use a value of 30, 20, or 15 here. (try 30 for R4830G version, 20 for the R4850G versions and 15 for the R4875G version)
-
-
-  - id: voltage_scaling_factor # universal scaling factor (should be left at 1024 for all flavours of the R48xxGx family)
-    type: int
-    initial_value: "1024"
-
 logger:
   level: INFO
 ##################################################################################################################
-# Uncomment this webserver block if you want to control the device via webpage
-#web_server:
-#  version: 3
+# Uncomment this webserver block if you want to control the device via webpage, this version has the timer and the wake/hibernate on voltage functions.
+web_server:
+  version: 3
 ##################################################################################################################
 ## If you are using Home Assistant uncomment this section
-api:
-  encryption:
-    key: "4taaK4Kn+NZNAyA8/RM+YaFkwiyy/gTorr4XlwfThQE="
+#api:
+#  encryption:
+#    key: "H298aU54c2QdjN8BZTAA3Sef3umNQ+dWXWGMmqQxbDo="
 
 ##################################################################################################################
 ## uncomment this block to enable mqtt if you are using NodeRed or other MQTT software !also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt! 
@@ -39,23 +29,59 @@ api:
 ##################################################################################################################
 ota:
   - platform: esphome
-    password: "f8ab526ee137e5bef0fd65e50a223861"
+    password: "ec929410663572fa5a48ef35d80bd8b9"
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+
+
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "R4875G1 Fallback Hotspot"
     password: '12345678'
 
+
 captive_portal:
+
+globals:
+  - id: amp_scaling_factor
+    type: int
+    initial_value: "15"
+    restore_value: true
+    
+  - id: voltage_scaling_factor
+    type: int
+    initial_value: "1024"
+    restore_value: true
+
+select:
+  - platform: template
+    id: model_selection
+    name: "Model Selection"
+    options:
+      - "R4830G"
+      - "R4850G"
+      - "R4875G"
+      - "Select different model"
+    initial_option: "Select different model"
+    icon: "mdi:chip"
+    set_action:
+      - lambda: |-
+          if (x == "R4830G") {
+            id(amp_scaling_factor) = 30;
+          } else if (x == "R4850G") {
+            id(amp_scaling_factor) = 20;
+          } else if (x == "R4875G") {
+            id(amp_scaling_factor) = 15;
+          }
+
 
 canbus:
   - platform: esp32_can
     tx_pin: GPIO19
-    rx_pin: GPIO02
+    rx_pin: GPIO21
     can_id: 0xE5F32E5
     bit_rate: 125kbps
     use_extended_id: True
@@ -110,18 +136,56 @@ canbus:
 
 # Define sensors
 
+substitutions:
+  multiplier_default: '0.0009765625' # 1/1024 conversion factor
+  multiplier_current: '0.066666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected   #1/30 for the r4850g2
+
 binary_sensor:
   - platform: template
     id: power_state_sensor
-    name: "Charger"
+    name: "003 Charger Power State"
     device_class: power
+
+
+# Create a text sensor to show the current model
+text_sensor:
+  - platform: template
+    name: "Current Model Selection"
+    lambda: |-
+      if (id(amp_scaling_factor) == 30) {
+        return {"R4830G"};
+      } else if (id(amp_scaling_factor) == 20) {
+        return {"R4850G"};
+      } else {
+        return {"R4875G"};
+      }
+    update_interval: 10s
+    icon: "mdi:chip"
+
+
 
 
 sensor:
 
+  - platform: template
+    name: "Amp Scaling Factor"
+    lambda: |-
+      return id(amp_scaling_factor);
+    update_interval: 10s
+    internal: true
+
+  - platform: template
+    name: "06a Output DC Current alt"
+    id: alt_amp_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${multiplier_current}
+    icon: "mdi:current-dc"
+
   # AC Power In kWh sensor
   - platform: total_daily_energy
-    name: "Daily kWh AC"
+    name: "14 AC Daily Energy (kWh)"
     power_id: ac_power_in_sensor
     unit_of_measurement: "kWh"
     accuracy_decimals: 3
@@ -132,7 +196,7 @@ sensor:
 
   # DC Power Out kWh sensor
   - platform: total_daily_energy
-    name: "Dail kWh DC"
+    name: "15 DC Daily Energy (kWh)"
     power_id: dc_power_out_sensor
     unit_of_measurement: "kWh"
     accuracy_decimals: 3
@@ -142,90 +206,73 @@ sensor:
     icon: "mdi:counter"
  
   - platform: template
-    name: "Output Current a"
-    id: alt_amp_sensor
-    unit_of_measurement: "A"
-    accuracy_decimals: 1
-    filters:
-      - lambda: |-
-          return x / id(amp_scaling_factor);  
-    icon: "mdi:current-dc"
-
-  - platform: template
-    name: "AC Power"
+    name: "01 Input AC Power"
     id: ac_power_in_sensor
     unit_of_measurement: "W"
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:flash"
 
   - platform: template
-    name: "DC Power"
+    name: "05 Output DC Power"
     id: dc_power_out_sensor
     unit_of_measurement: "W"
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:flash"
 
   - platform: template
-    name: "Grid"
+    name: "02 Input Grid AC Frequency"
     id: grid_frequency_sensor
     unit_of_measurement: "Hz"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:transmission-tower-import"
 
   - platform: template
-    name: "Current AC"
+    name: "03 Input AC Current"
     id: input_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:current-ac"
 
   - platform: template
-    name: "Voltage DC"
+    name: "07 Output DC Voltage"
     id: output_voltage_sensor
     unit_of_measurement: "V"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:current-dc"
 
   - platform: template
-    name: "Voltage AC"
+    name: "04 Input AC Grid Voltage"
     id: input_grid_voltage_sensor
     unit_of_measurement: "V"
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:sine-wave"
 
   - platform: template
-    name: "Temperature"
+    name: "08 Output Temperature"
     id: output_temperature_sensor
     unit_of_measurement: "°C"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:thermometer"
     on_value:
       then:
@@ -242,32 +289,31 @@ sensor:
                   format: "Temperature exceeded 90°C. Sent CAN OFF message."
 
   - platform: template
-    name: "Current DC"
+    name: "06 Output DC Current"
     id: output_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(voltage_scaling_factor);  
+      - multiply: ${multiplier_default}
     icon: "mdi:current-dc"
 
   - platform: template
-    name: "Max Current"
+    name: "09 Max Output DC Current"
     id: set_max_output_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - lambda: |-
-          return x / id(amp_scaling_factor);  
+      - multiply: ${multiplier_current}
     icon: "mdi:current-ac"
+
 
 # Number input for CAN Voltage
 number:
   # Number inputs for setting ON and OFF voltage thresholds
   - platform: template
-    name: "Wake-up below"
+    name: "004 Wake-up if Battery below:"
     id: can_on_voltage_threshold
     unit_of_measurement: "V"
     min_value: 0.0
@@ -280,7 +326,7 @@ number:
     icon: "mdi:power"
 
   - platform: template
-    name: "Hibernate above:"
+    name: "005 Hibernate if Battery above:"
     id: can_off_voltage_threshold
     unit_of_measurement: "V"
     min_value: 51.0
@@ -293,7 +339,7 @@ number:
     icon: "mdi:power"
 
   - platform: template
-    name: "SET Voltage"
+    name: "10 Set Voltage"
     id: can_voltage_input
     min_value: 49
     max_value: 58
@@ -329,10 +375,10 @@ number:
 
 
   - platform: template
-    name: "SET Current"
+    name: "12 Set Current"
     id: can_amp_input
     min_value: 1
-    max_value: 75
+    max_value: 50
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -367,10 +413,10 @@ number:
 
   # Fallback Amp Setting
   - platform: template
-    name: "SET Current-FB"
+    name: "13 Set Fallback Current"
     id: fallback_amp_input
     min_value: 1
-    max_value: 75
+    max_value: 50
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -404,7 +450,7 @@ number:
 
   # Fallback Voltage Setting
   - platform: template
-    name: "SET Voltage-FB"
+    name: "11 Set Fallback Voltage"
     id: fallback_voltage_input
     min_value: 49
     max_value: 58  # Adjust as needed for your voltage range
@@ -443,7 +489,7 @@ number:
  # the function can be disabled on the web interface by simply entering identical ON and OFF times.
   # Inputs for scheduled time 1
   - platform: template
-    name: "ON Hour"
+    name: "006 Switch ON Hour"
     id: msg_a_hour
     min_value: 0
     max_value: 23
@@ -462,7 +508,7 @@ number:
             }
 
   - platform: template
-    name: "ON Minute"
+    name: "007 Switch ON Minute"
     id: msg_a_minute
     min_value: 0
     max_value: 59
@@ -482,7 +528,7 @@ number:
 
   # Inputs for scheduled time 2
   - platform: template
-    name: "OFF Hour"
+    name: "008 Switch OFF Hour"
     id: msg_b_hour
     min_value: 0
     max_value: 23
@@ -501,7 +547,7 @@ number:
             }
 
   - platform: template
-    name: "OFF Minute"
+    name: "009 Switch OFF Minute"
     id: msg_b_minute
     min_value: 0
     max_value: 59
@@ -610,6 +656,9 @@ interval:
 
 
 
+
+
+
 ####################################################################################################################################################
 time:
   - platform: sntp
@@ -648,7 +697,7 @@ time:
 # Define a button component for turning ON
 button:
   - platform: template
-    name: "!ON!"
+    name: "001 CAN ON Button"
     icon: "mdi:power"
     on_press:
       then:
@@ -661,7 +710,7 @@ button:
 
 # Define a button component for turning OFF
   - platform: template
-    name: "!OFF!"
+    name: "002 CAN OFF Button"
     icon: "mdi:power"
     on_press:
       then:
@@ -674,7 +723,7 @@ button:
 
 # Define a button component for setting the fan to full speed
   - platform: template
-    name: "Fan Full"
+    name: "16 Fan Full Speed Button"
     icon: "mdi:power"
     on_press:
       then:
@@ -687,7 +736,7 @@ button:
 
 # Define a button component for setting the fan to auto mode
   - platform: template
-    name: "Fan Auto"
+    name: "17 Fan Auto Mode Button"
     icon: "mdi:power"
     on_press:
       then:
