@@ -56,10 +56,29 @@ globals:
     initial_value: "1024"
     restore_value: true
 
+  - id: max_amp_limit
+    type: float
+    initial_value: "75"  # Set your default max value here
+
+script:
+  - id: set_max_amp_limit
+    mode: queued
+    then:
+      - lambda: |-
+          // Adjust max amp limit dynamically based on the model
+          if (id(amp_scaling_factor) == 15) {
+            id(max_amp_limit) = 75.0;
+          } else if (id(amp_scaling_factor) == 20) {
+            id(max_amp_limit) = 50.0;
+          } else if (id(amp_scaling_factor) == 30) {
+            id(max_amp_limit) = 30.0;
+          }
+          ESP_LOGI("custom", "Max Amp Limit set to %.1f", id(max_amp_limit));
+
 select:
   - platform: template
     id: model_selection
-    name: "Model Selection"
+    name: "0-Model Selection"
     options:
       - "R4830G"
       - "R4850G"
@@ -76,6 +95,8 @@ select:
           } else if (x == "R4875G") {
             id(amp_scaling_factor) = 15;
           }
+          id(set_max_amp_limit).execute();  // Call the script to update the max limit
+
 
 
 canbus:
@@ -150,7 +171,7 @@ binary_sensor:
 # Create a text sensor to show the current model
 text_sensor:
   - platform: template
-    name: "Current Model Selection"
+    name: "0-Current Model Selection"
     lambda: |-
       if (id(amp_scaling_factor) == 30) {
         return {"R4830G"};
@@ -374,11 +395,12 @@ number:
 
 
 
+
   - platform: template
-    name: "12 Set Current"
+    name: "12 SET Current"
     id: can_amp_input
     min_value: 1
-    max_value: 50
+    max_value: 75  # Set to the maximum possible value for all models
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -390,8 +412,16 @@ number:
         - delay: 0.01s
         - lambda: |-
             float amp_value = id(can_amp_input).state;
+            float max_limit = id(max_amp_limit);  // Get dynamic limit from global
+
+            if (amp_value > max_limit) {
+              ESP_LOGW("custom", "Amp %.1f exceeds limit %.1f. Resetting.", amp_value, max_limit);
+              id(can_amp_input).publish_state(max_limit);  // Reset to max limit
+              amp_value = max_limit;
+            }
+
             int scaled_value = (int)(amp_value * id(amp_scaling_factor));
-            ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
+            ESP_LOGI("custom", "Validated Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
             uint8_t low_byte = scaled_value & 0xFF;
@@ -416,7 +446,7 @@ number:
     name: "13 Set Fallback Current"
     id: fallback_amp_input
     min_value: 1
-    max_value: 50
+    max_value: 75  # Set to the maximum possible value for all models
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -428,8 +458,16 @@ number:
         - delay: 0.01s
         - lambda: |-
             float fallback_amp_value = id(fallback_amp_input).state;
+            float max_limit = id(max_amp_limit);  // Get dynamic limit from global
+
+            if (fallback_amp_value > max_limit) {
+              ESP_LOGW("custom", "Fallback Amp %.1f exceeds limit %.1f. Resetting.", fallback_amp_value, max_limit);
+              id(fallback_amp_input).publish_state(max_limit);  // Reset to max limit
+              fallback_amp_value = max_limit;
+            }
+
             int fallback_scaled_value = (int)(fallback_amp_value * id(amp_scaling_factor));
-            ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
+            ESP_LOGI("custom", "Validated Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
 
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;
             uint8_t low_byte = fallback_scaled_value & 0xFF;
@@ -446,6 +484,7 @@ number:
               can_data[6] = (fallback_scaled_value >> 8) & 0xFF;
               can_data[7] = fallback_scaled_value & 0xFF;
               return can_data;
+
 
 
   # Fallback Voltage Setting
