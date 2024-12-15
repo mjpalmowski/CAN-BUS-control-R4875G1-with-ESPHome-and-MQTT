@@ -244,9 +244,12 @@ How to use: send Text string: `PRESS` to activate
   - Command Topic: `can-bus01/button/fan_full_speed_button/command`
  
 
-### The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+
 
 ## Text Sensor Topics
+
+How to use: The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+
 - **Set MAX Voltage**
   - **Description**: The R4875G1s subscribe to this topic to read voltage setpoints. Expects number input.
   - **Topic**: `home/canbus/voltage_set`
