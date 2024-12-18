@@ -119,8 +119,13 @@ If you prefer a standalone setup, you can configure the web server component for
 
 [View R4875G CAN Control YAML](./CAN-R4875G1-ESP32.YAML)
 
-If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) to your CAN BUS [here is an example YAML](./Control-two-R4875G1-with-one-ESP32-example.YAML) that allows you to set values for all units simultaneously and receive the sensor data separately.
+If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
 
+Here is a YAML example to [control two R4875G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4875G%20on%20one%20CAN-BUS-MQTT_example.YAML)
+
+Here is a YAML example to [control two R4850G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4850G%20on%20one%20CAN-BUS-MQTT_example.YAML)
+
+Here is a YAML example to [control two R4830G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4830G%20on%20one%20CAN-BUS-MQTT_example.YAML)
 
 And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
 
@@ -239,23 +244,26 @@ How to use: send Text string: `PRESS` to activate
   - Command Topic: `can-bus01/button/fan_full_speed_button/command`
  
 
-### The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+
 
 ## Text Sensor Topics
+
+How to use: The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
+
 - **Set MAX Voltage**
-  - **Description**: The R4875G1s subscribe to this topic to read voltage setpoints. Expects number input.
+  - **Description**: Publish to this topic to SET MAX voltage. Expects number input.
   - **Topic**: `home/canbus/voltage_set`
 
 - **Set MAX Amps**
-  - **Description**: The R4875G1s subscribe to this topic to read current (amperage) setpoints. Expects number input.
+  - **Description**: Publish to this topic to SET MAX current (amperage). Expects number input.
   - **Topic**: `home/canbus/amp_set`
 
 - **Set MAX Fallback Voltage**
-  - **Description**: The R4875G1s subscribe to this topic to read fallback voltage settings. Expects number input.
+  - **Description**: Publish to this topic to SET MAX fallback voltage. Expects number input.
   - **Topic**: `home/canbus/fallback_voltage_set`
 
 - **Set MAX Fallback Amps**
-  - **Description**: The R4875G1s subscribe to this topic to read fallback amperage settings. Expects number input.
+  - **Description**: Publish to this topic to SET MAX fallback amperage. Expects number input.
   - **Topic**: `home/canbus/fallback_amp_set`
 
 
