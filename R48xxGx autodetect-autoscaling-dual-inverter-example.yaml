@@ -13,9 +13,9 @@ logger:
 
 
 
-# This YAML file is optimised to run two R4875G units in parallel on the same CAN BUS. COMMUNICATION VIA MQTT.
+# This YAML file is optimised to run two R48xxGx units in parallel on the same CAN BUS. COMMUNICATION VIA MQTT.
 # If you dont have or want to use Home assistant or do any automation, just need a simple web surface to 
-# control your R4875G1, just fill out your wifi credentials, uncomment this webs_server: section and 
+# control your R48xxGx, just fill out your wifi credentials, uncomment this webs_server: section and 
 # comment out the "api:" section and the "mqtt:" section. and compile and upload bin to esp32 
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 # once installed you can find the webtool at http://can-bus01.local/
