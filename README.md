@@ -149,6 +149,8 @@ https://web.esphome.io/?dashboard_wizard to upload the .bin
 
 ### Example Screenshots
 
+![Screenshot 2024-12-17 230917](https://github.com/user-attachments/assets/7e92dae8-5b62-417b-a34f-55a1e8e75657)
+
 
 ![web surface intigration](https://github.com/user-attachments/assets/8f8a1d15-0d97-484c-a825-1dc12245aaed)
 
