@@ -132,7 +132,7 @@ Here is a YAML example to [control two R48xxGx units (have to be of identical ty
 
 And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
 
-And here you can find [a version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
+And here you can find [a web-app version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
 
 ![Screenshot 2024-12-15 075408](https://github.com/user-attachments/assets/94dee625-c55a-4b92-9047-dd49d9215d8f)
 
