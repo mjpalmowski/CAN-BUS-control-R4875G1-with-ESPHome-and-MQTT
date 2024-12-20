@@ -21,7 +21,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **R4830G**
 
 ### Supported Sensors
-- **Power State ON/Hibernate**
+- **Power State ON/Hibernate/Error**
 - **AC Power In**
 - **DC Power Out**
 - **Grid Frequency**
