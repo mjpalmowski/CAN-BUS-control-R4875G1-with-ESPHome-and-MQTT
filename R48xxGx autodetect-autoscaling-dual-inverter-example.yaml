@@ -9,26 +9,22 @@ esp32:
 
 logger:
   level: INFO
-
-
-
-
 # This YAML file is optimised to run two R48xxGx units in parallel on the same CAN BUS. COMMUNICATION VIA MQTT.
 # If you dont have or want to use Home assistant or do any automation, just need a simple web surface to 
-# control your R48xxGx, just fill out your wifi credentials, uncomment this webs_server: section and 
+# control your recifiers, just fill out your wifi credentials, uncomment this webs_server: section and 
 # comment out the "api:" section and the "mqtt:" section. and compile and upload bin to esp32 
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
-# once installed you can find the webtool at http://can-bus01.local/
+
 ########
 #web_server:
-#  version: 3
+ # version: 3
 ########
 
 # Uncomment api: block if you are using Home Assistant
 #######
-#api:
-# encryption:
-#   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 #######
 ota:
   - platform: esphome
@@ -59,12 +55,33 @@ globals:
   - id: amp_scaling_factor
     type: int
     initial_value: "15"
-    restore_value: true
+    restore_value: True
     
   - id: voltage_scaling_factor
     type: int
     initial_value: "1024"
-    restore_value: true
+    restore_value: True
+
+  - id: max_amp_limit
+    type: float
+    initial_value: "75"  # Set your default max value here
+    restore_value: True
+
+
+script:
+  - id: set_max_amp_limit
+    mode: queued
+    then:
+      - lambda: |-
+          // Adjust max amp limit dynamically based on the model
+          if (id(amp_scaling_factor) == 15) {
+            id(max_amp_limit) = 75.0;
+          } else if (id(amp_scaling_factor) == 20) {
+            id(max_amp_limit) = 50.0;
+          } else if (id(amp_scaling_factor) == 30) {
+            id(max_amp_limit) = 30.0;
+          }
+          ESP_LOGI("custom", "Max Amp Limit set to %.1f", id(max_amp_limit));
 
 
 canbus:
@@ -134,77 +151,113 @@ canbus:
                   id(power_state_sensor1).publish_state("OFF");
                 }
               }
-  
+   
       - can_id: 0x1081D27F
         use_extended_id: true
         then:
           - lambda: |-
-              static std::string accumulated_data = "";
-              static int expected_frame_id = 0;
+              static std::string accumulated_data = "";  // Buffer to accumulate data across frames
+              static int expected_frame_id = 0;  // Track expected frame ID for sequence validation
+              static bool message_complete = false;  // Track if the message is complete
+              static unsigned long last_frame_time = millis();  // Track time of the last frame
 
+              // Timeout mechanism: Reset buffer if no frames are received for 500ms
+              if (millis() - last_frame_time > 500) {
+                ESP_LOGW("CAN_BUS", "Timeout detected, resetting buffer.");
+                accumulated_data.clear();
+                expected_frame_id = 0;
+                message_complete = false;
+              }
+              last_frame_time = millis();  // Update the last frame time
+
+              // Extract the frame ID from the first two bytes
               int frame_id = (x[0] << 8) | x[1];
 
-              if (frame_id != expected_frame_id && expected_frame_id != 0) {
+              // Check for out-of-sequence frames
+              if (frame_id != expected_frame_id) {
                 ESP_LOGW("CAN_BUS", "Out of sequence frame received! Expected: %d, Got: %d", expected_frame_id, frame_id);
-                // Just continue accumulating data, don't clear.
+                expected_frame_id = frame_id + 1;  // Adjust expected frame ID
+              } else {
+                expected_frame_id = frame_id + 1;  // Update for the next expected frame
               }
-              expected_frame_id = frame_id + 1;
 
+              // Append ASCII data from the frame (starting from byte 2)
               for (size_t i = 2; i < x.size(); i++) {
                 char c = static_cast<char>(x[i]);
-                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {
+                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {  // Filter valid printable characters
                   accumulated_data += c;
                 }
               }
 
-              ESP_LOGI("CAN_BUS", "Accumulated string: %s", accumulated_data.c_str());
+              // Check for the "BO" marker to indicate end of the message
+              if (accumulated_data.size() >= 2 &&
+                  accumulated_data.substr(accumulated_data.size() - 2) == "BO") {
+                message_complete = true;
+              }
 
-              // Helper lambda for extracting values of the form "Key="
-              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
-                size_t start = data.find(key);
-                if (start == std::string::npos) return "";
-                start += key.size();
-                size_t end = data.find_first_of("\r\n ", start);
-                if (end == std::string::npos)
-                  end = data.size();
-                return data.substr(start, end - start);
-              };
+              // Process the complete message when detected
+              if (message_complete) {
+                ESP_LOGI("CAN_BUS", "Complete message received: %s", accumulated_data.c_str());
 
-              // Extract the Board Type (R48xxGx)
-              {
-                size_t pos = accumulated_data.find("R48");
-                if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
-                  if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
-                      isdigit((unsigned char)accumulated_data[pos + 4]) &&
-                      accumulated_data[pos + 5] == 'G' &&
-                      isalnum((unsigned char)accumulated_data[pos + 6])) {
-                    std::string board_type_str = accumulated_data.substr(pos, 7);
-                    ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
-                    id(board1_type).publish_state(board_type_str.c_str());
+                // Helper lambda for extracting values of the form "Key="
+                auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+                  size_t start = data.find(key);
+                  if (start == std::string::npos) return "";
+                  start += key.size();
+                  size_t end = data.find_first_of("\r\n ", start);
+                  if (end == std::string::npos)
+                    end = data.size();
+                  return data.substr(start, end - start);
+                };
 
-                    // Set amp_scaling_factor based on board type
-                    if (board_type_str.find("R4830") == 0) {
-                      id(amp_scaling_factor) = 30;
-                      ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 30 for R4830");
-                      id(sf_description).publish_state("SF 30 for R4830G");
-                    } else if (board_type_str.find("R4850") == 0) {
-                      id(amp_scaling_factor) = 20;
-                      ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 20 for R4850");
-                      id(sf_description).publish_state("SF 20 for R4850G");
-                    } else if (board_type_str.find("R4875") == 0) {
-                      id(amp_scaling_factor) = 15;
-                      ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 15 for R4875");
-                      id(sf_description).publish_state("SF 15 for R4875G");
+                // Extract the Board Type (R48xxGx)
+                {
+                  size_t pos = accumulated_data.find("R48");
+                  if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
+                    if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
+                        isdigit((unsigned char)accumulated_data[pos + 4]) &&
+                        accumulated_data[pos + 5] == 'G' &&
+                        isalnum((unsigned char)accumulated_data[pos + 6])) {
+                      std::string board_type_str = accumulated_data.substr(pos, 7);
+                      ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
+                      id(board1_type).publish_state(board_type_str.c_str());
+
+                      // Set amp_scaling_factor based on board type
+                      if (board_type_str.find("R4830") == 0) {
+                        id(amp_scaling_factor) = 30;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 30 for R4830");
+                        id(sf_description).publish_state("SF 30 for R4830G");
+                      } else if (board_type_str.find("R4850") == 0) {
+                        id(amp_scaling_factor) = 20;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 20 for R4850");
+                        id(sf_description).publish_state("SF 20 for R4850G");
+                      } else if (board_type_str.find("R4875") == 0) {
+                        id(amp_scaling_factor) = 15;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 15 for R4875");
+                        id(sf_description).publish_state("SF 15 for R4875G");
+                      }
                     }
                   }
                 }
-              }
 
-              // Extract Barcode
-              std::string barcode_str = extract_value(accumulated_data, "BarCode=");
-              if (!barcode_str.empty()) {
-                ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
-                id(barcode_sensor).publish_state(barcode_str.c_str());
+                // Extract Barcode
+                std::string barcode_str = extract_value(accumulated_data, "BarCode=");
+                if (!barcode_str.empty()) {
+                  ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
+                  id(barcode_sensor).publish_state(barcode_str.c_str());
+                }
+
+                // Extract Manufacturing Date
+                std::string manufactured_date = extract_value(accumulated_data, "Manufactured=");
+                if (!manufactured_date.empty()) {
+                  ESP_LOGI("CAN_BUS", "Manufacturing Date found: %s", manufactured_date.c_str());
+                  id(manufacturing_date_sensor1).publish_state(manufactured_date.c_str());
+                }
+
+                // Clear buffer after processing the complete message
+                accumulated_data.clear();
+                expected_frame_id = 0;  // Reset sequence tracking
+                message_complete = false;  // Reset the message complete flag
               }
 
       # Handle messages from the second device
@@ -269,65 +322,114 @@ canbus:
                 }
               }
 
+
       - can_id: 0x1082D27F
         use_extended_id: true
         then:
           - lambda: |-
-              static std::string accumulated_data = "";
-              static int expected_frame_id = 0;
+              static std::string accumulated_data = "";  // Buffer to accumulate data across frames
+              static int expected_frame_id = 0;  // Track expected frame ID for sequence validation
+              static bool message_complete = false;  // Track if the message is complete
+              static unsigned long last_frame_time = millis();  // Track time of the last frame
 
+              // Timeout mechanism: Reset buffer if no frames are received for 500ms
+              if (millis() - last_frame_time > 500) {
+                ESP_LOGW("CAN_BUS", "Timeout detected, resetting buffer.");
+                accumulated_data.clear();
+                expected_frame_id = 0;
+                message_complete = false;
+              }
+              last_frame_time = millis();  // Update the last frame time
+
+              // Extract the frame ID from the first two bytes
               int frame_id = (x[0] << 8) | x[1];
 
-              if (frame_id != expected_frame_id && expected_frame_id != 0) {
+              // Check for out-of-sequence frames
+              if (frame_id != expected_frame_id) {
                 ESP_LOGW("CAN_BUS", "Out of sequence frame received! Expected: %d, Got: %d", expected_frame_id, frame_id);
-                // Just continue accumulating data, don't clear.
+                expected_frame_id = frame_id + 1;  // Adjust expected frame ID
+              } else {
+                expected_frame_id = frame_id + 1;  // Update for the next expected frame
               }
-              expected_frame_id = frame_id + 1;
 
+              // Append ASCII data from the frame (starting from byte 2)
               for (size_t i = 2; i < x.size(); i++) {
                 char c = static_cast<char>(x[i]);
-                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {
+                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {  // Filter valid printable characters
                   accumulated_data += c;
                 }
               }
 
-              ESP_LOGI("CAN_BUS", "Accumulated string: %s", accumulated_data.c_str());
+              // Check for the "BO" marker to indicate end of the message
+              if (accumulated_data.size() >= 2 &&
+                  accumulated_data.substr(accumulated_data.size() - 2) == "BO") {
+                message_complete = true;
+              }
 
-              // Helper lambda for extracting values of the form "Key="
-              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
-                size_t start = data.find(key);
-                if (start == std::string::npos) return "";
-                start += key.size();
-                size_t end = data.find_first_of("\r\n ", start);
-                if (end == std::string::npos)
-                  end = data.size();
-                return data.substr(start, end - start);
-              };
+              // Process the complete message when detected
+              if (message_complete) {
+                ESP_LOGI("CAN_BUS", "Complete message received: %s", accumulated_data.c_str());
 
-              // Extract the Board Type (R48xxGx)
-              {
-                size_t pos = accumulated_data.find("R48");
-                if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
-                  if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
-                      isdigit((unsigned char)accumulated_data[pos + 4]) &&
-                      accumulated_data[pos + 5] == 'G' &&
-                      isalnum((unsigned char)accumulated_data[pos + 6])) {
-                    std::string board_type_str = accumulated_data.substr(pos, 7);
-                    ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
-                    id(board2_type).publish_state(board_type_str.c_str());
+                // Helper lambda for extracting values of the form "Key="
+                auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+                  size_t start = data.find(key);
+                  if (start == std::string::npos) return "";
+                  start += key.size();
+                  size_t end = data.find_first_of("\r\n ", start);
+                  if (end == std::string::npos)
+                    end = data.size();
+                  return data.substr(start, end - start);
+                };
+
+                // Extract the Board Type (R48xxGx)
+                {
+                  size_t pos = accumulated_data.find("R48");
+                  if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
+                    if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
+                        isdigit((unsigned char)accumulated_data[pos + 4]) &&
+                        accumulated_data[pos + 5] == 'G' &&
+                        isalnum((unsigned char)accumulated_data[pos + 6])) {
+                      std::string board_type_str = accumulated_data.substr(pos, 7);
+                      ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
+                      id(board2_type).publish_state(board_type_str.c_str());
+
+                      // Set amp_scaling_factor based on board type
+                      if (board_type_str.find("R4830") == 0) {
+                        id(amp_scaling_factor) = 30;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 30 for R4830");
+                        id(sf_description).publish_state("SF 30 for R4830G");
+                      } else if (board_type_str.find("R4850") == 0) {
+                        id(amp_scaling_factor) = 20;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 20 for R4850");
+                        id(sf_description).publish_state("SF 20 for R4850G");
+                      } else if (board_type_str.find("R4875") == 0) {
+                        id(amp_scaling_factor) = 15;
+                        ESP_LOGI("CAN_BUS", "amp_scaling_factor set to 15 for R4875");
+                        id(sf_description).publish_state("SF 15 for R4875G");
+                      }
+                    }
                   }
                 }
+
+                // Extract Barcode
+                std::string barcode_str = extract_value(accumulated_data, "BarCode=");
+                if (!barcode_str.empty()) {
+                  ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
+                  id(barcode2_sensor).publish_state(barcode_str.c_str());
+                }
+
+                // Extract Manufacturing Date
+                std::string manufactured_date = extract_value(accumulated_data, "Manufactured=");
+                if (!manufactured_date.empty()) {
+                  ESP_LOGI("CAN_BUS", "Manufacturing Date found: %s", manufactured_date.c_str());
+                  id(manufacturing_date_sensor2).publish_state(manufactured_date.c_str());
+                }
+
+                // Clear buffer after processing the complete message
+                accumulated_data.clear();
+                expected_frame_id = 0;  // Reset sequence tracking
+                message_complete = false;  // Reset the message complete flag
               }
-
-              // Extract Barcode
-              std::string barcode_str = extract_value(accumulated_data, "BarCode=");
-              if (!barcode_str.empty()) {
-                ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
-                id(barcode2_sensor).publish_state(barcode_str.c_str());
-              }
-
-
-
 
 time:
   - platform: sntp
@@ -653,68 +755,101 @@ number:
     name: "CAN Amp Set"
     id: can_amp_input
     min_value: 1
-    max_value: 75  # Max value for the Amp input
-    step: 1  # 1 Amp steps
+    max_value: 75 
+    step: 1
     unit_of_measurement: "A"
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
+    icon: "mdi:current-dc"
     on_value:
       then:
+        - delay: 0.01s
         - lambda: |-
-            float amp_value = id(can_amp_input).state;  // Get the current Amp value
-            int scaled_value = (int)(amp_value * id(amp_scaling_factor));  // Scale the Amp value
-            ESP_LOGD("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
-            
+            float amp_value = id(can_amp_input).state;
+            float max_amps = 75;  // Default max amps
+            if (id(amp_scaling_factor) == 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) == 20) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) == 30) {
+              max_amps = 30;
+            }
+
+            if (amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Amp %.1f exceeds max limit %.1f for model, resetting.", amp_value, max_amps);
+              id(can_amp_input).publish_state(max_amps);  // Reset to max value
+              return;
+            }
+
+            int scaled_value = (int)(amp_value * id(amp_scaling_factor));
+            ESP_LOGI("custom", "Validated Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
+
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
             uint8_t low_byte = scaled_value & 0xFF;
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
 
         - canbus.send:
             use_extended_id: true
             can_id: 0x108080FE
             data: !lambda |-
-              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-              can_data[0] = 0x01;  // First byte is always 0x01
-              can_data[1] = 0x03;  // Second byte is 0x03
-              int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));  // Scale the Amp value
-              can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-              can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              can_data[1] = 0x03;
+              int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
               return can_data;
-  
 
   # Fallback Amp Setting
   - platform: template
     name: "Fallback Amp Set"
     id: fallback_amp_input
     min_value: 1
-    max_value: 75  # Adjust as needed
-    step: 1  # 1A steps
+    max_value: 75  
+    step: 1
     unit_of_measurement: "A"
     optimistic: true
     mode: BOX
-    restore_value: True
+    restore_value: true
+    icon: "mdi:current-dc"
     on_value:
       then:
+        - delay: 0.01s
         - lambda: |-
-            float fallback_amp_value = id(fallback_amp_input).state;  // Get the fallback Amp value
-            int fallback_scaled_value = (int)(fallback_amp_value * id(amp_scaling_factor));  // Scale the Amp value 
-            ESP_LOGD("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
-            
-            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;  // Get high byte
-            uint8_t low_byte = fallback_scaled_value & 0xFF;  // Get low byte
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);  // Log the CAN message data
+            float fallback_amp_value = id(fallback_amp_input).state;
+            float max_amps = 75;  // Default max amps
+            if (id(amp_scaling_factor) == 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) == 20) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) == 30) {
+              max_amps = 30;
+            }
+
+            if (fallback_amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Fallback Amp %.1f exceeds max limit %.1f for model, resetting.", fallback_amp_value, max_amps);
+              id(fallback_amp_input).publish_state(max_amps);  // Reset to max value
+              return;
+            }
+
+            int fallback_scaled_value = (int)(fallback_amp_value * id(amp_scaling_factor));
+            ESP_LOGI("custom", "Validated Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
+
+            uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;
+            uint8_t low_byte = fallback_scaled_value & 0xFF;
+            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
 
         - canbus.send:
             use_extended_id: true
             can_id: 0x108080FE
             data: !lambda |-
-              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
-              can_data[0] = 0x01;  // First byte is always 0x01
-              can_data[1] = 0x04;  // Second byte is 0x04 for the Fallback Amps setting
-              int fallback_scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));  // Scale the Amp value
-              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
-              can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              can_data[1] = 0x04;
+              int scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
               return can_data;
 
   # Fallback Voltage Setting
@@ -909,11 +1044,11 @@ button:
 text_sensor:
   - platform: template
     id: power_state_sensor1
-    name: "Charger1"
+    name: "Board-1"
     
   - platform: template
     id: power_state_sensor2
-    name: "Charger2"
+    name: "Board-2"
 
   - platform: template
     name: "Board-1 Type"
@@ -921,10 +1056,9 @@ text_sensor:
     update_interval: never
 
   - platform: template
-    name: "Bar Code-1"
+    name: "Board-1 SN:"
     id: barcode_sensor
     update_interval: never
-
 
   - platform: template
     name: "Board-2 Type"
@@ -932,7 +1066,7 @@ text_sensor:
     update_interval: never
 
   - platform: template
-    name: "Bar Code-2"
+    name: "Board-2 SN:"
     id: barcode2_sensor
     update_interval: never
 
@@ -940,6 +1074,17 @@ text_sensor:
     name: "Scaling Factor Description"
     id: sf_description
     icon: "mdi:information-outline"
+    update_interval: never
+
+  - platform: template
+    name: "Board-1 Mfg:"
+    id: manufacturing_date_sensor1
+    update_interval: never
+
+  - platform: template
+    name: "Board-2 Mfg:"
+    id: manufacturing_date_sensor2
+    update_interval: never
 
 # ###################################################################################################################################
 # ##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
