@@ -282,4 +282,7 @@ How to use: The G4857G1 listens to the following MQTT topics. Publishing to thes
 - [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)
 - [DIY Solar Forum Discussion](https://diysolarforum.com/threads/diy-chargenectifier.56329/)
 - [R4875G5 Rectifier User Manual V2.3.pdf](https://github.com/user-attachments/files/17949610/R4875G5.Rectifier.User.Manual.V2.3.pdf)
+- [R4850G2 Rectifier User Manual.pdf](https://github.com/user-attachments/files/18236128/R4850G2.Rectifier.User.Manual.pdf)
+- [R4830G2 Rectifier User Manual.pdf](https://github.com/user-attachments/files/18236076/R4830G2.Rectifier.User.Manual.pdf)
+
 
