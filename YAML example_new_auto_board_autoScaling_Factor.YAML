@@ -16,15 +16,15 @@ logger:
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 
 ########
-#web_server:
- # version: 3
+web_server:
+  version: 3
 ########
 
 # Uncomment api: block if you are using Home Assistant
 #######
-api:
- encryption:
-   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+#api:
+# encryption:
+#   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 #######
 ota:
   - platform: esphome
@@ -83,6 +83,14 @@ globals:
     type: bool
     initial_value: "false"
 
+  - id: board_properties
+    type: std::string
+    initial_value: '""'
+
+  - id: board_properties_complete
+    type: bool
+    initial_value: "false"
+
 script:
 
           
@@ -119,6 +127,26 @@ script:
                 data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             - delay: 1s
 
+  - id: setup_sequence
+    mode: single
+    then:
+      # Detect Board-2
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x1082D2FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+      - delay: 1s
+      # Detect Board-1
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x1081D2FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+      - delay: 1s
+      # Detect Data Board-1
+      - script.execute: detect_data_board_1
+      - delay: 1s
+      # Detect Data Board-2
+      - script.execute: detect_data_board_2
 
 
 canbus:
@@ -157,98 +185,173 @@ canbus:
                 }
               }
 
+      # board properties (type, model, barcode (SN), item, manufacturing date, etc.)
       - can_id: 0x1081D27F
         use_extended_id: true
         then:
           - lambda: |-
-              static std::string accumulated_data = "";  // Buffer to accumulate data across frames
-              static int expected_frame_id = 0;  // Track expected frame ID for sequence validation
-              static bool message_complete = false;  // Track if the message is complete
-              static unsigned long last_frame_time = millis();  // Track time of the last frame
+              static bool message_started = false;
+              if (x.size() == 8) {
+                const uint8_t byte_1 = x[1];
+                if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
+                  id(board_properties) = "";
+                  id(board_properties_complete) = false;
+                  message_started = true;
+                }
 
-              // Timeout mechanism: Reset buffer if no frames are received for 500ms
-              if (millis() - last_frame_time > 500) {
-                ESP_LOGW("CAN_BUS", "Timeout detected, resetting buffer.");
-                accumulated_data.clear();
-                expected_frame_id = 0;
-                message_complete = false;
-              }
-              last_frame_time = millis();  // Update the last frame time
-
-              // Extract the frame ID from the first two bytes
-              int frame_id = (x[0] << 8) | x[1];
-
-              // Check for out-of-sequence frames
-              if (frame_id != expected_frame_id) {
-                ESP_LOGW("CAN_BUS", "Out of sequence frame received! Expected: %d, Got: %d", expected_frame_id, frame_id);
-                expected_frame_id = frame_id + 1;  // Adjust expected frame ID
-              } else {
-                expected_frame_id = frame_id + 1;  // Update for the next expected frame
-              }
-
-              // Append ASCII data from the frame (starting from byte 2)
-              for (size_t i = 2; i < x.size(); i++) {
-                char c = static_cast<char>(x[i]);
-                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {  // Filter valid printable characters
-                  accumulated_data += c;
+                if (!id(board_properties_complete) && message_started) {
+                  std::vector<uint8_t> b2 {x[2], x[3], x[4], x[5], x[6], x[7]};
+                  std::string result(b2.begin(), b2.end());
+                  id(board_properties) += result;
                 }
               }
 
-              // Check for the "BO" marker to indicate end of the message
-              if (accumulated_data.size() >= 2 &&
-                  accumulated_data.substr(accumulated_data.size() - 2) == "BO") {
-                message_complete = true;
+      # signal end of board properties message
+      - can_id: 0x1081D27E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              id(board_properties_complete) = true;
+
+              // Helper lambda for extracting values of the form "Key="
+              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+                size_t start = data.find(key);
+                if (start == std::string::npos) return "";
+                start += key.size();
+                size_t end = data.find_first_of("\r\n", start);
+                if (end == std::string::npos) {
+                  end = data.size();
+                }
+                return data.substr(start, end - start);
+              };
+
+              // BoardType
+              std::string boardtype_str = extract_value(id(board_properties), "BoardType=");
+              if (!boardtype_str.empty()) {
+                id(board_type_sensor_1).publish_state(boardtype_str.c_str());
               }
 
-              // Process the complete message when detected
-              if (message_complete) {
-                ESP_LOGI("CAN_BUS", "Complete message received: %s", accumulated_data.c_str());
-
-                // Helper lambda for extracting values of the form "Key="
-                auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
-                  size_t start = data.find(key);
-                  if (start == std::string::npos) return "";
-                  start += key.size();
-                  size_t end = data.find_first_of("\r\n ", start);
-                  if (end == std::string::npos)
-                    end = data.size();
-                  return data.substr(start, end - start);
-                };
-
-                // Extract the Board Type (R48xxGx)
-                {
-                  size_t pos = accumulated_data.find("R48");
-                  if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
-                    if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
-                        isdigit((unsigned char)accumulated_data[pos + 4]) &&
-                        (accumulated_data[pos + 5] == 'G' || accumulated_data[pos + 5] == 'S') &&
-                        isalnum((unsigned char)accumulated_data[pos + 6])) {
-                      std::string board_type_str = accumulated_data.substr(pos, 7);
-                      ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
-                      id(board1_type).publish_state(board_type_str.c_str());
-                    }
-                  }
-                }
-
-                // Extract Barcode
-                std::string barcode_str = extract_value(accumulated_data, "BarCode=");
-                if (!barcode_str.empty()) {
-                  ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
-                  id(barcode_sensor).publish_state(barcode_str.c_str());
-                }
-
-                // Extract Manufacturing Date
-                std::string manufactured_date = extract_value(accumulated_data, "Manufactured=");
-                if (!manufactured_date.empty()) {
-                  ESP_LOGI("CAN_BUS", "Manufacturing Date found: %s", manufactured_date.c_str());
-                  id(manufacturing_date_sensor1).publish_state(manufactured_date.c_str());
-                }
-
-                // Clear buffer after processing the complete message
-                accumulated_data.clear();
-                expected_frame_id = 0;  // Reset sequence tracking
-                message_complete = false;  // Reset the message complete flag
+              // Extract Barcode
+              std::string barcode_str = extract_value(id(board_properties), "BarCode=");
+              if (!barcode_str.empty()) {
+                id(barcode_sensor_1).publish_state(barcode_str.c_str());
               }
+
+              // Extract Item
+              std::string item_str = extract_value(id(board_properties), "Item=");
+              if (!item_str.empty()) {
+                id(item_no_sensor_1).publish_state(item_str.c_str());
+              }
+
+              // Extract Description
+              std::string description_str = extract_value(id(board_properties), "Description=");
+              if (!description_str.empty()) {
+                id(description_sensor_1).publish_state(description_str.c_str());
+              }
+
+              // Extract Manufacturing Date
+              std::string manufactured_str = extract_value(id(board_properties), "Manufactured=");
+              if (!manufactured_str.empty()) {
+                id(manufactured_sensor_1).publish_state(manufactured_str.c_str());
+              }
+
+              // Extract VendorName
+              std::string vendorname_str = extract_value(id(board_properties), "VendorName=");
+              if (!vendorname_str.empty()) {
+                id(vendor_name_sensor_1).publish_state(vendorname_str.c_str());
+              }
+
+              // Extract IssueNumber
+              std::string issueNumber_str = extract_value(id(board_properties), "IssueNumber=");
+              if (!issueNumber_str.empty()) {
+                id(issue_number_sensor_1).publish_state(issueNumber_str.c_str());
+              }
+
+
+
+      # board properties (type, model, barcode (SN), item, manufacturing date, etc.)
+      - can_id: 0x1082D27F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static bool message_started = false;
+              if (x.size() == 8) {
+                const uint8_t byte_1 = x[1];
+                if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
+                  id(board_properties) = "";
+                  id(board_properties_complete) = false;
+                  message_started = true;
+                }
+
+                if (!id(board_properties_complete) && message_started) {
+                  std::vector<uint8_t> b2 {x[2], x[3], x[4], x[5], x[6], x[7]};
+                  std::string result(b2.begin(), b2.end());
+                  id(board_properties) += result;
+                }
+              }
+
+      # signal end of board properties message
+      - can_id: 0x1082D27E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              id(board_properties_complete) = true;
+
+              // Helper lambda for extracting values of the form "Key="
+              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+                size_t start = data.find(key);
+                if (start == std::string::npos) return "";
+                start += key.size();
+                size_t end = data.find_first_of("\r\n", start);
+                if (end == std::string::npos) {
+                  end = data.size();
+                }
+                return data.substr(start, end - start);
+              };
+
+              // BoardType
+              std::string boardtype_str = extract_value(id(board_properties), "BoardType=");
+              if (!boardtype_str.empty()) {
+                id(board_type_sensor_2).publish_state(boardtype_str.c_str());
+              }
+
+              // Extract Barcode
+              std::string barcode_str = extract_value(id(board_properties), "BarCode=");
+              if (!barcode_str.empty()) {
+                id(barcode_sensor_2).publish_state(barcode_str.c_str());
+              }
+
+              // Extract Item
+              std::string item_str = extract_value(id(board_properties), "Item=");
+              if (!item_str.empty()) {
+                id(item_no_sensor_2).publish_state(item_str.c_str());
+              }
+
+              // Extract Description
+              std::string description_str = extract_value(id(board_properties), "Description=");
+              if (!description_str.empty()) {
+                id(description_sensor_2).publish_state(description_str.c_str());
+              }
+
+              // Extract Manufacturing Date
+              std::string manufactured_str = extract_value(id(board_properties), "Manufactured=");
+              if (!manufactured_str.empty()) {
+                id(manufactured_sensor_2).publish_state(manufactured_str.c_str());
+              }
+
+              // Extract VendorName
+              std::string vendorname_str = extract_value(id(board_properties), "VendorName=");
+              if (!vendorname_str.empty()) {
+                id(vendor_name_sensor_2).publish_state(vendorname_str.c_str());
+              }
+
+              // Extract IssueNumber
+              std::string issueNumber_str = extract_value(id(board_properties), "IssueNumber=");
+              if (!issueNumber_str.empty()) {
+                id(issue_number_sensor_2).publish_state(issueNumber_str.c_str());
+              }
+
+
 
       # Handler for CAN ID 0x1081507F (Packet 1)
       - can_id: 0x1081507F
@@ -450,98 +553,7 @@ canbus:
                 }
               }
 
-      - can_id: 0x1082D27F
-        use_extended_id: true
-        then:
-          - lambda: |-
-              static std::string accumulated_data = "";  // Buffer to accumulate data across frames
-              static int expected_frame_id = 0;  // Track expected frame ID for sequence validation
-              static bool message_complete = false;  // Track if the message is complete
-              static unsigned long last_frame_time = millis();  // Track time of the last frame
 
-              // Timeout mechanism: Reset buffer if no frames are received for 500ms
-              if (millis() - last_frame_time > 500) {
-                ESP_LOGW("CAN_BUS", "Timeout detected, resetting buffer.");
-                accumulated_data.clear();
-                expected_frame_id = 0;
-                message_complete = false;
-              }
-              last_frame_time = millis();  // Update the last frame time
-
-              // Extract the frame ID from the first two bytes
-              int frame_id = (x[0] << 8) | x[1];
-
-              // Check for out-of-sequence frames
-              if (frame_id != expected_frame_id) {
-                ESP_LOGW("CAN_BUS", "Out of sequence frame received! Expected: %d, Got: %d", expected_frame_id, frame_id);
-                expected_frame_id = frame_id + 1;  // Adjust expected frame ID
-              } else {
-                expected_frame_id = frame_id + 1;  // Update for the next expected frame
-              }
-
-              // Append ASCII data from the frame (starting from byte 2)
-              for (size_t i = 2; i < x.size(); i++) {
-                char c = static_cast<char>(x[i]);
-                if (isprint((unsigned char)c) || c == '\n' || c == '\r') {  // Filter valid printable characters
-                  accumulated_data += c;
-                }
-              }
-
-              // Check for the "BO" marker to indicate end of the message
-              if (accumulated_data.size() >= 2 &&
-                  accumulated_data.substr(accumulated_data.size() - 2) == "BO") {
-                message_complete = true;
-              }
-
-              // Process the complete message when detected
-              if (message_complete) {
-                ESP_LOGI("CAN_BUS", "Complete message received: %s", accumulated_data.c_str());
-
-                // Helper lambda for extracting values of the form "Key="
-                auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
-                  size_t start = data.find(key);
-                  if (start == std::string::npos) return "";
-                  start += key.size();
-                  size_t end = data.find_first_of("\r\n ", start);
-                  if (end == std::string::npos)
-                    end = data.size();
-                  return data.substr(start, end - start);
-                };
-
-                // Extract the Board Type (R48xxGx)
-                {
-                  size_t pos = accumulated_data.find("R48");
-                  if (pos != std::string::npos && pos + 6 < accumulated_data.size()) {
-                    if (isdigit((unsigned char)accumulated_data[pos + 3]) &&
-                        isdigit((unsigned char)accumulated_data[pos + 4]) &&
-                        (accumulated_data[pos + 5] == 'G' || accumulated_data[pos + 5] == 'S') &&
-                        isalnum((unsigned char)accumulated_data[pos + 6])) {
-                      std::string board_type_str = accumulated_data.substr(pos, 7);
-                      ESP_LOGI("CAN_BUS", "Board Type found: %s", board_type_str.c_str());
-                      id(board2_type).publish_state(board_type_str.c_str());
-                    }
-                  }
-                }
-
-                // Extract Barcode
-                std::string barcode_str = extract_value(accumulated_data, "BarCode=");
-                if (!barcode_str.empty()) {
-                  ESP_LOGI("CAN_BUS", "Barcode found: %s", barcode_str.c_str());
-                  id(barcode2_sensor).publish_state(barcode_str.c_str());
-                }
-
-                // Extract Manufacturing Date
-                std::string manufactured_date = extract_value(accumulated_data, "Manufactured=");
-                if (!manufactured_date.empty()) {
-                  ESP_LOGI("CAN_BUS", "Manufacturing Date found: %s", manufactured_date.c_str());
-                  id(manufacturing_date_sensor2).publish_state(manufactured_date.c_str());
-                }
-
-                // Clear buffer after processing the complete message
-                accumulated_data.clear();
-                expected_frame_id = 0;  // Reset sequence tracking
-                message_complete = false;  // Reset the message complete flag
-              }
 
 time:
   - platform: sntp
@@ -1158,35 +1170,12 @@ button:
             can_id: 0x108080FE
             data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-  - platform: template
-    name: "Detect Board-2"
-    on_press:
-      then:
-        - canbus.send:
-            use_extended_id: true
-            can_id: 0x1082D2FE
-            data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
- 
-  - platform: template
-    name: "Detect Board-1"
-    on_press:
-      then:
-        - canbus.send:
-            use_extended_id: true
-            can_id: 0x1081D2FE
-            data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
   - platform: template
-    name: "Detect Data Board-1"
+    name: "SETUP"
     on_press:
       then:
-        - script.execute: detect_data_board_1
-
-  - platform: template
-    name: "Detect Data Board-2"
-    on_press:
-      then:
-        - script.execute: detect_data_board_2
+        - script.execute: setup_sequence
 
 
 # Define text sensor for "ON/OFF/ERROR" state
@@ -1200,35 +1189,60 @@ text_sensor:
     name: "Pwr Board-2"
 
   - platform: template
-    name: "Type Board-1"
-    id: board1_type
-    update_interval: never
+    name: "Board Type"
+    id: board_type_sensor_1
 
   - platform: template
-    name: "SN Board-1"
-    id: barcode_sensor
-    update_interval: never
+    name: "Barcode"
+    id: barcode_sensor_1
 
   - platform: template
-    name: "Type Board-2"
-    id: board2_type
-    update_interval: never
+    name: "Item Number"
+    id: item_no_sensor_1
 
   - platform: template
-    name: "SN Board-2"
-    id: barcode2_sensor
-    update_interval: never
+    name: "Description"
+    id: description_sensor_1
 
   - platform: template
-    name: "Mfg Board-1"
-    id: manufacturing_date_sensor1
-    update_interval: never
+    name: "Manufacturing Date"
+    id: manufactured_sensor_1
 
   - platform: template
-    name: "Mfg Board-2"
-    id: manufacturing_date_sensor2
-    update_interval: never
+    name: "Vendor Name"
+    id: vendor_name_sensor_1
 
+  - platform: template
+    name: "Issue Number"
+    id: issue_number_sensor_1
+
+  - platform: template
+    name: "Board-2 Type"
+    id: board_type_sensor_2
+
+  - platform: template
+    name: "Barcode2"
+    id: barcode_sensor_2
+
+  - platform: template
+    name: "Item Number2"
+    id: item_no_sensor_2
+
+  - platform: template
+    name: "Description2"
+    id: description_sensor_2
+
+  - platform: template
+    name: "Manufacturing Date2"
+    id: manufactured_sensor_2
+
+  - platform: template
+    name: "Vendor Name2"
+    id: vendor_name_sensor_2
+
+  - platform: template
+    name: "Issue Number2"
+    id: issue_number_sensor_2
 
 
 # ###################################################################################################################################
