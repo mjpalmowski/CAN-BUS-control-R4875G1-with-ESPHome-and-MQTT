@@ -16,15 +16,15 @@ logger:
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 
 ########
-web_server:
-  version: 3
+#web_server:
+#  version: 3
 ########
 
 # Uncomment api: block if you are using Home Assistant
 #######
-#api:
-# encryption:
-#   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 #######
 ota:
   - platform: esphome
@@ -91,6 +91,11 @@ globals:
     type: bool
     initial_value: "false"
 
+  - id: frame_counter
+    type: int
+    restore_value: no
+    initial_value: '0'
+
 script:
 
           
@@ -133,13 +138,13 @@ script:
       # Detect Board-2
       - canbus.send:
           use_extended_id: true
-          can_id: 0x1082D2FE
+          can_id: 0x1081D2FE
           data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
       - delay: 1s
       # Detect Board-1
       - canbus.send:
           use_extended_id: true
-          can_id: 0x1081D2FE
+          can_id: 0x1082D2FE
           data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
       - delay: 1s
       # Detect Data Board-1
@@ -185,36 +190,50 @@ canbus:
                 }
               }
 
-      # board properties (type, model, barcode (SN), item, manufacturing date, etc.)
+      # Handle board properties message start
       - can_id: 0x1081D27F
         use_extended_id: true
         then:
           - lambda: |-
               static bool message_started = false;
+
               if (x.size() == 8) {
-                const uint8_t byte_1 = x[1];
                 if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
-                  id(board_properties) = "";
+                  id(board_properties) = "";  // Clear existing string
                   id(board_properties_complete) = false;
                   message_started = true;
+                  id(frame_counter) = 0;  // Reset global frame counter
+                  ESP_LOGI("board_properties", "Message Start Detected");
                 }
 
-                if (!id(board_properties_complete) && message_started) {
-                  std::vector<uint8_t> b2 {x[2], x[3], x[4], x[5], x[6], x[7]};
-                  std::string result(b2.begin(), b2.end());
-                  id(board_properties) += result;
+                if (message_started) {
+                  // Extract and append all payload bytes starting from x[2]
+                  std::string frame_data((char*)&x[2], 6);  // 6 bytes of payload
+                  id(board_properties) += frame_data;
+
+                  // Increment global frame counter
+                  id(frame_counter)++;
+
+                  // Log for debugging purposes
+                  ESP_LOGD("board_properties", "Captured Frame #%d: %s", id(frame_counter), frame_data.c_str());
                 }
               }
 
-      # signal end of board properties message
+      # Signal end of board properties message
       - can_id: 0x1081D27E
         use_extended_id: true
         then:
           - lambda: |-
               id(board_properties_complete) = true;
 
-              // Helper lambda for extracting values of the form "Key="
-              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+              // Log the total number of frames captured
+              ESP_LOGI("board_properties", "Total Frames Captured: %d", id(frame_counter));
+
+              // Log the full board_properties string
+              ESP_LOGI("board_properties", "Final Board Properties: %s", id(board_properties).c_str());
+
+              // Helper lambda to extract key-value pairs in "Key=Value" format
+              auto extract_value = [](const std::string &data, const std::string &key) -> std::string {
                 size_t start = data.find(key);
                 if (start == std::string::npos) return "";
                 start += key.size();
@@ -225,80 +244,81 @@ canbus:
                 return data.substr(start, end - start);
               };
 
-              // BoardType
-              std::string boardtype_str = extract_value(id(board_properties), "BoardType=");
-              if (!boardtype_str.empty()) {
-                id(board_type_sensor_1).publish_state(boardtype_str.c_str());
+              // Define the keys and corresponding text sensors
+              struct KeySensorPair {
+                const char* key;
+                esphome::template_::TemplateTextSensor* sensor;
+              };
+
+              KeySensorPair mappings[] = {
+                {"BoardType=", id(board_type_sensor_1)},
+                {"BarCode=", id(barcode_sensor_1)},
+                {"Item=", id(item_no_sensor_1)},
+                {"Description=", id(description_sensor_1)},
+                {"Manufactured=", id(manufactured_sensor_1)}
+              };
+
+              for (const auto& mapping : mappings) {
+                std::string value = extract_value(id(board_properties), mapping.key);
+                if (!value.empty()) {
+                  ESP_LOGI("board_properties", "Extracted %s: %s", mapping.key, value.c_str());
+                  mapping.sensor->publish_state(value.c_str());
+                } else {
+                  ESP_LOGW("board_properties", "Key %s not found or empty", mapping.key);
+                }
               }
 
-              // Extract Barcode
-              std::string barcode_str = extract_value(id(board_properties), "BarCode=");
-              if (!barcode_str.empty()) {
-                id(barcode_sensor_1).publish_state(barcode_str.c_str());
-              }
-
-              // Extract Item
-              std::string item_str = extract_value(id(board_properties), "Item=");
-              if (!item_str.empty()) {
-                id(item_no_sensor_1).publish_state(item_str.c_str());
-              }
-
-              // Extract Description
-              std::string description_str = extract_value(id(board_properties), "Description=");
-              if (!description_str.empty()) {
-                id(description_sensor_1).publish_state(description_str.c_str());
-              }
-
-              // Extract Manufacturing Date
-              std::string manufactured_str = extract_value(id(board_properties), "Manufactured=");
-              if (!manufactured_str.empty()) {
-                id(manufactured_sensor_1).publish_state(manufactured_str.c_str());
-              }
-
-              // Extract VendorName
-              std::string vendorname_str = extract_value(id(board_properties), "VendorName=");
-              if (!vendorname_str.empty()) {
-                id(vendor_name_sensor_1).publish_state(vendorname_str.c_str());
-              }
-
-              // Extract IssueNumber
-              std::string issueNumber_str = extract_value(id(board_properties), "IssueNumber=");
-              if (!issueNumber_str.empty()) {
-                id(issue_number_sensor_1).publish_state(issueNumber_str.c_str());
-              }
-
-
-
-      # board properties (type, model, barcode (SN), item, manufacturing date, etc.)
+      # Handle board properties message start
       - can_id: 0x1082D27F
         use_extended_id: true
         then:
           - lambda: |-
               static bool message_started = false;
+              static int frame_counter = 0;  // Counter to track the number of frames captured
+
               if (x.size() == 8) {
-                const uint8_t byte_1 = x[1];
                 if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
-                  id(board_properties) = "";
+                  id(board_properties) = "";  // Clear existing string
                   id(board_properties_complete) = false;
                   message_started = true;
+                  frame_counter = 0;  // Reset frame counter
+                  ESP_LOGI("board_properties", "Message Start Detected");
                 }
 
-                if (!id(board_properties_complete) && message_started) {
-                  std::vector<uint8_t> b2 {x[2], x[3], x[4], x[5], x[6], x[7]};
-                  std::string result(b2.begin(), b2.end());
-                  id(board_properties) += result;
+                if (message_started) {
+                  // Extract and append all payload bytes starting from x[2]
+                  std::string frame_data((char*)&x[2], 6);  // 6 bytes of payload
+                  id(board_properties) += frame_data;
+
+                  // Increment frame counter
+                  frame_counter++;
+
+                  // Log for debugging purposes
+                  ESP_LOGD("board_properties", "Captured Frame #%d: %s", frame_counter, frame_data.c_str());
                 }
               }
 
-      # signal end of board properties message
+      # Signal end of board properties message
       - can_id: 0x1082D27E
         use_extended_id: true
         then:
           - lambda: |-
+              // Check if this frame contains additional payload data
+              if (x.size() > 2) {  // Payload starts at x[2], so size must be > 2
+                std::string frame_data((char*)&x[2], x.size() - 2);
+                ESP_LOGI("board_properties", "End Message Frame Data: %s", frame_data.c_str());
+
+                // Append any remaining data to board_properties
+                id(board_properties) += frame_data;
+              }
+
               id(board_properties_complete) = true;
 
-              // Helper lambda for extracting values of the form "Key="
-              auto extract_value = [&](const std::string &data, const std::string &key) -> std::string {
+              // Log the full board_properties string
+              ESP_LOGI("board_properties", "Final Board Properties: %s", id(board_properties).c_str());
+
+              // Helper lambda to extract key-value pairs in "Key=Value" format
+              auto extract_value = [](const std::string &data, const std::string &key) -> std::string {
                 size_t start = data.find(key);
                 if (start == std::string::npos) return "";
                 start += key.size();
@@ -309,47 +329,32 @@ canbus:
                 return data.substr(start, end - start);
               };
 
-              // BoardType
-              std::string boardtype_str = extract_value(id(board_properties), "BoardType=");
-              if (!boardtype_str.empty()) {
-                id(board_type_sensor_2).publish_state(boardtype_str.c_str());
+              // Define the keys and corresponding text sensors
+              struct KeySensorPair {
+                const char* key;
+                esphome::template_::TemplateTextSensor* sensor;
+              };
+
+              KeySensorPair mappings[] = {
+                {"BoardType=", id(board_type_sensor_2)},
+                {"BarCode=", id(barcode_sensor_2)},
+                {"Item=", id(item_no_sensor_2)},
+                {"Description=", id(description_sensor_2)},
+                {"Manufactured=", id(manufactured_sensor_2)},
+              };
+
+              for (const auto& mapping : mappings) {
+                std::string value = extract_value(id(board_properties), mapping.key);
+                if (!value.empty()) {
+                  ESP_LOGI("board_properties", "Extracted %s: %s", mapping.key, value.c_str());
+                  mapping.sensor->publish_state(value.c_str());
+                } else {
+                  ESP_LOGW("board_properties", "Key %s not found or empty", mapping.key);
+                }
               }
 
-              // Extract Barcode
-              std::string barcode_str = extract_value(id(board_properties), "BarCode=");
-              if (!barcode_str.empty()) {
-                id(barcode_sensor_2).publish_state(barcode_str.c_str());
-              }
 
-              // Extract Item
-              std::string item_str = extract_value(id(board_properties), "Item=");
-              if (!item_str.empty()) {
-                id(item_no_sensor_2).publish_state(item_str.c_str());
-              }
 
-              // Extract Description
-              std::string description_str = extract_value(id(board_properties), "Description=");
-              if (!description_str.empty()) {
-                id(description_sensor_2).publish_state(description_str.c_str());
-              }
-
-              // Extract Manufacturing Date
-              std::string manufactured_str = extract_value(id(board_properties), "Manufactured=");
-              if (!manufactured_str.empty()) {
-                id(manufactured_sensor_2).publish_state(manufactured_str.c_str());
-              }
-
-              // Extract VendorName
-              std::string vendorname_str = extract_value(id(board_properties), "VendorName=");
-              if (!vendorname_str.empty()) {
-                id(vendor_name_sensor_2).publish_state(vendorname_str.c_str());
-              }
-
-              // Extract IssueNumber
-              std::string issueNumber_str = extract_value(id(board_properties), "IssueNumber=");
-              if (!issueNumber_str.empty()) {
-                id(issue_number_sensor_2).publish_state(issueNumber_str.c_str());
-              }
 
 
 
@@ -1209,14 +1214,6 @@ text_sensor:
     id: manufactured_sensor_1
 
   - platform: template
-    name: "Vendor Name"
-    id: vendor_name_sensor_1
-
-  - platform: template
-    name: "Issue Number"
-    id: issue_number_sensor_1
-
-  - platform: template
     name: "Board-2 Type"
     id: board_type_sensor_2
 
@@ -1235,14 +1232,6 @@ text_sensor:
   - platform: template
     name: "Manufacturing Date2"
     id: manufactured_sensor_2
-
-  - platform: template
-    name: "Vendor Name2"
-    id: vendor_name_sensor_2
-
-  - platform: template
-    name: "Issue Number2"
-    id: issue_number_sensor_2
 
 
 # ###################################################################################################################################
