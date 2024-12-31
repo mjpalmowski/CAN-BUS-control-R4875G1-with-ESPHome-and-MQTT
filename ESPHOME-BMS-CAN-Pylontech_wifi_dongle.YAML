@@ -1,0 +1,380 @@
+esphome:
+  name: pyloncan
+  friendly_name: pyloncan
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+
+logger:
+  level: INFO
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "eQUM8N8v0HCgJhE8IgkW7S+oThXPts0oYmKfQ/THltU="
+
+# ########
+#mqtt:
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+#   id: mqtt_client
+ ########
+
+########
+#web_server:
+#  version: 3
+########
+
+
+ota:
+  - platform: esphome
+    password: "086c66193fc1f930c53344f997a25fff"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Pacecan Fallback Hotspot"
+    password: "0VHNUG8Sq5Uz"
+
+captive_portal:
+
+
+    
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO19
+    rx_pin: GPIO21
+    can_id: 0x0E5  # Your ESP32's CAN ID
+    bit_rate: 500kbps
+    on_frame:
+      # 1. Battery Charge/Discharge Limits (CAN ID: 0x351)
+      - can_id: 0x351
+        use_extended_id: false
+        then:
+          - lambda: |-
+              float parsed_charge_voltage = (x[1] << 8 | x[0]) * 0.1;  // Bytes 0-1, Unit: 0.1V
+              float parsed_charge_current = (int16_t)(x[3] << 8 | x[2]) * 0.1;  // Bytes 2-3, Unit: 0.1A
+              float parsed_discharge_current = (int16_t)(x[5] << 8 | x[4]) * 0.1;  // Bytes 4-5, Unit: 0.1A
+              // ESP_LOGD("can", "Charge Voltage: %.1f V, Charge Current: %.1f A, Discharge Current: %.1f A", parsed_charge_voltage, parsed_charge_current, parsed_discharge_current);
+              id(charge_voltage).publish_state(parsed_charge_voltage);  // Publish Charge Voltage
+              id(charge_current).publish_state(parsed_charge_current);  // Publish Charge Current
+              id(discharge_current).publish_state(parsed_discharge_current);  // Publish Discharge Current
+
+      # 2. SOC and SOH (CAN ID: 0x355)
+      - can_id: 0x355
+        use_extended_id: false
+        then:
+          - lambda: |-
+              float soc = (x[1] << 8 | x[0]);  // Bytes 0-1
+              float soh = (x[3] << 8 | x[2]);  // Bytes 2-3
+              // ESP_LOGD("can", "SOC: %.1f%%, SOH: %.1f%%", soc, soh);
+              id(state_of_charge).publish_state(soc);
+
+      # 3. Voltage, Current, and Temperature (CAN ID: 0x356)
+      - can_id: 0x356
+        use_extended_id: false
+        then:
+          - lambda: |-
+              float voltage = (x[1] << 8 | x[0]) * 0.01;  // Bytes 0-1, Unit: 0.01V
+              float current = (int16_t)(x[3] << 8 | x[2]) * 0.1;  // Bytes 2-3, Unit: 0.1A
+              float temperature = (int16_t)(x[5] << 8 | x[4]) * 0.1;  // Bytes 4-5, Unit: 0.1°C
+              // ESP_LOGD("can", "Voltage: %.2f V, Current: %.2f A, Temperature: %.1f°C", voltage, current, temperature);
+              id(battery_voltage).publish_state(voltage);
+              id(pack_current).publish_state(current);
+              id(average_temperature).publish_state(temperature);
+
+# CAN message handler for 0x35C
+      - can_id: 0x35C
+        use_extended_id: false
+        then:
+          - lambda: |-
+              uint8_t flags = x[0];  // Byte 0 contains the flags
+
+              // Parse individual flags
+              bool charge_enable = flags & 0x80;  // Bit 7
+              bool discharge_enable = flags & 0x40;  // Bit 6
+              bool request_force_charge_I = flags & 0x20;  // Bit 5
+              bool request_force_charge_II = flags & 0x10;  // Bit 4
+              bool request_full_charge = flags & 0x08;  // Bit 3
+
+              // Log parsed flags
+              ESP_LOGD("can", "Flags (0x35C): Charge Enable: %s, Discharge Enable: %s, Force Charge I: %s, Force Charge II: %s, Request Full Charge: %s",
+                  charge_enable ? "Yes" : "No",
+                  discharge_enable ? "Yes" : "No",
+                  request_force_charge_I ? "Yes" : "No",
+                  request_force_charge_II ? "Yes" : "No",
+                  request_full_charge ? "Yes" : "No");
+
+              // Publish flags to Home Assistant sensors
+              id(charge_enable_sensor).publish_state(charge_enable);
+              id(discharge_enable_sensor).publish_state(discharge_enable);
+              id(request_force_charge_I_sensor).publish_state(request_force_charge_I);
+              id(request_force_charge_II_sensor).publish_state(request_force_charge_II);
+              id(request_full_charge_sensor).publish_state(request_full_charge);
+
+      # 5. Manufacturer Information (CAN ID: 0x35E)
+      - can_id: 0x35E
+        use_extended_id: false
+        then:
+          - lambda: |-
+              char manufacturer[9];
+              memcpy(manufacturer, x.data(), 8);  // Use x.data() to get raw pointer
+              manufacturer[8] = '\0';  // Null-terminate the string
+              //# ESP_LOGD("can", "Manufacturer: %s", manufacturer);
+              id(protocol_name).publish_state(manufacturer);  // Publish to Protocol Name sensor
+
+      - can_id: 0x359
+        use_extended_id: false
+        then:
+          - lambda: |-
+              uint8_t protection_flags_byte0 = x[0];  // Byte 0: Protection flags
+              uint8_t protection_flags_byte1 = x[1];  // Byte 1: Protection flags
+              uint8_t alarm_flags_byte2 = x[2];       // Byte 2: Alarm flags
+              uint8_t alarm_flags_byte3 = x[3];       // Byte 3: Alarm flags
+              uint8_t module_numbers = x[4];         // Byte 4: Module numbers
+
+              // Parse individual flags (existing logic)
+              bool discharge_overcurrent = protection_flags_byte0 & 0x80;  // Bit 7
+              bool cell_under_temperature = protection_flags_byte0 & 0x10;  // Bit 4
+              bool cell_over_temperature = protection_flags_byte0 & 0x08;  // Bit 3
+              bool cell_or_module_under_voltage = protection_flags_byte0 & 0x04;  // Bit 2
+              bool cell_or_module_over_voltage = protection_flags_byte0 & 0x02;  // Bit 1
+              bool system_error = protection_flags_byte1 & 0x08;  // Bit 3
+              bool charge_overcurrent = protection_flags_byte1 & 0x01;  // Bit 0
+              bool discharge_high_current = alarm_flags_byte2 & 0x80;  // Bit 7
+              bool cell_low_temperature = alarm_flags_byte2 & 0x10;  // Bit 4
+              bool cell_high_temperature = alarm_flags_byte2 & 0x08;  // Bit 3
+              bool cell_or_module_low_voltage = alarm_flags_byte2 & 0x04;  // Bit 2
+              bool cell_or_module_high_voltage = alarm_flags_byte2 & 0x02;  // Bit 1
+              bool internal_communication_fail = alarm_flags_byte3 & 0x08;  // Bit 3
+              bool charge_high_current = alarm_flags_byte3 & 0x01;  // Bit 0
+
+              // Log parsed flags
+              ESP_LOGD("can", "Module Numbers (Byte 4): %d", module_numbers);
+              ESP_LOGD("can", "Protection Flags Byte 0: Discharge Overcurrent: %s, Cell Under Temp: %s, Cell Over Temp: %s, Cell/Module Under Voltage: %s, Cell/Module Over Voltage: %s",
+                  discharge_overcurrent ? "Yes" : "No",
+                  cell_under_temperature ? "Yes" : "No",
+                  cell_over_temperature ? "Yes" : "No",
+                  cell_or_module_under_voltage ? "Yes" : "No",
+                  cell_or_module_over_voltage ? "Yes" : "No");
+              ESP_LOGD("can", "Protection Flags Byte 1: System Error: %s, Charge Overcurrent: %s",
+                  system_error ? "Yes" : "No",
+                  charge_overcurrent ? "Yes" : "No");
+              ESP_LOGD("can", "Alarm Flags Byte 2: Discharge High Current: %s, Cell Low Temp: %s, Cell High Temp: %s, Cell/Module Low Voltage: %s, Cell/Module High Voltage: %s",
+                  discharge_high_current ? "Yes" : "No",
+                  cell_low_temperature ? "Yes" : "No",
+                  cell_high_temperature ? "Yes" : "No",
+                  cell_or_module_low_voltage ? "Yes" : "No",
+                  cell_or_module_high_voltage ? "Yes" : "No");
+              ESP_LOGD("can", "Alarm Flags Byte 3: Internal Communication Fail: %s, Charge High Current: %s",
+                  internal_communication_fail ? "Yes" : "No",
+                  charge_high_current ? "Yes" : "No");
+
+              // Publish parsed values to Home Assistant
+              id(discharge_overcurrent_sensor).publish_state(discharge_overcurrent);
+              id(cell_under_temperature_sensor).publish_state(cell_under_temperature);
+              id(cell_over_temperature_sensor).publish_state(cell_over_temperature);
+              id(cell_or_module_under_voltage_sensor).publish_state(cell_or_module_under_voltage);
+              id(cell_or_module_over_voltage_sensor).publish_state(cell_or_module_over_voltage);
+              id(system_error_sensor).publish_state(system_error);
+              id(charge_overcurrent_sensor).publish_state(charge_overcurrent);
+              id(discharge_high_current_sensor).publish_state(discharge_high_current);
+              id(cell_low_temperature_sensor).publish_state(cell_low_temperature);
+              id(cell_high_temperature_sensor).publish_state(cell_high_temperature);
+              id(cell_or_module_low_voltage_sensor).publish_state(cell_or_module_low_voltage);
+              id(cell_or_module_high_voltage_sensor).publish_state(cell_or_module_high_voltage);
+              id(internal_communication_fail_sensor).publish_state(internal_communication_fail);
+              id(charge_high_current_sensor).publish_state(charge_high_current);
+              id(module_numbers_sensor).publish_state(module_numbers);
+interval:
+  # 1. Status Request (every 1 second) - Standard ID
+  - interval: 1s
+    then:
+      - canbus.send:
+          use_extended_id: false
+          can_id: 0x351
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  # 2. Pack Voltage/Current Request (every 1 second) - Standard ID
+  - interval: 1s
+    then:
+      - canbus.send:
+          use_extended_id: false
+          can_id: 0x356
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  # 3. SOC Request (every 5 seconds) - Standard ID
+  - interval: 5s
+    then:
+      - canbus.send:
+          use_extended_id: false
+          can_id: 0x359
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  # 4. Alarm/Warning Request (every 10 seconds) - Standard ID
+  - interval: 10s
+    then:
+      - canbus.send:
+          use_extended_id: false
+          can_id: 0x35E
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+
+text_sensor:
+  - platform: template
+    name: "Protocol Name"
+    id: protocol_name
+    update_interval: never
+
+
+sensor:
+  # State of Charge (SOC)
+  - platform: template
+    name: "State of Charge (SOC)"
+    id: state_of_charge
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    update_interval: never
+
+  # Battery Voltage
+  - platform: template
+    name: "Battery Voltage"
+    id: battery_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    update_interval: never
+
+  # Pack Current
+  - platform: template
+    name: "Pack Current"
+    id: pack_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+    update_interval: never
+
+  # Average Cell Temperature
+  - platform: template
+    name: "Average Cell Temperature"
+    id: average_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: never
+
+  # Charge Voltage Limit
+  - platform: template
+    name: "Charge Voltage Limit"
+    id: charge_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    update_interval: never
+
+  # Charge Current Limit
+  - platform: template
+    name: "Charge Current Limit"
+    id: charge_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    update_interval: never
+
+  # Discharge Current Limit
+  - platform: template
+    name: "Discharge Current Limit"
+    id: discharge_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    update_interval: never
+
+  - platform: template
+    name: "Module Numbers"
+    id: module_numbers_sensor
+    unit_of_measurement: "Modules"
+    icon: mdi:chip
+
+binary_sensor:
+  - platform: template
+    name: "Charge Enable"
+    id: charge_enable_sensor
+    device_class: power
+
+  - platform: template
+    name: "Discharge Enable"
+    id: discharge_enable_sensor
+    device_class: power
+
+  - platform: template
+    name: "Request Force Charge I"
+    id: request_force_charge_I_sensor
+
+
+  - platform: template
+    name: "Request Force Charge II"
+    id: request_force_charge_II_sensor
+
+
+  - platform: template
+    name: "Request Full Charge"
+    id: request_full_charge_sensor
+
+
+  - platform: template
+    name: "Discharge Overcurrent"
+    id: discharge_overcurrent_sensor
+
+  - platform: template
+    name: "Cell Under Temperature"
+    id: cell_under_temperature_sensor
+
+  - platform: template
+    name: "Cell Over Temperature"
+    id: cell_over_temperature_sensor
+
+  - platform: template
+    name: "Cell or Module Under Voltage"
+    id: cell_or_module_under_voltage_sensor
+
+  - platform: template
+    name: "Cell or Module Over Voltage"
+    id: cell_or_module_over_voltage_sensor
+
+  - platform: template
+    name: "System Error"
+    id: system_error_sensor
+
+  - platform: template
+    name: "Charge Overcurrent"
+    id: charge_overcurrent_sensor
+
+  - platform: template
+    name: "Discharge High Current"
+    id: discharge_high_current_sensor
+
+  - platform: template
+    name: "Cell Low Temperature"
+    id: cell_low_temperature_sensor
+
+  - platform: template
+    name: "Cell High Temperature"
+    id: cell_high_temperature_sensor
+
+  - platform: template
+    name: "Cell or Module Low Voltage"
+    id: cell_or_module_low_voltage_sensor
+
+  - platform: template
+    name: "Cell or Module High Voltage"
+    id: cell_or_module_high_voltage_sensor
+
+  - platform: template
+    name: "Internal Communication Fail"
+    id: internal_communication_fail_sensor
+
+  - platform: template
+    name: "Charge High Current"
+    id: charge_high_current_sensor
