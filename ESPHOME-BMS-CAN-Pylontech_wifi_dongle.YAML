@@ -6,8 +6,9 @@ esp32:
   board: esp32dev
   framework:
     type: arduino
-
-
+#
+# This is a way to get Pylontech CAN-BUS compatible Battery data (PACE BMS etc) via MQTT or HA to the Battery charger, so the charger can react to Battery parameters other than voltage. 
+# there is a PDF with the wiring diagram called PylonCan.pdf you will need a separate ESP32 to run this as Pylontech uses 500kbs.
 logger:
   level: INFO
 
