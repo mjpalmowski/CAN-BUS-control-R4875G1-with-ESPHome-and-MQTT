@@ -47,35 +47,125 @@ captive_portal:
 
 globals:
   - id: amp_scaling_factor
-    type: int
-    initial_value: "15"
-    restore_value: true
+    type: float
+    initial_value: "15.0"
+    restore_value: True
     
   - id: voltage_scaling_factor
     type: int
     initial_value: "1024"
-    restore_value: true
+    restore_value: True
 
-select:
-  - platform: template
-    id: model_selection
-    name: "Model Selection"
-    options:
-      - "R4830G"
-      - "R4850G"
-      - "R4875G"
-      - "Select different model"
-    initial_option: "Select different model"
-    icon: "mdi:chip"
-    set_action:
+  - id: max_amp_limit
+    type: float
+    initial_value: "75"  # Set your default max value here
+    restore_value: True
+
+  - id: max_current_found_board_1
+    type: bool
+    initial_value: "false"
+
+  - id: data_found_board_1
+    type: bool
+    initial_value: "false"
+
+
+  - id: board_properties
+    type: std::string
+    initial_value: '""'
+
+  - id: board_properties_complete
+    type: bool
+    initial_value: "false"
+
+  - id: frame_counter_bp1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: frame_counter_msg_start1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: search_attempts
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: search_counter_board_1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: board_properties_complete_1
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+script:
+  - id: setup_sequence
+    mode: single
+    then:
+      - script.execute: detect_board_1_properties
+      - delay: 5s
+      # Detect Data Board-1
+      - script.execute: detect_data_board_1
+      - delay: 1s
+
+
+
+  - id: detect_board_1_properties
+    mode: single
+    then:
       - lambda: |-
-          if (x == "R4830G") {
-            id(amp_scaling_factor) = 30;
-          } else if (x == "R4850G") {
-            id(amp_scaling_factor) = 20;
-          } else if (x == "R4875G") {
-            id(amp_scaling_factor) = 15;
+          id(board_properties_complete) = false; // Reset the completion flag before starting
+          id(frame_counter_bp1) = 0; // Reset the frame counter
+      - while:
+          condition:
+            lambda: |-
+              return !id(board_properties_complete) && id(frame_counter_bp1) < 5;
+          then:
+            - canbus.send:
+                can_id: 0x1081D2FE
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - lambda: |-
+                id(frame_counter_bp1) += 1; // Increment the frame counter
+                ESP_LOGI("board_properties", "Frame Counter: %d", id(frame_counter_bp1));
+      - lambda: |-
+          if (id(board_properties_complete)) {
+            ESP_LOGI("board_properties", "Board properties detected successfully.");
+          } else {
+            ESP_LOGW("board_properties", "Fail-safe triggered: Loop stopped after 5 attempts.");
           }
+
+  - id: detect_data_board_1
+    then:
+      - lambda: |-
+          id(max_current_found_board_1) = false; // Reset the flag before starting
+          id(data_found_board_1) = false; // Reset the flag before starting
+          id(search_counter_board_1) = 0; // Initialize a fail-safe counter
+      - while:
+          condition:
+            lambda: |-
+              return !(id(max_current_found_board_1) && id(data_found_board_1)) && id(search_counter_board_1) < 10;
+          then:
+            - canbus.send:
+                can_id: 0x108150fe
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - lambda: |-
+                id(search_counter_board_1) += 1; // Increment the fail-safe counter
+      - lambda: |-
+          if (id(search_counter_board_1) >= 10) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          }
+
+
+
 
 
 canbus:
@@ -113,59 +203,251 @@ canbus:
                     break;
                 }
               }
+      # Handle board properties message start
+      - can_id: 0x1081D27F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static bool message_started = false;
+
+              if (x.size() == 8) {
+                if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
+                  id(board_properties) = "";  // Clear existing string
+                  id(board_properties_complete) = false;
+                  message_started = true;
+                  id(frame_counter_msg_start1) = 0;  // Reset global frame counter
+                  ESP_LOGI("board_properties", "Message Start Detected");
+                }
+
+                if (message_started) {
+                  // Extract and append all payload bytes starting from x[2]
+                  std::string frame_data((char*)&x[2], 6);  // 6 bytes of payload
+                  id(board_properties) += frame_data;
+
+                  // Increment global frame counter
+                  id(frame_counter_msg_start1)++;
+
+                  // Log for debugging purposes
+                  ESP_LOGD("board_properties", "Captured Frame #%d: %s", id(frame_counter_msg_start1), frame_data.c_str());
+                }
+              }
+
+      # Signal end of board properties message
+      - can_id: 0x1081D27E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              // Check if this frame contains additional payload data
+              if (x.size() > 2) {  // Payload starts at x[2], so size must be > 2
+                std::string frame_data((char*)&x[2], x.size() - 2);
+                ESP_LOGI("board_properties", "End Message Frame Data: %s", frame_data.c_str());
+
+                // Append any remaining data to board_properties
+                id(board_properties) += frame_data;
+              }
+              ESP_LOGI("board_properties", "Total Frames Captured: %d", id(frame_counter_msg_start1));
+              ESP_LOGI("board_properties", "Final Board Properties: %s", id(board_properties).c_str());
+
+              auto extract_value = [](const std::string &data, const std::string &key) -> std::string {
+                size_t start = data.find(key);
+                if (start == std::string::npos) return "";
+                start += key.size();
+                size_t end = data.find_first_of("\r\n", start);
+                if (end == std::string::npos) {
+                  end = data.size();
+                }
+                return data.substr(start, end - start);
+              };
+
+              struct KeySensorPair {
+                const char* key;
+                esphome::template_::TemplateTextSensor* sensor;
+                bool* flag;
+              };
+
+              KeySensorPair mappings[] = {
+                {"BoardType=", id(board_type_sensor_1), nullptr},
+                {"BarCode=", id(barcode_sensor_1), nullptr},
+                {"Item=", id(item_no_sensor_1), nullptr},
+                {"Description=", id(description_sensor_1), nullptr},
+                {"Manufactured=", id(manufactured_sensor_1), &id(board_properties_complete)}
+              };
+
+              bool all_keys_found = true;
+
+              for (const auto& mapping : mappings) {
+                std::string value = extract_value(id(board_properties), mapping.key);
+                if (!value.empty()) {
+                  ESP_LOGI("board_properties", "Extracted %s: %s", mapping.key, value.c_str());
+                  mapping.sensor->publish_state(value.c_str());
+                  if (mapping.flag) {
+                    *(mapping.flag) = true;
+                  }
+                } else {
+                  ESP_LOGW("board_properties", "Key %s not found or empty", mapping.key);
+                  all_keys_found = false;
+                  if (mapping.flag) {
+                    *(mapping.flag) = false; // Reset the flag for missing keys
+                  }
+                }
+              }
+
+              if (all_keys_found) {
+                id(board_properties_complete) = true; // Mark completion only if all keys are found
+                ESP_LOGI("board_properties", "All required keys found. Marking as complete.");
+              } else {
+                id(board_properties_complete) = false; // Explicitly reset the flag if keys are missing
+                ESP_LOGI("board_properties", "Not all keys found. Will continue processing.");
+              }
 
       - can_id: 0x1001117E
         use_extended_id: true
         then:
           - lambda: |-
+              static uint16_t last_alt_amp_value_1 = 0;
+              static std::string last_power_state_1 = "";
               if (x.size() == 8) {
-                // Extract the state byte (x[3]) and last four bytes for Wh
+                // Extract data from the message
                 const uint8_t state_byte = x[3];
-                const uint32_t meter_value = 
-                  (static_cast<uint32_t>(x[4]) << 24) | 
-                  (static_cast<uint32_t>(x[5]) << 16) | 
-                  (static_cast<uint32_t>(x[6]) << 8)  | 
-                  static_cast<uint32_t>(x[7]);
+                const uint8_t error_byte = x[4];
+                const uint16_t alt_amp_value =
+                  (static_cast<uint16_t>(x[6]) << 8) |
+                  static_cast<uint16_t>(x[7]);
 
-                // Publish Power state and alt AMP values
-                id(alt_amp_sensor).publish_state(meter_value);
-                id(power_state_sensor).publish_state(state_byte == 0);
+                // Publish alt AMP value only if it has changed
+                if (alt_amp_value != last_alt_amp_value_1) {
+                  id(alt_amp_sensor).publish_state(alt_amp_value);
+                  last_alt_amp_value_1 = alt_amp_value;
+                }
+
+                // Determine the new power state
+                std::string new_power_state;
+                if (error_byte == 1) {
+                  new_power_state = "ERROR";
+                } else if (state_byte == 0) {
+                  new_power_state = "ON";
+                } else {
+                  new_power_state = "OFF";
+                }
+
+                // Publish power state only if it has changed
+                if (new_power_state != last_power_state_1) {
+                  id(power_state_sensor1).publish_state(new_power_state.c_str());
+                  last_power_state_1 = new_power_state;
+                }
+              }
+      # Handler for CAN ID 0x1081507F (Packet 1)
+      - can_id: 0x1081507F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (id(max_current_found_board_1)) {
+                return; // Skip processing if already found
               }
 
+              uint8_t packet_number = x.data()[1];
+              uint8_t packet_data[8];
+              memcpy(packet_data, x.data(), 8);
+              if (packet_number == 1) {
+                uint8_t max_current_raw = packet_data[5];
+                float max_current = max_current_raw / 2.0; // Adjust scaling factor if necessary
+                ESP_LOGI("canbus", "Board 1 Max current capability: %.1f A", max_current);
+                id(max_current_sensor).publish_state(max_current);
+                id(max_current_found_board_1) = true; // Set the flag to true
+
+                // Calculate and update amp_scaling_factor
+                if (max_current > 0) {
+                  id(amp_scaling_factor) = 1024.0f / max_current;
+                  ESP_LOGI("canbus", "New amp_scaling_factor: %.5f", id(amp_scaling_factor));
+                  id(sf_value).publish_state(id(amp_scaling_factor));
+                } else {
+                  ESP_LOGW("canbus", "Max current is zero. Cannot calculate amp_scaling_factor.");
+                }
+              }
+
+    # Handler for CAN ID 0x1081507E (packet 6)
+      - can_id: 0x1081507E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (id(data_found_board_1)) {
+                ESP_LOGI("canbus", "Data already found. Skipping further processing.");
+                return; // Skip processing if already found
+              }
+
+              ESP_LOGI("canbus", "Board 1 Received CAN message 0x1081507E (Packet 6)");
+
+              uint8_t packet_data[8];
+              memcpy(packet_data, x.data(), 8);
+
+              uint8_t pin11 = packet_data[2];
+              uint8_t pin12 = packet_data[3];
+              ESP_LOGI("canbus", "Board 1 Pin 11: %d, Pin 12: %d", pin11, pin12);
+
+              id(pin11_sensor).publish_state(pin11);
+              id(pin12_sensor).publish_state(pin12);
+
+              if ((pin11 >= 1 && pin11 <= 4) && (pin12 >= 1 && pin12 <= 4)) {
+                id(data_found_board_1) = true; // Set the flag to true
+              }
 
 
 # Define sensors
 
-substitutions:
-  multiplier_default: '0.0009765625' # 1/1024 conversion factor
-  multiplier_current: '0.066666666'          # 1/20 conversion factor        # 1/15 conversion factor 0.06666 to be used if pin 9 and pin 10 on r4875g1 board edge are connected   #1/30 for the r4850g2
-
-binary_sensor:
-  - platform: template
-    id: power_state_sensor
-    name: "003 Charger Power State"
-    device_class: power
 
 
 # Create a text sensor to show the current model
 text_sensor:
+
   - platform: template
-    name: "Current Model Selection"
-    lambda: |-
-      if (id(amp_scaling_factor) == 30) {
-        return {"R4830G"};
-      } else if (id(amp_scaling_factor) == 20) {
-        return {"R4850G"};
-      } else {
-        return {"R4875G"};
-      }
-    update_interval: 10s
-    icon: "mdi:chip"
+    id: power_state_sensor1
+    name: "003 Power State"
+    icon: "mdi:information-outline"
 
-
-
+  - platform: template
+    name: "Type"
+    id: board_type_sensor_1
+    icon: "mdi:information-outline"
+  - platform: template
+    name: "Barcode"
+    id: barcode_sensor_1
+    icon: "mdi:information-outline"
+  - platform: template
+    name: "Item Number"
+    id: item_no_sensor_1
+    icon: "mdi:information-outline"
+  - platform: template
+    name: "Description"
+    id: description_sensor_1
+    icon: "mdi:information-outline"
+  - platform: template
+    name: "Mfg"
+    id: manufactured_sensor_1
+    icon: "mdi:information-outline"
 
 sensor:
+  - platform: template
+    name: "Scaling Factor"
+    id: sf_value
+    accuracy_decimals: 4
+    icon: "mdi:information-outline"
+    update_interval: never    
+
+  - platform: template
+    name: "Max Current Capability"
+    id: max_current_sensor
+    unit_of_measurement: "A"
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Pin 11 Readback"
+    id: pin11_sensor
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Pin 12 Readback"
+    id: pin12_sensor
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "Amp Scaling Factor"
@@ -173,14 +455,15 @@ sensor:
       return id(amp_scaling_factor);
     update_interval: 10s
     internal: true
-
+    icon: "mdi:information-outline"
   - platform: template
     name: "06a Output DC Current alt"
     id: alt_amp_sensor
     unit_of_measurement: "A"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_current}
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
     icon: "mdi:current-dc"
 
   # AC Power In kWh sensor
@@ -212,7 +495,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:flash"
 
   - platform: template
@@ -222,7 +506,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:flash"
 
   - platform: template
@@ -232,7 +517,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:transmission-tower-import"
 
   - platform: template
@@ -242,7 +528,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-ac"
 
   - platform: template
@@ -252,7 +539,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-dc"
 
   - platform: template
@@ -262,7 +550,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:sine-wave"
 
   - platform: template
@@ -272,7 +561,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:thermometer"
     on_value:
       then:
@@ -295,7 +585,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_default}
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
     icon: "mdi:current-dc"
 
   - platform: template
@@ -305,7 +596,8 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 1
     filters:
-      - multiply: ${multiplier_current}
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
     icon: "mdi:current-ac"
 
 
@@ -363,7 +655,7 @@ number:
 
         - canbus.send:
             use_extended_id: true
-            can_id: 0x108180FE
+            can_id: 0x108080FE
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);
               can_data[0] = 0x01;
@@ -373,12 +665,12 @@ number:
               return can_data;
 
 
-
+  # Amp Setting
   - platform: template
-    name: "12 Set Current"
+    name: "12 SET Current"
     id: can_amp_input
     min_value: 1
-    max_value: 50
+    max_value: 75 
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -390,16 +682,29 @@ number:
         - delay: 0.01s
         - lambda: |-
             float amp_value = id(can_amp_input).state;
+            float max_amps = 75;  // Default max amps
+            if (id(amp_scaling_factor) == 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) == 20) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) == 30) {
+              max_amps = 30;
+            }
+
+            if (amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Amp %.1f exceeds max limit %.1f for model, resetting.", amp_value, max_amps);
+              id(can_amp_input).publish_state(max_amps);  // Reset to max value
+              return;
+            }
+
             int scaled_value = (int)(amp_value * id(amp_scaling_factor));
-            ESP_LOGI("custom", "Received Amp: %.1fA, Scaled value: %d", amp_value, scaled_value);
 
             uint8_t high_byte = (scaled_value >> 8) & 0xFF;
             uint8_t low_byte = scaled_value & 0xFF;
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
 
         - canbus.send:
             use_extended_id: true
-            can_id: 0x108180FE
+            can_id: 0x108080FE
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);
               can_data[0] = 0x01;
@@ -409,14 +714,14 @@ number:
               can_data[7] = scaled_value & 0xFF;
               return can_data;
 
-  
+
 
   # Fallback Amp Setting
   - platform: template
     name: "13 Set Fallback Current"
     id: fallback_amp_input
     min_value: 1
-    max_value: 50
+    max_value: 75  
     step: 1
     unit_of_measurement: "A"
     optimistic: true
@@ -428,24 +733,38 @@ number:
         - delay: 0.01s
         - lambda: |-
             float fallback_amp_value = id(fallback_amp_input).state;
+            float max_amps = 75;  // Default max amps
+            if (id(amp_scaling_factor) == 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) == 20) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) == 30) {
+              max_amps = 30;
+            }
+
+            if (fallback_amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Fallback Amp %.1f exceeds max limit %.1f for model, resetting.", fallback_amp_value, max_amps);
+              id(fallback_amp_input).publish_state(max_amps);  // Reset to max value
+              return;
+            }
+
             int fallback_scaled_value = (int)(fallback_amp_value * id(amp_scaling_factor));
-            ESP_LOGI("custom", "Fallback Amp: %.1fA, Scaled value: %d", fallback_amp_value, fallback_scaled_value);
 
             uint8_t high_byte = (fallback_scaled_value >> 8) & 0xFF;
-            uint8_t low_byte = fallback_scaled_value & 0xFF;
-            ESP_LOGI("custom", "Encoded CAN message: [0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x%02X, 0x%02X]", high_byte, low_byte);
+            uint8_t low_byte = fallback_scaled_value & 0xFF;  
 
         - canbus.send:
             use_extended_id: true
-            can_id: 0x108180FE
+            can_id: 0x108080FE
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);
               can_data[0] = 0x01;
               can_data[1] = 0x04;
-              int fallback_scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
-              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;
-              can_data[7] = fallback_scaled_value & 0xFF;
+              int scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
               return can_data;
+
 
 
   # Fallback Voltage Setting
@@ -474,7 +793,7 @@ number:
 
         - canbus.send:
             use_extended_id: true
-            can_id: 0x108180FE
+            can_id: 0x108080FE
             data: !lambda |-
               std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
               can_data[0] = 0x01;  // First byte is always 0x01
@@ -618,7 +937,7 @@ interval:
                 data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
 
 # low voltage-wake and high-voltage-hibernate function
-  - interval: 30s
+  - interval: 2s
     then:
       - lambda: |-
           float output_voltage = id(output_voltage_sensor).state;
@@ -746,6 +1065,17 @@ button:
             use_extended_id: true
             can_id: 0x108080FE
             data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+ 
+  - platform: template
+    name: "SETUP"
+    icon: mdi:magnify-scan
+    on_press:
+      then:
+        - script.execute: setup_sequence
+
+
+
 ###################################################################################################################################
 ##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
 ## Subscribe to MQTT topic to update CAN voltage
