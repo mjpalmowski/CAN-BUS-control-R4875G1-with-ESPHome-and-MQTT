@@ -407,7 +407,7 @@ canbus:
               id(pin11_sensor).publish_state(pin11);
               id(pin12_sensor).publish_state(pin12);
 
-              if (pin11 == 1 && pin12 == 1) {
+              if ((pin11 >= 1 && pin11 <= 4) && (pin12 >= 1 && pin12 <= 4)) {
                 id(data_found_board_1) = true; // Set the flag to true
               }
 
@@ -451,7 +451,7 @@ canbus:
               id(pin11_sensor2).publish_state(pin11);
               id(pin12_sensor2).publish_state(pin12);
 
-              if (pin11 == 1 && pin12 == 1) {
+              if ((pin11 >= 1 && pin11 <= 4) && (pin12 >= 1 && pin12 <= 4)) {
                 id(data_found_board_2) = true; // Set the flag to true
               }
 
