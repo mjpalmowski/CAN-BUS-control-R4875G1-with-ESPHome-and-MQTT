@@ -6,9 +6,8 @@ esp32:
   board: esp32dev
   framework:
     type: arduino
-#
-# This is a way to get Pylontech CAN-BUS compatible Battery data (PACE BMS etc) via MQTT or HA to the Battery charger, so the charger can react to Battery parameters other than voltage. 
-# there is a PDF with the wiring diagram called PylonCan.pdf you will need a separate ESP32 to run this as Pylontech uses 500kbs.
+
+
 logger:
   level: INFO
 
@@ -194,6 +193,41 @@ canbus:
               id(internal_communication_fail_sensor).publish_state(internal_communication_fail);
               id(charge_high_current_sensor).publish_state(charge_high_current);
               id(module_numbers_sensor).publish_state(module_numbers);
+
+
+
+      - can_id: 0x373
+        use_extended_id: false
+        then:
+          - lambda: |-
+              // Byte 0-1: Actual Minimum Cell Voltage
+              uint16_t min_cell_voltage = (x[1] << 8) | x[0];  // Combine bytes
+              float min_cell_voltage_v = min_cell_voltage * 0.001;  // Scale to volts (0.1mV)
+
+              // Byte 2-3: Actual Maximum Cell Voltage
+              uint16_t max_cell_voltage = (x[3] << 8) | x[2];  // Combine bytes
+              float max_cell_voltage_v = max_cell_voltage * 0.001;  // Scale to volts (0.1mV)
+
+              // Byte 4-5: Actual Minimum Cell Temperature (Kelvin)
+              uint16_t min_cell_temp_kelvin = (x[5] << 8) | x[4];  // Combine bytes
+              float min_cell_temp_c = min_cell_temp_kelvin - 273.15;  // Convert Kelvin to Celsius
+
+              // Byte 6-7: Actual Maximum Cell Temperature (Kelvin)
+              uint16_t max_cell_temp_kelvin = (x[7] << 8) | x[6];  // Combine bytes
+              float max_cell_temp_c = max_cell_temp_kelvin - 273.15;  // Convert Kelvin to Celsius
+
+              // Log the parsed values
+              ESP_LOGD("can", "CAN ID 0x373: Min Cell Voltage: %.3fV, Max Cell Voltage: %.3fV, Min Cell Temp: %.2f°C, Max Cell Temp: %.2f°C",
+                  min_cell_voltage_v, max_cell_voltage_v, min_cell_temp_c, max_cell_temp_c);
+
+              // Publish values to Home Assistant
+              id(actual_min_cell_voltage_sensor).publish_state(min_cell_voltage_v);
+              id(actual_max_cell_voltage_sensor).publish_state(max_cell_voltage_v);
+              id(actual_min_cell_temp_sensor).publish_state(min_cell_temp_c);
+              id(actual_max_cell_temp_sensor).publish_state(max_cell_temp_c);
+
+
+
 interval:
   # 1. Status Request (every 1 second) - Standard ID
   - interval: 1s
@@ -233,6 +267,7 @@ text_sensor:
     name: "Protocol Name"
     id: protocol_name
     update_interval: never
+
 
 
 sensor:
@@ -297,6 +332,34 @@ sensor:
     id: module_numbers_sensor
     unit_of_measurement: "Modules"
     icon: mdi:chip
+
+  - platform: template
+    name: "Actual Minimum Cell Voltage"
+    id: actual_min_cell_voltage_sensor
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    icon: mdi:flash
+
+  - platform: template
+    name: "Actual Maximum Cell Voltage"
+    id: actual_max_cell_voltage_sensor
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    icon: mdi:flash
+
+  - platform: template
+    name: "Actual Minimum Cell Temperature"
+    id: actual_min_cell_temp_sensor
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    icon: mdi:thermometer
+
+  - platform: template
+    name: "Actual Maximum Cell Temperature"
+    id: actual_max_cell_temp_sensor
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    icon: mdi:thermometer
 
 binary_sensor:
   - platform: template
