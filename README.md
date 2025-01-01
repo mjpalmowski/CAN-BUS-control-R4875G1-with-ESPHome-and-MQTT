@@ -143,7 +143,7 @@ And here you can find [a web-app version where you can drop-down select differen
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 
-[latest release 0.9.5 with "ONE-Click" SETUP Button]([https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.93](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95))
+[latest release 0.9.5 with "ONE-Click" SETUP Button](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.93](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95))
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
 
