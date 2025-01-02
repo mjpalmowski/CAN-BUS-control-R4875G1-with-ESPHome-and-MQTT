@@ -947,7 +947,42 @@ canbus:
                 }
               }
 
+      - can_id: 0x1003117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static uint16_t last_alt_amp_value_3 = 0;
+              static std::string last_power_state_3 = "";
+              if (x.size() == 8) {
+                // Extract data from the message
+                const uint8_t state_byte = x[3];
+                const uint8_t error_byte = x[4];
+                const uint16_t alt_amp_value =
+                  (static_cast<uint16_t>(x[6]) << 8) |
+                  static_cast<uint16_t>(x[7]);
 
+                // Publish alt AMP value only if it has changed
+                if (alt_amp_value != last_alt_amp_value_3) {
+                  id(alt_amp_sensor3).publish_state(alt_amp_value);
+                  last_alt_amp_value_3 = alt_amp_value;
+                }
+
+                // Determine the new power state
+                std::string new_power_state;
+                if (error_byte == 1) {
+                  new_power_state = "ERROR";
+                } else if (state_byte == 0) {
+                  new_power_state = "ON";
+                } else {
+                  new_power_state = "OFF";
+                }
+
+                // Publish power state only if it has changed
+                if (new_power_state != last_power_state_3) {
+                  id(power_state_sensor3).publish_state(new_power_state.c_str());
+                  last_power_state_3 = new_power_state;
+                }
+              }
 
 time:
   - platform: sntp
