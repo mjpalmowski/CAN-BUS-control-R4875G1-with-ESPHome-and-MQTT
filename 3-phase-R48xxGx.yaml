@@ -1,6 +1,7 @@
 esphome:
-  name: phase3_r4875g1
-  friendly_name: phase3_r4875g1
+  name: can-bus01
+  friendly_name: can-bus01
+
 
 esp32:
   board: esp32dev
@@ -17,8 +18,8 @@ logger:
 # using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
 
 ########
-#web_server:
-#  version: 3
+web_server:
+  version: 3
 ########
 
 # Uncomment api: block if you are using Home Assistant
@@ -45,11 +46,11 @@ captive_portal:
 
 # Uncomment this mqtt: block AND the mqtt block at the bottom of this file if you plan to use it. The status and control topics are shown in the Log also.
 ########
-mqtt:
-  broker: !secret mqtt_host
-  username: !secret mqtt_username
-  password: !secret mqtt_password
-  id: mqtt_client
+#mqtt:
+#  broker: !secret mqtt_host
+#  username: !secret mqtt_username
+#  password: !secret mqtt_password
+#  id: mqtt_client
  #######
 
 globals:
@@ -180,7 +181,7 @@ script:
       - while:
           condition:
             lambda: |-
-              return !id(board_properties_complete1) && id(frame_counter_bp1) < 5;
+              return !id(board_properties_complete1) && id(frame_counter_bp1) < 3;
           then:
             - canbus.send:
                 can_id: 0x1081D2FE
@@ -194,7 +195,7 @@ script:
           if (id(board_properties_complete1)) {
             ESP_LOGI("board_properties", "Board properties detected successfully.");
           } else {
-            ESP_LOGW("board_properties1", "Fail-safe triggered: Loop stopped after 5 attempts.");
+            ESP_LOGW("board_properties1", "Fail-safe triggered: Loop stopped after 3 attempts.");
           }
         
   - id: detect_board_2_properties
@@ -206,7 +207,7 @@ script:
       - while:
           condition:
             lambda: |-
-              return !id(board_properties_complete2) && id(frame_counter_bp2) < 5;
+              return !id(board_properties_complete2) && id(frame_counter_bp2) < 3;
           then:
             - canbus.send:
                 can_id: 0x1082D2FE
@@ -220,7 +221,7 @@ script:
           if (id(board_properties_complete2)) {
             ESP_LOGI("board_properties2", "Board properties detected successfully.");
           } else {
-            ESP_LOGW("board_properties2", "Fail-safe triggered: Loop stopped after 5 attempts.");
+            ESP_LOGW("board_properties2", "Fail-safe triggered: Loop stopped after 3 attempts.");
           }
 
 
@@ -234,10 +235,10 @@ script:
       - while:
           condition:
             lambda: |-
-              return !id(board_properties_complete3) && id(frame_counter_bp3) < 5;
+              return !id(board_properties_complete3) && id(frame_counter_bp3) < 3;
           then:
             - canbus.send:
-                can_id: 0x1082D2FE
+                can_id: 0x1083D2FE
                 use_extended_id: true
                 data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             - delay: 1s
@@ -248,7 +249,7 @@ script:
           if (id(board_properties_complete3)) {
             ESP_LOGI("board_properties3", "Board properties detected successfully.");
           } else {
-            ESP_LOGW("board_properties3", "Fail-safe triggered: Loop stopped after 5 attempts.");
+            ESP_LOGW("board_properties3", "Fail-safe triggered: Loop stopped after 3 attempts.");
           }
 
 
@@ -275,8 +276,8 @@ script:
             - lambda: |-
                 id(search_counter_board_1) += 1; // Increment the fail-safe counter
       - lambda: |-
-          if (id(search_counter_board_1) >= 10) {
-            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          if (id(search_counter_board_1) >= 20) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 20 attempts.");
           }
 
 
@@ -299,8 +300,8 @@ script:
             - lambda: |-
                 id(search_counter_board_2) += 1; // Increment the fail-safe counter
       - lambda: |-
-          if (id(search_counter_board_2) >= 10) {
-            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          if (id(search_counter_board_2) >= 20) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 20 attempts.");
           }
 
   - id: detect_data_board_3
@@ -315,15 +316,15 @@ script:
               return !(id(max_current_found_board_3) && id(data_found_board_3)) && id(search_counter_board_3) < 10;
           then:
             - canbus.send:
-                can_id: 0x108250fe
+                can_id: 0x108350fe
                 use_extended_id: true
                 data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             - delay: 1s
             - lambda: |-
                 id(search_counter_board_3) += 1; // Increment the fail-safe counter
       - lambda: |-
-          if (id(search_counter_board_3) >= 10) {
-            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          if (id(search_counter_board_3) >= 20) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 20 attempts.");
           }
 
   - id: setup_sequence
@@ -337,11 +338,11 @@ script:
       - delay: 5s      
       # Detect Data Board-1
       - script.execute: detect_data_board_1
-      - delay: 1s
+      - delay: 20s
       # Detect Data Board-2
       - script.execute: detect_data_board_2
-      - delay: 1s
-      # Detect Data Board-2
+      - delay: 20s
+      # Detect Data Board-3
       - script.execute: detect_data_board_3
 
 
@@ -802,7 +803,7 @@ canbus:
               }
 
       # Handlers for Board 3
-      - can_id: 0x1082507F
+      - can_id: 0x1083507F
         use_extended_id: true
         then:
           - lambda: |-
@@ -821,7 +822,7 @@ canbus:
                 id(max_current_found_board_3) = true; // Set the flag to true
               }
 
-      - can_id: 0x1082507E
+      - can_id: 0x1083507E
         use_extended_id: true
         then:
           - lambda: |-
@@ -829,14 +830,14 @@ canbus:
                 return; // Skip processing if already found
               }
 
-              ESP_LOGI("canbus", "Board 3 Received CAN message 0x1082507E (Packet 6)");
+              ESP_LOGI("canbus", "Board 3 Received CAN message 0x1083507E (Packet 6)");
 
               uint8_t packet_data[8];
               memcpy(packet_data, x.data(), 8);
 
               uint8_t pin11 = packet_data[2];
               uint8_t pin12 = packet_data[3];
-              ESP_LOGI("canbus", "Board 2 Pin 11: %d, Pin 12: %d", pin11, pin12);
+              ESP_LOGI("canbus", "Board 3 Pin 11: %d, Pin 12: %d", pin11, pin12);
 
               id(pin11_sensor3).publish_state(pin11);
               id(pin12_sensor3).publish_state(pin12);
@@ -846,7 +847,7 @@ canbus:
               }
 
       # Handle messages from the third device
-      - can_id: 0x1082407F
+      - can_id: 0x1083407F
         use_extended_id: true
         then:
           - lambda: |-
@@ -1871,85 +1872,86 @@ text_sensor:
     name: "Mfg Board-3"
     id: manufactured_sensor_3
 
-###################################################################################################################################
-##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
-## Subscribe to MQTT topic to update CAN voltage
-  - platform: mqtt_subscribe
-    name: "CAN Voltage MQTT"
-    id: mqtt_voltage_input
-    topic: "home/canbus/voltage_set"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
-        - lambda: |-
-            // Convert MQTT message to float
-            float mqtt_voltage = atof(x.c_str());
 
-            // Update the number input with the new value
-            if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
-              id(can_voltage_input).publish_state(mqtt_voltage);
-            } else {
-              ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
-            }
+# ###################################################################################################################################
+# ##This Block must be added to enable voltage and currrent SET topics when using the mqtt: component
+# ## Subscribe to MQTT topic to update CAN voltage
+#   - platform: mqtt_subscribe
+#     name: "CAN Voltage MQTT"
+#     id: mqtt_voltage_input
+#     topic: "home/canbus/voltage_set"
+#     internal: true  # This makes the sensor internal
+#     on_value:
+#       then:
+#         - delay: 0.01s  # Small delay to ensure the value is properly updated
+#         - lambda: |-
+#             // Convert MQTT message to float
+#             float mqtt_voltage = atof(x.c_str());
 
-  # Subscribe to MQTT topic to update CAN amps
-  - platform: mqtt_subscribe
-    name: "CAN Amps MQTT"
-    id: mqtt_amp_input
-    topic: "home/canbus/amp_set"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
-        - lambda: |-
-            // Convert MQTT message to float
-            float mqtt_amp = atof(x.c_str());
+#             // Update the number input with the new value
+#             if (mqtt_voltage >= 49.0 && mqtt_voltage <= 58.0) {
+#               id(can_voltage_input).publish_state(mqtt_voltage);
+#             } else {
+#               ESP_LOGW("custom", "Received out-of-range voltage value: %.1fV", mqtt_voltage);
+#             }
 
-            // Update the number input with the new value
-            if (mqtt_amp >= 1.0 && mqtt_amp <= 75.0) {
-              id(can_amp_input).publish_state(mqtt_amp);
-            } else {
-              ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
-            }
+#   # Subscribe to MQTT topic to update CAN amps
+#   - platform: mqtt_subscribe
+#     name: "CAN Amps MQTT"
+#     id: mqtt_amp_input
+#     topic: "home/canbus/amp_set"
+#     internal: true  # This makes the sensor internal
+#     on_value:
+#       then:
+#         - delay: 0.01s  # Small delay to ensure the value is properly updated
+#         - lambda: |-
+#             // Convert MQTT message to float
+#             float mqtt_amp = atof(x.c_str());
 
-  # Subscribe to MQTT topic to update Fallback Voltage
-  - platform: mqtt_subscribe
-    name: "Fallback Voltage MQTT"
-    id: mqtt_fallback_voltage
-    topic: "home/canbus/fallback_voltage_set"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
-        - lambda: |-
-            // Convert MQTT message to float
-            float fallback_voltage = atof(x.c_str());
+#             // Update the number input with the new value
+#             if (mqtt_amp >= 1.0 && mqtt_amp <= 75.0) {
+#               id(can_amp_input).publish_state(mqtt_amp);
+#             } else {
+#               ESP_LOGW("custom", "Received out-of-range amp value: %.1fA", mqtt_amp);
+#             }
 
-            // Update the number input with the new value
-            if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
-              id(fallback_voltage_input).publish_state(fallback_voltage);
-            } else {
-              ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
-            }
+#   # Subscribe to MQTT topic to update Fallback Voltage
+#   - platform: mqtt_subscribe
+#     name: "Fallback Voltage MQTT"
+#     id: mqtt_fallback_voltage
+#     topic: "home/canbus/fallback_voltage_set"
+#     internal: true  # This makes the sensor internal
+#     on_value:
+#       then:
+#         - delay: 0.01s  # Small delay to ensure the value is properly updated
+#         - lambda: |-
+#             // Convert MQTT message to float
+#             float fallback_voltage = atof(x.c_str());
 
-  # Subscribe to MQTT topic to update Fallback Amps
-  - platform: mqtt_subscribe
-    name: "Fallback Amps MQTT"
-    id: mqtt_fallback_amp
-    topic: "home/canbus/fallback_amp_set"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - delay: 0.01s  # Small delay to ensure the value is properly updated
-        - lambda: |-
-            // Convert MQTT message to float
-            float fallback_amp = atof(x.c_str());
+#             // Update the number input with the new value
+#             if (fallback_voltage >= 49.0 && fallback_voltage <= 58.0) {
+#               id(fallback_voltage_input).publish_state(fallback_voltage);
+#             } else {
+#               ESP_LOGW("custom", "Received out-of-range fallback voltage value: %.1fV", fallback_voltage);
+#             }
 
-            // Update the number input with the new value
-            if (fallback_amp >= 1.0 && fallback_amp <= 75.0) {
-              id(fallback_amp_input).publish_state(fallback_amp);
-            } else {
-              ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
-            }
- #############################################################################################################################
+#   # Subscribe to MQTT topic to update Fallback Amps
+#   - platform: mqtt_subscribe
+#     name: "Fallback Amps MQTT"
+#     id: mqtt_fallback_amp
+#     topic: "home/canbus/fallback_amp_set"
+#     internal: true  # This makes the sensor internal
+#     on_value:
+#       then:
+#         - delay: 0.01s  # Small delay to ensure the value is properly updated
+#         - lambda: |-
+#             // Convert MQTT message to float
+#             float fallback_amp = atof(x.c_str());
+
+#             // Update the number input with the new value
+#             if (fallback_amp >= 1.0 && fallback_amp <= 75.0) {
+#               id(fallback_amp_input).publish_state(fallback_amp);
+#             } else {
+#               ESP_LOGW("custom", "Received out-of-range fallback amp value: %.1fA", fallback_amp);
+#             }
+#  #############################################################################################################################
