@@ -11,7 +11,7 @@ esp32:
 logger:
   level: INFO
 # This YAML file is optimised to run three R48xxGx units in parallel on the same CAN BUS. Great start for a three-phase install. 
-# For now the thee units behave like one big unit drawing evenly across three phases  COMMUNICATION VIA MQTT or Home Assistant API.
+# For now the thee units behave like one big unit drawing evenly across three phases  COMMUNICATION VIA WEB-APP  or Home Assistant API or MQTT.
 # If you dont have or want to use Home assistant or do any automation, just need a simple web surface to 
 # control your recifiers, just fill out your wifi credentials, uncomment this webs_server: section and 
 # comment out the "api:" section and the "mqtt:" section also the mqtt section at the bottom of this file! and compile and upload bin to esp32 
