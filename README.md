@@ -86,6 +86,8 @@ PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpre
 
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
+**Now, you have is all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :)](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95)** 
+
 ![Wiring Diagram](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
 For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
