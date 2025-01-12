@@ -144,7 +144,7 @@ And here you can find [a web-app version where you can drop-down select differen
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
 
-[Total Off-Grid, Preppers, SHTF: This way](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v001-SHTF-offgrid-edition) to a version of the software to control Huawai R48xxGx that creates a Hotspot on the ESP32 to which you can directly connect with your phone and control the charger. No WiFi network, no Internet, no Home Assistant, all you need is your phone. This version works for all Huawai R4830G, R4850G and R4875G devices there is a SETUP button on the web-app that discovers the amp rating.
+***[Total Off-Grid, Preppers, SHTF: This way](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v001-SHTF-offgrid-edition)*** to a version of the software to control Huawai R48xxGx that creates a Hotspot on the ESP32 to which you can directly connect with your phone and control the charger. No WiFi network, no Internet, no Home Assistant, all you need is your phone. This version works for all Huawai R4830G, R4850G and R4875G devices there is a SETUP button on the web-app that discovers the amp rating.
 
 ### Example Screenshots
 
