@@ -1632,11 +1632,21 @@ number:
 interval:
 
   # Interval for sending the first CAN message every 05 seconds
-  - interval: 500ms
+  - interval: 577ms
     then:
       - canbus.send:
           use_extended_id: true
-          can_id: 0x108040FE
+          can_id: 0x108140FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+      - delay: 183ms
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108240FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+      - delay: 193ms
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108340FE
           data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
   # Interval for sending voltage CAN message every 30 seconds
