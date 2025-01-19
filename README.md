@@ -20,6 +20,8 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **R4850G**
 - **R4830G**
 
+- **Up to three units are supported to run in parallel with one controller! Just tie can bus lines together and parallel connect DC-output**
+
 ### Supported Sensors
 - **Power State ON/Hibernate/Error**
 - **AC Power In**
