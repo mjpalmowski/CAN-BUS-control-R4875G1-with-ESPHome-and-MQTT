@@ -1,7 +1,12 @@
 esphome:
   name: pyloncan
   friendly_name: pyloncan
-
+#####################################################
+# This is a quick wifi dongle for pylontec          #
+# protocol BMS CAN-BUS. So any BMS where you can    #
+# select the pylontec CAN BUS protocol should work. #
+# How to use: see PylonCan.pdf                      #
+#####################################################
 esp32:
   board: esp32dev
   framework:
