@@ -377,6 +377,7 @@ canbus:
                       case 0x78: id(input_grid_voltage_sensor1).publish_state(value); break;
                       case 0x7F: id(output_temperature_sensor1).publish_state(value); break;
                       case 0x81: id(output_current_sensor1).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor1).publish_state(value); break;
                     }
                     break;
                 }
@@ -797,6 +798,7 @@ canbus:
                       case 0x78: id(input_grid_voltage_sensor_device2).publish_state(value); break;
                       case 0x7F: id(output_temperature_sensor_device2).publish_state(value); break;
                       case 0x81: id(output_current_sensor_device2).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor_device2).publish_state(value); break;
                     }
                     break;
                 }
@@ -870,6 +872,7 @@ canbus:
                       case 0x78: id(input_grid_voltage_sensor_device3).publish_state(value); break;
                       case 0x7F: id(output_temperature_sensor_device3).publish_state(value); break;
                       case 0x81: id(output_current_sensor_device3).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor_device3).publish_state(value); break;
                     }
                     break;
                 }
@@ -997,6 +1000,38 @@ time:
 
 sensor:
 
+  - platform: template
+    name: "Input Temperature Board-1"
+    id: input_temperature_sensor1
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "Input Temperature Board-2"
+    id: input_temperature_sensor_device2
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "Input Temperature Board-3"
+    id: input_temperature_sensor_device3
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
 
   - platform: template
     name: "Scaling Factor Board-1"
