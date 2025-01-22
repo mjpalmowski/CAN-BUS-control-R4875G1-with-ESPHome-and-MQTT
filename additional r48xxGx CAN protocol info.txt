@@ -1,0 +1,87 @@
+
+CAN  Baud rate: 125kbps   All frames are extended frames
+==========================================================================================================================================================
+Voltage and Current Setting Data Frame
+Upper Computer Sending:		
+			0x108180fe	Data Frame	Extended Frame	0x08	01 00 00 00 00 00 uu uu      Voltage range limitation (Only valid when continuously sent, reset after 1 minute if sent once) (a6c0 - ea67) dc 5e =55.22v
+			0x108180fe	Data Frame	Extended Frame	0x08	01 01 00 00 00 00 uu uu      Default Maximum Voltage (c000 - e99a)  
+			0x108180fe	Data Frame	Extended Frame	0x08	01 03 00 00 00 00 ii ii      Current limitation (Only valid when continuously sent, reset to default maximum current after 1 minute if sent once)
+			0x108180fe	Data Frame	Extended Frame	0x08	01 04 00 00 00 00 ii ii      Default Maximum Current
+uu uu = 1024 x Voltage [V]    ii ii = 30 x Current [A]??     Preliminary analysis indicates current minimum resolution of 50mA,
+Power Reply:
+			0x1081807e	Data Frame	Extended Frame	0x08	01 00 00 00 00 00 uu uu 
+			0x1081807e	Data Frame	Extended Frame	0x08	01 00 00 00 00 00 uu uu 
+			0x1081807e	Data Frame	Extended Frame	0x08	01 00 00 00 00 00 ii ii 
+			0x1081807e	Data Frame	Extended Frame	0x08	01 00 00 00 00 00 iiii 
+ii ii=     (Every 1A differs by 0x14 (20)), but above 10A, some differ by 0x13
+00 09= 0.5A
+00 13= 1A  
+00 27= 2A,   00 3B= 3A, 00 4E =4A, 00 62 =5A, 00 76= 6A, 00 89= 7A, 00 9D= 8A, 00 B1= 9A
+00 C4 =10A, 00 D8 =11A, 00 EC =12A, 01 00 =13A, 01 13 =14A, 01 27=15A, 01 89 =20A, 01 EC= 25A, 02 4E= 30A
+02 B1= 35A, 03 13 =40A, 03 76 =45A, 03 D8= 50A
+==========================================================================================================================================================
+System Status Query Frame
+Upper Computer Sending:
+			0x108140fe	Data Frame	Extended Frame	0x08	00 00 00 00 00 00 00 00 	Send read command
+
+Power Reply:			
+			0x1081407f	Data Frame	Extended Frame	0x08	01 0e 00 00 00 00 5f d6 	24534		            Total Runtime (h)	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 70 00 00 00 02 2e b2 	143026	139.6738281W	Input Power Value/1024 (Convert Hexadecimal to Decimal first, same below)	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 71 00 00 00 00 c7 d7 	51159	49.95996094HZ	Input Frequency Value/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 72 00 00 00 00 02 7b 	635	0.620117188A	Input Current Value	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 73 00 00 00 01 fd 0c 	130316	127.2617188W	Output Power Value/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 74 00 00 00 00 03 a5 	933	0.911132813	        Real-time Efficiency Value/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 75 00 00 00 00 d8 4b 	55371	54.07324219V	Output Voltage Feedback/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 76 00 00 00 00 01 27 	295		                Maximum Output Current	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 78 00 00 00 03 85 a0 	230816	225.40625V	Input Voltage/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 7f 00 00 00 00 6c 00 	27648	27 C	        Output Module Temperature/1024	
+			0x1081407f	Data Frame	Extended Frame	0x08	01 80 00 00 00 00 64 00 	25600	25 C	        Input Module Temperature	Value Displayed/1024
+			0x1081407f	Data Frame	Extended Frame	0x08	01 81 00 00 00 00 09 6a 	2410	2.353515625	    Current Limiting Point %	24%
+			0x1081407f	Data Frame	Extended Frame	0x08	01 82 00 00 00 00 09 01 	2305	2.250976563A	Real-time Output Current/1024	
+			0x1081407e	Data Frame	Extended Frame	0x08	01 83 00 10 00 00 00 00 	                        End/Status			
+==========================================================================================================================================================
+Power Broadcast Data Frame:
+			0x100011fe	Data Frame	Extended Frame	0x08	00 02 00 00 00 00 00 2f    (Possibly Alarm Signal) Bytes 7 and 8 are variable
+			0x1001117e	Data Frame	Extended Frame	0x08	00 01 00 00 00 00 00 2f    (Real-time Output Current, sent automatically every second.) Bytes 7 and 8 are variable (Related to Current? Output Current Feedback = ii ii x 0.0509) Preliminary analysis indicates status of input section.
+ 											                                 Byte 2 is related to power on/off; after shutdown, data is 00)
+			0x108111fe	Data Frame	Extended Frame	0x08	00 03 00 00 00 01 00 2f    (Sent automatically every second, possibly an Alarm Signal.) Bytes 7 and 8 are variable Preliminary analysis indicates status of output section.
+											                                 Byte 6 is related to power on/off; after shutdown, data is 00          
+==========================================================================================================================================================
+Data sent at the moment of power on:
+			0x1000107e	Data Frame	Extended Frame	0x08	30 01 2c 68 24 08 35 1b 
+			0x1000107e	Data Frame	Extended Frame	0x08	30 01 2c 68 24 08 35 1b 
+			0x1000107e	Data Frame	Extended Frame	0x08	30 01 2c 68 24 08 35 1b 
+
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+			0x1001107e	Data Frame	Extended Frame	0x08	30 02 2c 68 24 08 35 1b 
+==========================================================================================================================================================
+Handshake Connection:
+Upper Computer Sending:		
+			0x108150fe	Data Frame	Extended Frame	0x08	00 00 00 00 00 00 00 00 
+
+Power Reply:		
+			0x1081507f	Data Frame	Extended Frame	0x08	00 01 00 00 40 68 0e 2c 
+			0x1081507f	Data Frame	Extended Frame	0x08	00 02 2c 68 24 08 35 1b 
+			0x1081507f	Data Frame	Extended Frame	0x08	00 03 32 31 30 32 33 31 
+			0x1081507f	Data Frame	Extended Frame	0x08	00 04 30 46 46 41 44 30 
+			0x1081507f	Data Frame	Extended Frame	0x08	00 05 04 00 01 05 01 05 
+			0x1081507e	Data Frame	Extended Frame	0x08	00 06 01 01 00 00 00 00 
+==========================================================================================================================================================
+Upper Computer Broadcast Data:
+			0x108181fe	Data Frame	Extended Frame	0x08	01 01 00 00 00 00 uu uu    Default Voltage Data (Refer to the relationship above)
+			0x108181fe	Data Frame	Extended Frame	0x08	01 04 00 00 00 00 ii ii    Default Current Data (Refer to the relationship above)
+==========================================================================================================================================================	
+Power Off Command:
+Upper Computer Sending:		
+			0x108180fe	Data Frame	Extended Frame	0x08	01 32 00 01 00 00 00 00    Off (Power off command must be continuously sent to maintain the power-off state; otherwise, it will restart after 1 minute)
+ 			0x108180fe	Data Frame	Extended Frame	0x08	01 32 00 00 00 00 00 00    On
+
+Power Reply:		
+			0x1081807e	Data Frame	Extended Frame	0x08	01 32 00 01 00 00 00 00
+			0x1081807e	Data Frame	Extended Frame	0x08	01 32 00 00 00 00 00 00
