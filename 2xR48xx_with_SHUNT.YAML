@@ -1,0 +1,1119 @@
+esphome:
+  name: 2xr4875g1-with-shunt
+  friendly_name: 2xr4875g1-with-shunt
+
+  on_boot:
+    priority: 600  # Adjust priority if needed
+    then:
+      - delay: 15s  # Wait 15 seconds after boot
+      - script.execute: setup_sequence
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+
+logger:
+  level: INFO
+# This YAML file is optimised to run two R48xxGx units in parallel on the same CAN BUS. COMMUNICATION VIA MQTT.
+# If you dont have or want to use Home assistant or do any automation, just need a simple web surface to 
+# control your recifiers, just fill out your wifi credentials, uncomment this webs_server: section and 
+# comment out the "api:" section and the "mqtt:" section. and compile and upload bin to esp32 
+# using any PC: https://www.youtube.com/watch?v=BX6tDsux_X4 
+
+########
+#web_server:
+#  version: 3
+########
+
+# Uncomment api: block if you are using Home Assistant
+#######
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+#######
+ota:
+  - platform: esphome
+    password: "afafd3c4bba9467b8f842f8d622f1435"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Can-Bus01 Fallback Hotspot"
+    password: "Qjk3nwK8gpqw"
+
+captive_portal:
+
+
+ # Uncomment this mqtt: block if you plan to use it. The status and control topics are shown in the Log also.
+ ########
+#mqtt:
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+#   id: mqtt_client
+ ########
+
+
+i2c:
+  sda: GPIO22
+  scl: GPIO23
+  scan: true
+  id: bus_a
+
+
+globals:
+  - id: voltage_triggered
+    type: bool
+    restore_value: false
+    initial_value: "false"
+
+  - id: voltage_threshold
+    type: float
+    restore_value: true
+    initial_value: '47.5'  # Default threshold value
+
+  - id: amp_scaling_factor
+    type: float
+    initial_value: "15.0"
+    restore_value: True
+
+  - id: voltage_scaling_factor
+    type: int
+    initial_value: "1024"
+    restore_value: True
+
+  - id: max_amp_limit
+    type: float
+    initial_value: "75"  # Set your default max value here
+    restore_value: True
+
+  - id: max_current_found_board_1
+    type: bool
+    initial_value: "false"
+
+  - id: max_current_found_board_2
+    type: bool
+    initial_value: "false"
+
+  - id: search_counter_board_2
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: search_counter_board_1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+
+
+switch:
+  - platform: template
+    name: "Enable Auto Half Shunt Current"
+    id: auto_half_shunt_enable
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # Send ON command
+    turn_off_action:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00] # Send OFF command
+
+
+
+script:
+
+  - id: auto_set_half_shunt_current
+    then:
+      - lambda: |-
+          auto shunt = id(shunt_current);
+          if (shunt && shunt->state < 0) {
+            float shunt_current = shunt->state;
+            float half_current = fabs(shunt_current) / 2.0;
+
+            // Define the maximum allowable amps based on scaling factor
+            float max_amps = 75.0;
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_amps = 30;
+            }
+
+            // Ensure half_current does not exceed max_amps
+            if (half_current > max_amps) {
+              half_current = max_amps;
+            }
+
+            // Publish half_current to CAN Amp Input
+            id(can_amp_input).publish_state(half_current);
+          } else {
+            ESP_LOGW("custom", "Shunt Current is not negative or invalid.");
+          }
+
+  - id: setup_sequence
+    mode: single
+    then:
+      # Detect Data Board-1
+      - script.execute: detect_data_board_1
+      - delay: 1s
+      # Detect Data Board-2
+      - script.execute: detect_data_board_2
+
+  - id: detect_data_board_1
+    then:
+      - lambda: |-
+          id(max_current_found_board_1) = false; // Reset the flag before starting
+          id(search_counter_board_1) = 0; // Initialize a fail-safe counter
+      - while:
+          condition:
+            lambda: |-
+              return !id(max_current_found_board_1) && id(search_counter_board_1) < 10;
+          then:
+            - canbus.send:
+                can_id: 0x108150fe
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - lambda: |-
+                id(search_counter_board_1) += 1; // Increment the fail-safe counter
+      - lambda: |-
+          if (id(search_counter_board_1) >= 10) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          }
+
+  - id: detect_data_board_2
+    then:
+      - lambda: |-
+          id(max_current_found_board_2) = false; // Reset the flag before starting
+          id(search_counter_board_2) = 0; // Initialize a fail-safe counter
+      - while:
+          condition:
+            lambda: |-
+              return !id(max_current_found_board_2) && id(search_counter_board_2) < 10;
+          then:
+            - canbus.send:
+                can_id: 0x108250fe
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - lambda: |-
+                id(search_counter_board_2) += 1; // Increment the fail-safe counter
+      - lambda: |-
+          if (id(search_counter_board_2) >= 10) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          }
+
+
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO19
+    rx_pin: GPIO21
+    can_id: 0xE5F32E5
+    bit_rate: 125kbps
+    use_extended_id: true
+    on_frame:
+      - can_id: 0x1081407F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() >= 8) {
+                const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
+                const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
+                                       (static_cast<uint32_t>(x[5]) << 16) | 
+                                       (static_cast<uint32_t>(x[6]) << 8) | 
+                                       static_cast<uint32_t>(x[7]);
+                switch (byte_0) {
+                  case 0x01:
+                    switch (byte_1) {
+                      case 0x70: id(ac_power_in_sensor1).publish_state(value); break;
+                      case 0x71: id(grid_frequency_sensor1).publish_state(value); break;
+                      case 0x72: id(input_current_sensor1).publish_state(value); break;
+                      case 0x73: id(dc_power_out_sensor1).publish_state(value); break;
+                      case 0x75: id(output_voltage_sensor1).publish_state(value); break;
+                      case 0x76: id(set_max_output_current_sensor1).publish_state(value); break;
+                      case 0x78: id(input_grid_voltage_sensor1).publish_state(value); break;
+                      case 0x7F: id(output_temperature_sensor1).publish_state(value); break;
+                      case 0x81: id(output_current_sensor1).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor_1).publish_state(value); break;
+                    }
+                    break;
+                }
+              }
+
+      # Handler for CAN ID 0x1081507F (Packet 1)
+      - can_id: 0x1081507F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (id(max_current_found_board_1)) {
+                return; // Skip processing if already found
+              }
+
+              uint8_t packet_number = x.data()[1];
+              uint8_t packet_data[8];
+              memcpy(packet_data, x.data(), 8);
+              if (packet_number == 1) {
+                uint8_t max_current_raw = packet_data[5];
+                float max_current = max_current_raw / 2; // Adjust scaling factor if necessary
+                ESP_LOGI("canbus", "Board 1 Max current capability: %.1f A", max_current);
+                id(max_current_sensor).publish_state(max_current);
+                id(max_current_found_board_1) = true; // Set the flag to true
+
+                // Calculate and update amp_scaling_factor
+                if (max_current > 0) {
+                  id(amp_scaling_factor) = 1024.0 / max_current;
+                  ESP_LOGI("canbus", "New amp_scaling_factor: %.3f", id(amp_scaling_factor));
+                  id(sf_value).publish_state(id(amp_scaling_factor));
+                } else {
+                  ESP_LOGW("canbus", "Max current is zero. Cannot calculate amp_scaling_factor.");
+                }
+              }
+
+
+      # Handlers for Board 2
+      - can_id: 0x1082507F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (id(max_current_found_board_2)) {
+                return; // Skip processing if already found
+              }
+
+              uint8_t packet_number = x.data()[1];
+              uint8_t packet_data[8];
+              memcpy(packet_data, x.data(), 8);
+              if (packet_number == 1) {
+                uint8_t max_current_raw = packet_data[5];
+                float max_current = max_current_raw / 2; // Adjust scaling factor if necessary
+                ESP_LOGI("canbus", "Board 2 Max current capability: %.1f A", max_current);
+                id(max_current_sensor2).publish_state(max_current);
+                id(max_current_found_board_2) = true; // Set the flag to true
+              }
+
+
+
+      # Handle messages from the second device
+      - can_id: 0x1082407F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() >= 8) {
+                const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
+                const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
+                                       (static_cast<uint32_t>(x[5]) << 16) | 
+                                       (static_cast<uint32_t>(x[6]) << 8) | 
+                                       static_cast<uint32_t>(x[7]);
+                switch (byte_0) {
+                  case 0x01:
+                    switch (byte_1) {
+                      case 0x70: id(ac_power_in_sensor_device2).publish_state(value); break;
+                      case 0x71: id(grid_frequency_sensor_device2).publish_state(value); break;
+                      case 0x72: id(input_current_sensor_device2).publish_state(value); break;
+                      case 0x73: id(dc_power_out_sensor_device2).publish_state(value); break;
+                      case 0x75: id(output_voltage_sensor_device2).publish_state(value); break;
+                      case 0x76: id(set_max_output_current_sensor_device2).publish_state(value); break;
+                      case 0x78: id(input_grid_voltage_sensor_device2).publish_state(value); break;
+                      case 0x7F: id(output_temperature_sensor_device2).publish_state(value); break;
+                      case 0x81: id(output_current_sensor_device2).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor_2).publish_state(value); break;
+                    }
+                    break;
+                }
+              }
+
+      - can_id: 0x1001117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static uint16_t last_alt_amp_value_1 = 0;
+              static std::string last_power_state_1 = "";
+              if (x.size() == 8) {
+                // Extract data from the message
+                const uint8_t state_byte = x[3];
+                const uint8_t error_byte = x[4];
+
+                // Determine the new power state
+                std::string new_power_state;
+                if (error_byte == 1) {
+                  new_power_state = "ERROR";
+                } else if (state_byte == 0) {
+                  new_power_state = "ON";
+                } else {
+                  new_power_state = "OFF";
+                }
+                // Publish power state only if it has changed
+                if (new_power_state != last_power_state_1) {
+                  id(power_state_sensor1).publish_state(new_power_state.c_str());
+                  last_power_state_1 = new_power_state;
+                }
+              }
+
+      - can_id: 0x1002117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static uint16_t last_alt_amp_value_2 = 0;
+              static std::string last_power_state_2 = "";
+              if (x.size() == 8) {
+                // Extract data from the message
+                const uint8_t state_byte = x[3];
+                const uint8_t error_byte = x[4];
+
+                // Determine the new power state
+                std::string new_power_state;
+                if (error_byte == 1) {
+                  new_power_state = "ERROR";
+                } else if (state_byte == 0) {
+                  new_power_state = "ON";
+                } else {
+                  new_power_state = "OFF";
+                }
+
+                // Publish power state only if it has changed
+                if (new_power_state != last_power_state_2) {
+                  id(power_state_sensor2).publish_state(new_power_state.c_str());
+                  last_power_state_2 = new_power_state;
+                }
+              }
+
+
+
+time:
+  - platform: sntp
+    id: sntp_time
+
+
+sensor:
+  # INA226 Sensor Configuration
+  - platform: ina226
+    address: 0x40
+    i2c_id: bus_a
+    shunt_resistance: 0.00025
+    max_current: 300
+    adc_time: 140us
+    adc_averaging: 128
+    update_interval: 300ms
+    current:
+      name: "Shunt Current"
+      unit_of_measurement: "A"
+      accuracy_decimals: 2
+      id: shunt_current
+    shunt_voltage:
+      name: "Shunt Voltage"
+      unit_of_measurement: "V"
+      accuracy_decimals: 5
+
+  # Output Voltage Template Sensor
+  - platform: template
+    name: "Output Voltage Board-1"
+    id: output_voltage_sensor1
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:current-dc"
+    update_interval: 3s
+
+  # Shunt Power Calculation
+  - platform: template
+    name: "Shunt Power"
+    unit_of_measurement: "W"
+    accuracy_decimals: 1
+    lambda: |-
+      float voltage = id(output_voltage_sensor1).state;
+      float current = id(shunt_current).state;
+
+      ESP_LOGD("Shunt Power", "Voltage: %.2f V, Current: %.2f A", voltage, current);
+
+      if (!isnan(voltage) && !isnan(current)) {
+        return voltage * current;
+      } else {
+        ESP_LOGW("Shunt Power", "Invalid voltage or current value: Voltage %.2f, Current %.2f", voltage, current);
+        return 0;
+      }
+    update_interval: 3.5s
+
+  - platform: template
+    name: "Scaling Factor Board-1"
+    id: sf_value
+    icon: "mdi:information-outline"
+    accuracy_decimals: 5
+    update_interval: never
+
+  - platform: template
+    name: "Max Current Capability Board-1"
+    id: max_current_sensor
+    unit_of_measurement: "A"
+    update_interval: never
+
+  - platform: template
+    name: "Max Current Capability Board-2"
+    id: max_current_sensor2
+    unit_of_measurement: "A"
+
+  - platform: template
+    name: "AC Power In Board-1"
+    id: ac_power_in_sensor1
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:flash"
+    update_interval: 3s  # Updates every 3 second
+
+  - platform: template
+    name: "DC Power Out Board-1"
+    id: dc_power_out_sensor1
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:flash"
+    update_interval: 3s  # Updates every second
+
+  - platform: template
+    name: "Grid Frequency Board-1"
+    id: grid_frequency_sensor1
+    unit_of_measurement: "Hz"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:transmission-tower-import"
+    update_interval: 3s
+
+  - platform: template
+    name: "Input Current Board-1"
+    id: input_current_sensor1
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:current-ac"
+    update_interval: 3s
+
+
+
+  - platform: template
+    name: "Input Grid Voltage Board-1"
+    id: input_grid_voltage_sensor1
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:sine-wave"
+    update_interval: 10s
+
+  - platform: template
+    name: "Output Temperature Board-1"
+    id: output_temperature_sensor1
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(output_temperature_sensor1).state > 90.0;'
+            then:
+              - canbus.send:
+                  use_extended_id: true
+                  can_id: 0x108180FE
+                  data: [1, 50, 0, 1, 0, 0, 0, 0]
+              - logger.log:
+                  level: INFO
+                  format: "Temperature exceeded 90°C. Sent CAN OFF message."
+
+  - platform: template
+    name: "Input Temperature Board-1"
+    id: input_temperature_sensor_1
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "Output Current Board-1"
+    id: output_current_sensor1
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:current-dc"
+    update_interval: 3s
+
+  - platform: template
+    name: "Set Max Output Current Board-1"
+    id: set_max_output_current_sensor1
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
+    icon: "mdi:current-ac"
+    update_interval: 3s
+
+  - platform: template
+    name: "AC Power In Board-2"
+    id: ac_power_in_sensor_device2
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:flash"
+    update_interval: 3s  # Updates every second
+
+  # Combined AC Power sensor
+  - platform: template
+    name: "Combined AC Power Board-1-2"
+    id: combined_ac_power_sensor
+    unit_of_measurement: "kW"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.001
+    update_interval: 3s  # Updates every second
+    lambda: |-
+      return id(ac_power_in_sensor1).state + id(ac_power_in_sensor_device2).state;
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "DC Power Out Board-2"
+    id: dc_power_out_sensor_device2
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:flash"
+    update_interval: 3s  # Updates every second
+
+  # Combined DC Power sensor
+  - platform: template
+    name: "Combined DC Power Board-1-2"
+    id: combined_dc_power_sensor
+    unit_of_measurement: "kW"
+    accuracy_decimals: 2
+    update_interval: 3s  # Updates every second
+    filters:
+      - multiply: 0.001
+    lambda: |-
+      return id(dc_power_out_sensor1).state + id(dc_power_out_sensor_device2).state;
+    icon: "mdi:flash"
+
+  # Combined Daily AC Energy kWh sensor
+  - platform: total_daily_energy
+    name: "AC Power In Total (kWh)"
+    power_id: combined_ac_power_sensor
+    time_id: sntp_time
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 3
+    icon: "mdi:counter"
+
+  # Combined Daily DC Energy kWh sensor
+  - platform: total_daily_energy
+    name: "DC Power Out Total (kWh)"
+    power_id: combined_dc_power_sensor
+    time_id: sntp_time
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 3
+    icon: "mdi:counter"
+
+  - platform: template
+    name: "Grid Frequency Board-2"
+    id: grid_frequency_sensor_device2
+    unit_of_measurement: "Hz"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:transmission-tower-import"
+    update_interval: 3s
+
+  - platform: template
+    name: "Input Current Board-2"
+    id: input_current_sensor_device2
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:current-ac"
+    update_interval: 3s
+
+  - platform: template
+    name: "Output Voltage Board-2"
+    id: output_voltage_sensor_device2
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:current-dc"
+    update_interval: 3s
+
+  - platform: template
+    name: "Input Grid Voltage Board-2"
+    id: input_grid_voltage_sensor_device2
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:sine-wave"
+    update_interval: 3s
+
+  - platform: template
+    name: "Output Temperature Board-2"
+    id: output_temperature_sensor_device2
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(output_temperature_sensor1).state > 90.0;'
+            then:
+              - canbus.send:
+                  use_extended_id: true
+                  can_id: 0x108280FE
+                  data: [1, 50, 0, 1, 0, 0, 0, 0]
+              - logger.log:
+                  level: INFO
+                  format: "Temperature exceeded 90°C. Sent CAN OFF message."
+
+  - platform: template
+    name: "Input Temperature Board-2"
+    id: input_temperature_sensor_2
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "Output Current Board-2"
+    id: output_current_sensor_device2
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:current-dc"
+    update_interval: 3s
+
+  - platform: template
+    name: "Set Max Output Current Board-2"
+    id: set_max_output_current_sensor_device2
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(amp_scaling_factor);  
+    icon: "mdi:current-ac"
+    update_interval: 3s
+
+
+number:
+
+# Number input for CAN Voltage
+
+  - platform: template
+    name: "10 Set Voltage Limit"
+    id: can_voltage_input
+    min_value: 49
+    max_value: 58
+    step: 0.1
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:sine-wave"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float voltage_value = id(can_voltage_input).state;
+            ESP_LOGI("custom", "Received voltage: %.1fV", voltage_value);
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;  // Identifier byte
+              int scaled_value = (int)(id(can_voltage_input).state * id(voltage_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;  // High byte
+              can_data[7] = scaled_value & 0xFF;         // Low byte
+              return can_data;
+
+  # Fallback Voltage Setting
+  - platform: template
+    name: "11 Set Fallback Voltage Limit"
+    id: fallback_voltage_input
+    min_value: 49
+    max_value: 58  # Adjust as needed for your voltage range
+    step: 0.1  # 0.1V steps
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:sine-wave"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float fallback_voltage_value = id(fallback_voltage_input).state;
+            ESP_LOGI("custom", "Fallback Voltage: %.1fV", fallback_voltage_value);
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+              can_data[0] = 0x01;  // First byte is always 0x01
+              can_data[1] = 0x01;  // Second byte is 0x01 for the Fallback Voltage setting
+              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * id(voltage_scaling_factor));  // Scale the voltage value
+              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+              can_data[7] = fallback_scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+              return can_data;
+
+
+  - platform: template
+    name: "14 Set AC Current Limit"
+    id: can_current_limit_input
+    min_value: 0
+    max_value: 21
+    step: 1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:current-ac"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            float current_value = id(can_current_limit_input).state;
+            float max_current = 10.0; // Default max current limit
+
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_current = 17;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_current = 21;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_current = 13;
+            }
+
+            if (current_value > max_current) {
+              ESP_LOGW("custom", "Entered Current %.1f exceeds max limit %.1f for model, resetting.", current_value, max_current);
+              id(can_current_limit_input).publish_state(max_current); // Reset to max value
+              current_value = max_current; // Update current value for consistency
+            }
+
+            if (current_value == 0) {
+              ESP_LOGI("custom", "AC Current Limit disabled.");
+            } else {
+              ESP_LOGI("custom", "AC Current Limit set to %.1fA.", current_value);
+            }
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(can_current_limit_input).state * id(voltage_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x09;
+              can_data[3] = (id(can_current_limit_input).state > 0) ? 0x01 : 0x00; // Enable or disable limit
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+
+
+  - platform: template
+    name: "12 Set DC Current Limit"
+    id: can_amp_input
+    min_value: 1
+    max_value: 95  # Maximum amps allowed
+    step: 0.1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float amp_value = id(can_amp_input).state;
+            float max_amps = 75; // Default max amps
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_amps = 30;
+            }
+
+            if (amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Amp %.1f exceeds max limit %.1f for model, resetting.", amp_value, max_amps);
+              id(can_amp_input).publish_state(max_amps); // Reset to max value
+              amp_value = max_amps; // Update for consistency
+            }
+
+            ESP_LOGI("custom", "DC Current Limit set to %.1fA.", amp_value);
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x03;
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+  - platform: template
+    name: "13 Set Fallback DC Current Limit"
+    id: fallback_amp_input
+    min_value: 1
+    max_value: 75  # Maximum amps allowed
+    step: 1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float fallback_amp_value = id(fallback_amp_input).state;
+            float max_amps = 75; // Default max amps
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_amps = 50;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_amps = 30;
+            }
+
+            if (fallback_amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Fallback Amp %.1f exceeds max limit %.1f for model, resetting.", fallback_amp_value, max_amps);
+              id(fallback_amp_input).publish_state(max_amps); // Reset to max value
+              fallback_amp_value = max_amps; // Update for consistency
+            }
+
+            ESP_LOGI("custom", "Fallback DC Current Limit set to %.1fA.", fallback_amp_value);
+
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x04;
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+interval:
+
+  - interval: 300ms
+    then:
+      - if:
+          condition:
+            switch.is_on: auto_half_shunt_enable
+          then:
+            - script.execute: auto_set_half_shunt_current
+
+  # Interval for sending the first CAN message every 05 seconds
+  - interval: 735ms
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108140FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+      - delay: 183ms
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108240FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+
+  # Interval for sending voltage CAN message every 30 seconds
+  - interval: 27s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+            can_data[0] = 0x01;  // First byte is always 0x01
+            int scaled_value = (int)(id(can_voltage_input).state * id(voltage_scaling_factor));  // Scale the voltage value
+            can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+            can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+            return can_data;
+
+  # Interval for sending Amp setting CAN message every 10 seconds
+  - interval: 29s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108080FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);  // Initialize with 8 zeros
+            can_data[0] = 0x01;  // First byte is always 0x01
+            can_data[1] = 0x03;  // Second byte is 0x03
+            int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));  // Scale the Amp value
+            can_data[6] = (scaled_value >> 8) & 0xFF;  // Encode the high byte in the 7th byte
+            can_data[7] = scaled_value & 0xFF;         // Encode the low byte in the 8th byte
+            return can_data;
+
+
+# Define a button component for turning ON
+button:
+  - platform: template
+    name: "!ON!"
+    id: on_button
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for turning OFF
+  - platform: template
+    name: "!OFF!"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+  - platform: template
+    name: "ON Board-1"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  - platform: template
+    name: "ON Board-2"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108280FE
+            data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for turning OFF
+  - platform: template
+    name: "!OFF!"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+  - platform: template
+    name: "OFF Board-1"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108180FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+  - platform: template
+    name: "OFF Board-2"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108280FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for setting the fan to full speed
+  - platform: template
+    name: "Fan Full Speed Button"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for setting the fan to auto mode
+  - platform: template
+    name: "Fan Auto Mode Button"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+
+  - platform: template
+    name: "SETUP"
+    on_press:
+      then:
+        - script.execute: setup_sequence
+
+
+# Define text sensor for "ON/OFF/ERROR" state
+text_sensor:
+  - platform: template
+    id: power_state_sensor1
+    name: "Pwr Board-1"
+    
+  - platform: template
+    id: power_state_sensor2
+    name: "Pwr Board-2"
+
+
+
