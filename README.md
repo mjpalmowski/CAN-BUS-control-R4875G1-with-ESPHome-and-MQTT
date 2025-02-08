@@ -70,8 +70,10 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Manufacturing Date autodetect**
 - **Serial Number autodetect**
 - **Scaling Factor auto-set**
+
 ## Use Cases
 This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC batteries, making it useful for home battery systems that store solar or off-peak power. It is particularly useful when backing up solar setups with a generator. Additionally, it can serve as a powerful DC bench power supply when paired with a robust [adjustable](https://github.com/mjpalmowski/esphome-juntek-DPM8650-mqtt-http-tool) buck/boost converter, as an onboard fast-charger for boats that encounter different supply voltages or as a rapid charger for Ebikes, [here is a guy that runs his HAM radio amp equippment](https://qsl.net/zl1rs/old/r4875g1.html) with it (clean DC indeed). And for those who want to play along at home, here is a guy that has an innovative approach to use four R4875G1s to create a double conversion system (he is basically planning to run his entire grid import through these rectifiers straight to his batteries, so as far as the grid is concerned he is just using a battery charger, very cool), removing the need for clunky high current relays (changeover switches, ATS), removing the worry about grid backfeed. [His story is unfolding here](https://diysolarforum.com/threads/diy-chargenectifier.56329/page-29#post-1281632).  
+If you have a large solar install (string inverters or microinverters) without batteries and would like to add a battery on the cheap and realize zero export have a look at the [NodeRed flow that controls the charge power depending on the grid export.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8) 
 
 For example, the **EG4 Chargeverter** product is essentially two of these 48V telecom units in a box, with buttons for setting maximum voltage and current. [Watch the Chargeverter Teardown](https://www.youtube.com/watch?v=WPEjRtABc2U).
 
