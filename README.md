@@ -151,7 +151,7 @@ Here is a YAML example to [control two R4850G units on one can-bus](https://gith
 
 Here is a YAML example to [control two R4830G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4830G%20on%20one%20CAN-BUS-MQTT_example.YAML)
 
-**Here is the latests YAML example to [control two R48xxGx units on one can-bus via MQTT (have to be of identical type) but this version has auto "SETUP" Board-Type detection it has AC-Current limit-set and PWM FAN control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
+**Here is the latests YAML example to [control up to two R48xxGx units on one can-bus via MQTT (have to be of identical type) but this version has auto "SETUP" Board-Type detection it has AC-Current limit-set and PWM FAN control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
 And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
 
