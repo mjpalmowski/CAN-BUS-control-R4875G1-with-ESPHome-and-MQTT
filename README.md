@@ -291,7 +291,7 @@ How to use: The G4857G1 listens to the following MQTT topics. Publishing to thes
 
 - **12_set_dc_current_limit**
   - **Topic:** `can-bus01/number/12_set_dc_current_limit/command`
-  - **Description:** Sets the DC current limit (1–95 A).
+  - **Description:** Sets the DC current limit (1–75 A).
 
 - **13_set_fallback_dc_current_limit**
   - **Topic:** `can-bus01/number/13_set_fallback_dc_current_limit/command`
