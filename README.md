@@ -273,21 +273,29 @@ How to use: send Text string: `PRESS` to activate
 
 How to use: The G4857G1 listens to the following MQTT topics. Publishing to these topics; integers (for AMP settings) or floating-point numbers (for Volt settings) will set the respective values.
 
-- **Set MAX Voltage**
-  - **Description**: Publish to this topic to SET MAX voltage. Expects number input.
-  - **Topic**: `home/canbus/voltage_set`
+- **set_fan_speed_percentage**
+  - **Topic:** `can-bus01/number/set_fan_speed_percentage/command`
+  - **Description:** Sets the fan speed as a percentage (0–100%).
 
-- **Set MAX Amps**
-  - **Description**: Publish to this topic to SET MAX current (amperage). Expects number input.
-  - **Topic**: `home/canbus/amp_set`
+- **10_set_voltage_limit**
+  - **Topic:** `can-bus01/number/10_set_voltage_limit/command`
+  - **Description:** Configures the voltage limit (49–58 V).
 
-- **Set MAX Fallback Voltage**
-  - **Description**: Publish to this topic to SET MAX fallback voltage. Expects number input.
-  - **Topic**: `home/canbus/fallback_voltage_set`
+- **11_set_fallback_voltage_limit**
+  - **Topic:** `can-bus01/number/11_set_fallback_voltage_limit/command`
+  - **Description:** Configures the fallback voltage limit (49–58 V).
 
-- **Set MAX Fallback Amps**
-  - **Description**: Publish to this topic to SET MAX fallback amperage. Expects number input.
-  - **Topic**: `home/canbus/fallback_amp_set`
+- **14_set_ac_current_limit**
+  - **Topic:** `can-bus01/number/14_set_ac_current_limit/command`
+  - **Description:** Sets the AC current limit (0–21 A).
+
+- **12_set_dc_current_limit**
+  - **Topic:** `can-bus01/number/12_set_dc_current_limit/command`
+  - **Description:** Sets the DC current limit (1–95 A).
+
+- **13_set_fallback_dc_current_limit**
+  - **Topic:** `can-bus01/number/13_set_fallback_dc_current_limit/command`
+  - **Description:** Sets the fallback DC current limit (1–75 A).
 
 
 
