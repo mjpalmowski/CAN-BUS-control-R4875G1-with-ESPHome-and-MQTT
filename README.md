@@ -84,9 +84,7 @@ So, if you want to build an automation-friendly Chargeverter alternative, you ar
 ## Hardware Setup
 
 ### Module and Connections
-The **Huawei R4875G1** power module is controlled as shown below. It can output 35A at 54V continuously at an ambient temperature of 23°C without additional cooling. 
-
-![Screenshot 2024-11-14 111944](https://github.com/user-attachments/assets/c53ce6c9-9675-487b-8b2c-839d39cd7b22)
+The **Huawei R4875G1** power module is controlled as shown below. 
 
 
 PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpress.
