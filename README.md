@@ -112,7 +112,7 @@ Google Search: DC-DC 60V 5V 2A Buck Regulator
 
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
-**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :)](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95)** 
+**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
 
 ![Wiring Diagram](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
 
@@ -168,7 +168,7 @@ And here you can find [a web-app version where you can drop-down select differen
 
 ## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
-[latest release 0.9.5 with "ONE-Click" SETUP Button](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95)
+[latest release 0.9.6 with "Fan Control"](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
 
