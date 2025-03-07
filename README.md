@@ -102,7 +102,7 @@ PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpre
 
 ### Power supply
 
-You can supply the ESP32 using a USB cable, or if your Battery is allways conected, you can also use a buck converter:
+You can supply the ESP32 using a USB cable, or if your Battery is allways connected, you can also use a buck converter:
 
 Google Search: DC-DC 60V 5V 2A Buck Regulator
 
