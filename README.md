@@ -99,6 +99,15 @@ PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpre
 - **AC Cables**: Rated for continuous 16A supply.
 - **CAN BUS Connections**: White (CAN-L) and Black (CAN-H)
 
+
+### Power supply
+
+You can supply the ESP32 using a USB cable, or if your Battery is allways conected, you can also use a buck converter:
+
+![Screenshot 2025-03-07 110516](https://github.com/user-attachments/assets/c5579568-974c-4958-9d7e-8400ec5f987c)
+
+
+
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
 **Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :)](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.95)** 
