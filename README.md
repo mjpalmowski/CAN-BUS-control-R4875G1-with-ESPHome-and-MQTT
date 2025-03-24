@@ -137,7 +137,7 @@ Connect the folowing pins together (this will allow the full 75A max output curr
 
 - If Pin9 and Pin10 are not connected the R4875G can only be set to a maximum of 50A.
   
-- If Pin9 is connected to Pin10 the 4875G can be stet to a max of 75A.
+- If Pin9 is connected to Pin10 the R4875G can be stet to a max of 75A.
 
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
