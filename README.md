@@ -135,11 +135,9 @@ Connect the following Pins to DC- (Pin1):
 Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
 ***Connect Pin9 to Pin10*** 
 
-- If Pin9 and Pin10 are not connected the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
+- If Pin9 and Pin10 are not connected the R4875G can only be set to a maximum of 50A.
   
-- If Pin9 is connected to Pin10 the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
-
-please adjust the scaling factor in the YAML code if you have not connected Pin9 to Pin10. 
+- If Pin9 is connected to Pin10 the 4875G can be stet to a max of 75A.
 
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
