@@ -115,7 +115,10 @@ To connect, ensure the TX pin from the ESP32 is connected to the transceiver's T
 **Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
 
 
-For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
+
+
+
+***For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.***
 
 
 ### Important Detail about the Edge Connector/Pins
