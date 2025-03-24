@@ -132,7 +132,7 @@ Connect the following pins together:
 Connect the following Pins to DC- (Pin1):
 ***Connect Pin1 to Pin11, connect Pin1 to Pin12***
 
-Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
+Connect the folowing pins together (this will allow the full 75A max output currrent to be set):
 ***Connect Pin9 to Pin10*** 
 
 - If Pin9 and Pin10 are not connected the R4875G can only be set to a maximum of 50A.
