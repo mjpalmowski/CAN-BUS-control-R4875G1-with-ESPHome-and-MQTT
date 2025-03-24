@@ -126,14 +126,14 @@ To connect, ensure the TX pin from the ESP32 is connected to the transceiver's T
 
 ![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
 
-Connect the following pins together
-Pin1 to Pin5
+Connect the following pins together:
+***Connect Pin1 to Pin5***
 
 Connect the following Pins to DC- (Pin1):
-11,12
+***Connect Pin1 to Pin11, connect Pin1 to Pin12***
 
 Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
-Pin9 to Pin10 
+***Connect Pin9 to Pin10*** 
 
 - If Pin9 and Pin10 are not connected the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
   
