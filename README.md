@@ -310,7 +310,7 @@ How to use: The G4857G1 listens to the following MQTT topics. Publishing to thes
 
 
 
-## Additional Resources
+# Additional Resources
 - [Huawei R4875G1 CAN Protocol](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Protocol_R4875g.xlsx)
 - [Beyond Logic Review](https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/)
 - [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)
