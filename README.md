@@ -151,7 +151,7 @@ If you prefer a standalone setup, you can configure the web server component for
 2. **Home Assistant API**: Uncomment the `api:` block for Home Assistant discovery.
 3. **Web Interface**: Uncomment the `webserver:` block if a web interface is needed.
 
-If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) or go [three phase](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/3-phase-R48xxGx.yaml) hooking several units to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
+If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM), or go [three phase](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/3-phase-R48xxGx.yaml) hooking several units to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
 
 **Here is the latests YAML example to [control up to two R48xxGx units on one can-bus via MQTT (have to be of identical type) but this version has auto "SETUP" Board-Type detection it has AC-Current limit-set and PWM FAN control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
