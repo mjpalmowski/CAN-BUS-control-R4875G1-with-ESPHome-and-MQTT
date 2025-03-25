@@ -112,7 +112,7 @@ Google Search: DC-DC 60V 5V 2A Buck Regulator
 
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
-**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
+**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
 
 
 
