@@ -155,19 +155,10 @@ If you prefer a standalone setup, you can configure the web server component for
 
 If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) or go [three phase](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/3-phase-R48xxGx.yaml) hooking several units to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
 
-Here is a YAML example to [control two R4875G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4875G%20on%20one%20CAN-BUS-MQTT_example.YAML)
-
-Here is a YAML example to [control two R4850G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4850G%20on%20one%20CAN-BUS-MQTT_example.YAML)
-
-Here is a YAML example to [control two R4830G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4830G%20on%20one%20CAN-BUS-MQTT_example.YAML)
-
 **Here is the latests YAML example to [control up to two R48xxGx units on one can-bus via MQTT (have to be of identical type) but this version has auto "SETUP" Board-Type detection it has AC-Current limit-set and PWM FAN control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
-And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
 
-And here you can find [a web-app version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
-
-## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
+# Pre-compiled `.BIN` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 [latest release 0.9.6 with "Fan Control"](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)
 
