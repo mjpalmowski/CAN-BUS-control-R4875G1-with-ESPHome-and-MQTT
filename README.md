@@ -47,6 +47,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Set Maximum Output Voltage**
 - **Output Temperature**
 - **FAN-RPM** (NEW)
+- **Total Operating Hours** (NEW)
 
 
 ### Configuration Settings
