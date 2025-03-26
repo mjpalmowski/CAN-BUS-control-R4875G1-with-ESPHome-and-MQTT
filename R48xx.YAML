@@ -21,7 +21,7 @@ web_server:
 #  js_url: ""
   version: 3
 
-# Uncomment api: block if you are using Home Assistant (also remve the above web_server: block)
+# Uncomment api: block if you are using Home Assistant (also remove the above web_server: block)
 #######
 #api:
 # encryption:
