@@ -18,7 +18,7 @@ This project focuses on the **Huawei R4875G1 48V Rectifier Module**, originally 
 This module is 97% efficient, provides up to 4kW of DC power, and includes short circuit and surge protection, communicating via CAN BUS. These capabilities make it suitable for home battery charging, achieved [through reverse-engineering its CAN BUS control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4)
 
 ## Key Features
-The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. **The ESP32 connects to the R48xx via a [VP230 CAN-BUS transceiver](https://www.aliexpress.com/w/wholesale-sn65hvd230-can-bus.html)**. Below are the main features:
+The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. **[The ESP32](https://www.aliexpress.com/w/wholesale-esp32-wroom-32.html) connects to the R48xx via a [VP230 CAN-BUS transceiver](https://www.aliexpress.com/w/wholesale-sn65hvd230-can-bus.html)**. Below are the main features:
 
 ### Supported Hardware:
 - **R4875G**
