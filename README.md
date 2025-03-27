@@ -105,7 +105,7 @@ PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpre
 
 You can supply the ESP32 using a USB cable, or if your Battery is allways connected, you can also use a buck converter:
 
-Google Search: (DC-DC 60V 5V 2A Buck Regulator)[https://www.aliexpress.com/w/wholesale-dc-dc-converter-step-down-60v-to-5v.html)
+Google Search: [DC-DC 60V 5V 2A Buck Regulator](https://www.aliexpress.com/w/wholesale-dc-dc-converter-step-down-60v-to-5v.html)
 
 ![Screenshot 2025-03-07 110516](https://github.com/user-attachments/assets/c5579568-974c-4958-9d7e-8400ec5f987c)
 
