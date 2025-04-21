@@ -18,7 +18,7 @@ This project focuses on the **Huawei R4875G1 48V Rectifier Module**, originally 
 This module is 97% efficient, provides up to 4kW of DC power, and includes short circuit and surge protection, communicating via CAN BUS. These capabilities make it suitable for home battery charging, achieved [through reverse-engineering its CAN BUS control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4)
 
 ## Key Features
-The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. The ESP32 connects to the R4875G1 via a VP230 CAN-BUS transceiver. Below are the main features:
+The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. **[The ESP32](https://www.aliexpress.com/w/wholesale-esp32-wroom-32.html) connects to the R48xx via a [VP230 CAN-BUS transceiver](https://www.aliexpress.com/w/wholesale-sn65hvd230-can-bus.html)**. Below are the main features:
 
 ### Supported Hardware:
 - **R4875G**
@@ -47,6 +47,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Set Maximum Output Voltage**
 - **Output Temperature**
 - **FAN-RPM** (NEW)
+- **Total Operating Hours** (NEW)
 
 
 ### Configuration Settings
@@ -104,7 +105,7 @@ PCB edge connectors for the R4875G1 and R4875G5 series are available on AliExpre
 
 You can supply the ESP32 using a USB cable, or if your Battery is allways connected, you can also use a buck converter:
 
-Google Search: DC-DC 60V 5V 2A Buck Regulator
+Google Search: [DC-DC 60V 5V 2A Buck Regulator](https://www.aliexpress.com/w/wholesale-dc-dc-converter-step-down-60v-to-5v.html)
 
 ![Screenshot 2025-03-07 110516](https://github.com/user-attachments/assets/c5579568-974c-4958-9d7e-8400ec5f987c)
 
@@ -112,31 +113,32 @@ Google Search: DC-DC 60V 5V 2A Buck Regulator
 
 To connect, ensure the TX pin from the ESP32 is connected to the transceiver's TX pin, and the RX pin is connected to the transceiver's RX pin.
 
-**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin :](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
-
-![Wiring Diagram](https://github.com/user-attachments/assets/4670849b-ee3d-4f3b-bfe2-2639171bf4d3)
-
-For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus.
+**Now, you have it all connected and can't wait to try? Go here [set it up as in the quick start guide for the ready made .bin](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)** 
 
 
+
+
+
+
+
+
+## For those not using the adapter board, the module can be manually turned on by shorting specific pads to DC-minus
 ### Important Detail about the Edge Connector/Pins
 
 ![Screenshot 2024-11-29 152930](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
 
-Connect the following pins together
-Pin1 to Pin5
+Connect the following pins together:
+***Connect Pin1 to Pin5***
 
 Connect the following Pins to DC- (Pin1):
-11,12
+***Connect Pin1 to Pin11, connect Pin1 to Pin12***
 
-Connect the folowing pins together (this will allow the full 75A max output currrent to be set, see comment about CAN scaling factor below):
-Pin9 to Pin10 
+Connect the folowing pins together (this will allow the full 75A max output currrent to be set):
+***Connect Pin9 to Pin10*** 
 
-- If Pin9 and Pin10 are not connected the CAN message for setting "Current" has a scaling factor of `* 20` and the R4875G can only be set to a maximum of 50A.
+- If Pin9 and Pin10 are not connected the R4875G can only be set to a maximum of 50A.
   
-- If Pin9 is connected to Pin10 the CAN message for setting "Current" has a scaling factor of `* 15` and the 4875G can be stet to a max of 75A.
-
-please adjust the scaling factor in the YAML code if you have not connected Pin9 to Pin10. 
+- If Pin9 is connected to Pin10 the R4875G can be stet to a max of 75A.
 
 ### Hardware Reference:
 - [PCB Adapter Guide](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
@@ -150,23 +152,12 @@ If you prefer a standalone setup, you can configure the web server component for
 2. **Home Assistant API**: Uncomment the `api:` block for Home Assistant discovery.
 3. **Web Interface**: Uncomment the `webserver:` block if a web interface is needed.
 
-[View R4875G CAN Control YAML](./CAN-R4875G1-ESP32.YAML)
-
-If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM) and [add another R4875G1](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4) or go [three phase](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/3-phase-R48xxGx.yaml) hooking several units to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
-
-Here is a YAML example to [control two R4875G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4875G%20on%20one%20CAN-BUS-MQTT_example.YAML)
-
-Here is a YAML example to [control two R4850G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4850G%20on%20one%20CAN-BUS-MQTT_example.YAML)
-
-Here is a YAML example to [control two R4830G units on one can-bus](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Dual%20R4830G%20on%20one%20CAN-BUS-MQTT_example.YAML)
+If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM), or go [three phase](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/3-phase-R48xxGx.yaml) hooking several units to your CAN BUS allowing to set values for all units simultaneously and receive the sensor data separately.
 
 **Here is the latests YAML example to [control up to two R48xxGx units on one can-bus via MQTT (have to be of identical type) but this version has auto "SETUP" Board-Type detection it has AC-Current limit-set and PWM FAN control.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
-And here you can find the [web-app optimised version](/r4875g1-can-web.latest.YAML).
 
-And here you can find [a web-app version where you can drop-down select different R48xxGx models.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xxGx-example.YAML)
-
-## Pre-compiled `.bin` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
+# Pre-compiled `.BIN` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
 [latest release 0.9.6 with "Fan Control"](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)
 
@@ -309,7 +300,7 @@ How to use: The G4857G1 listens to the following MQTT topics. Publishing to thes
 
 
 
-## Additional Resources
+# Additional Resources
 - [Huawei R4875G1 CAN Protocol](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/Protocol_R4875g.xlsx)
 - [Beyond Logic Review](https://www.beyondlogic.org/review-huawei-r4850g2-power-supply-53-5vdc-3kw/)
 - [Endless Sphere Forum](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/)

@@ -21,11 +21,11 @@ logger:
 
 ##################################################################################################################
 ## uncomment this block to enable mqtt if you are using NodeRed or other MQTT software !also enable the mqtt relevant block at the bottom of this YAML to activate the ability to set Voltage and Current using mqtt! 
-mqtt:
-   broker: !secret mqtt_host
-   username: !secret mqtt_username
-   password: !secret mqtt_password
-   id: mqtt_client
+#mqtt:
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+#   id: mqtt_client
 ##################################################################################################################
 ota:
   - platform: esphome
