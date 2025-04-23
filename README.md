@@ -74,41 +74,42 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Serial Number autodetect**
 - **Scaling Factor auto-set**
 
-## 🔋 Soft-Charge (Staged-Charging)  
+## 🔋 Soft-Charge (Staged Charging)  
 
-A built-in state machine that **automatically steps the charger down through up to four current levels as the battery approaches full**, preventing sudden BMS
-disconnects caused by cell imbalance and giving the cells plenty of time to top-balance.
+A built-in state machine that **automatically steps the charger down through up to four current levels as the battery approaches full**, preventing sudden BMS disconnects caused by cell imbalance and giving the cells ample time to top-balance.
 
 ### Why you want it  
-* **No more “BMS high-current disconnect” surprises** – the charger backs off
-  smoothly instead of slamming into the BMS’s cut-off when a single cell goes overvoltage.  
-* **Adjustable balance phase** – set both the *current* and the *duration* of the
-  final stage to match your pack’s balance current.  
-* **Auto Hibernate** – Charger automatically shuts off after balanancing time is up.
+* **No more “BMS high-current disconnect” surprises** – the charger eases back smoothly instead of hitting the BMS cut-off when a single cell goes over-voltage.  
+* **Adjustable balance phase** – set both the *current* and the *duration* of the final stage to match your pack’s balancing capability.  
+* **Auto-hibernate** – the charger switches off automatically once the balancing period has finished.  
 
 ### How it works  
-| Stage | Trigger voltage<sup>*</sup> | Charging current | Exit condition |
-|-------|----------------------------|------------------|----------------|
-| 1     | `stage1_threshold`         | `stage1_current` | Hysteresis drop |
-| 2     | `stage2_threshold`         | `stage2_current` | Hysteresis drop |
-| 3     | `stage3_threshold`         | `stage3_current` | Hysteresis drop |
-| 4     | `stage4_threshold`         | `stage4_current` | *Timer* or hysteresis drop |
 
-\* Each stage also has an independent hysteresis setting. Hysteresis = drop in V required to re-arm the trigger. so If the stage trigger voltage is set to 55V and hysteresis is set to 2.5V, once the battery reaches 52.5V the algorythm is reset.
+| Stage | Trigger voltage*     | Charging current | Exit condition              |
+|-------|----------------------|------------------|-----------------------------|
+| 1     | `stage1_threshold`   | `stage1_current` | Hysteresis drop             |
+| 2     | `stage2_threshold`   | `stage2_current` | Hysteresis drop             |
+| 3     | `stage3_threshold`   | `stage3_current` | Hysteresis drop             |
+| 4     | `stage4_threshold`   | `stage4_current` | Timer expiry *or* hysteresis drop |
 
-* Every 5s the firmware  
-  1. Checks the pack voltage and (de)activates stages.  
-  2. Tracks how long Stage 4 has been active.  
-  3. Computes the commanded current.  
-  4. Pushes a new current limit over CAN  
-* When Stage 4’s timer expires, the charger is told to turn *off* and will not
-  re-enter Stage 4 until the pack voltage has dropped below the hysteresis band.
+\* Each stage has its own hysteresis setting — the voltage drop required before the trigger is re-armed.  
+  For example, if the trigger voltage is 55 V and the hysteresis is 2.5 V, the algorithm resets once the battery falls below 52.5 V.
+
+Every 5 s the firmware:  
+1. Checks the pack voltage and (de)activates stages.  
+2. Tracks how long Stage 4 has been active.  
+3. Calculates the commanded current.  
+4. Sends an updated current limit over CAN if it has changed.  
+
+When the Stage 4 timer expires the charger is turned *off* and will not re-enter Stage 4 until the pack voltage drops below the hysteresis band.
 
 ### Typical results  
-| Before Soft-Charge | After Soft-Charge |
-|--------------------|-------------------|
-| Charger holds full current up to BMS cut-off → instant disconnect at 55-58 V | Current tapers from e.g. 25 A → 15 A → 10 A → 5 A. Pack reaches 100 % SOC without disconnects |
-| Cells never see more than a few minutes of balance time | Final stage runs at 3-5 A for a user-set 30-120 min, giving the balancers time to work |
+
+| Before Soft-Charge                                                        | After Soft-Charge                                                                                          |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Charger delivers full current until BMS cut-off → instant disconnect at 55–58 V | Current tapers, e.g. 25 A → 15 A → 10 A → 5 A, allowing the pack to reach 100 % SOC without disconnects |
+| Cells receive only a few minutes of balance time                          | Final stage runs at 3–5 A for a user-defined 30–120 min, giving the balancers time to work                 |
+
 
 
 ## Use Cases
