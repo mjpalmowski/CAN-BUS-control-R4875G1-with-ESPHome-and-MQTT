@@ -108,7 +108,7 @@ When the Stage-4 timer expires the charger is turned *off* and will not re-enter
 | Before Soft-Charge                                                        | After Soft-Charge                                                                                          |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | Charger delivers full current as battery approaches FULL → risk of high current disconnect at 55–58 V | Current tapers, e.g. 25 A → 15 A → 10 A → 5 A, allowing the pack to reach 100 % SOC without discconnect |
-| Cells receive only a few minutes of balance time                          | Final stage runs at e.g. 2A max for a user-defined 30–120 min, giving the balancers time to work                 |
+| Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 2A max for a user-defined 30–120 min, giving the balancers time to work                 |
 
 
 
