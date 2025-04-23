@@ -95,20 +95,20 @@ A built-in state machine that **automatically steps the charger down through up 
 \* Each stage has its own hysteresis setting — the voltage drop required before the trigger is re-armed.  
   For example, if the trigger voltage is 55 V and the hysteresis is 2.5 V, the algorithm resets once the battery falls below 52.5 V.
 
-Every 5 s the firmware:  
+The new firmware:  
 1. Checks the pack voltage and (de)activates stages.  
 2. Tracks how long Stage 4 has been active.  
 3. Calculates the commanded current.  
-4. Sends an updated current limit over CAN if it has changed.  
+4. Sends an updated current limit over CAN.  
 
-When the Stage 4 timer expires the charger is turned *off* and will not re-enter Stage 4 until the pack voltage drops below the hysteresis band.
+When the Stage-4 timer expires the charger is turned *off* and will not re-enter Stage 4 until the pack voltage drops below the hysteresis band.
 
 ### Typical results  
 
 | Before Soft-Charge                                                        | After Soft-Charge                                                                                          |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | Charger delivers full current until BMS cut-off → instant disconnect at 55–58 V | Current tapers, e.g. 25 A → 15 A → 10 A → 5 A, allowing the pack to reach 100 % SOC without disconnects |
-| Cells receive only a few minutes of balance time                          | Final stage runs at 3–5 A for a user-defined 30–120 min, giving the balancers time to work                 |
+| Cells receive only a few minutes of balance time                          | Final stage runs at e.g. 2A max for a user-defined 30–120 min, giving the balancers time to work                 |
 
 
 
