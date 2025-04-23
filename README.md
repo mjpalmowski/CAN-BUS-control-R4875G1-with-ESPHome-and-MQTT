@@ -131,7 +131,7 @@ stage3_hysteresis: 0.2 V
 stage4_threshold: 56.8 V
 stage4_current:    5 A       # balance current
 stage4_hysteresis: 0.1 V
-stage4_duration:  60 min     # balance time
+stage4_duration:  60 min     # balance time```
 
 
 ## Use Cases
