@@ -93,7 +93,7 @@ A built-in state machine that **automatically steps the charger down through up 
 | 4     | `stage4_threshold`   | `stage4_current` | Timer expiry *or* hysteresis drop |
 
 \* Each stage has its own hysteresis setting — the voltage drop required before the trigger is re-armed.  
-  For example, if the trigger voltage is 55 V and the hysteresis is 2.5 V, the algorithm resets once the battery falls below 52.5 V.
+  For example, if the "Trigger voltage" is 55 V and the hysteresis is 2.5 V, the stage resets once the battery falls below 52.5 V.
 
 The new firmware:  
 1. Checks the pack voltage and (de)activates stages.  
