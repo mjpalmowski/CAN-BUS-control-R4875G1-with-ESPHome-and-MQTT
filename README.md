@@ -96,7 +96,7 @@ A built-in state machine that **automatically steps the charger down through up 
   For example, if the "Trigger voltage" is 55 V and the hysteresis is 2.5 V, the stage resets once the battery falls below 52.5 V.
 
 The new firmware:  
-1. Checks the pack voltage and (de)activates stages.  
+1. Checks the output voltage and (de)activates stages.  
 2. Tracks how long Stage 4 has been active.  
 3. Calculates the commanded current.  
 4. Sends an updated current limit over CAN.  
