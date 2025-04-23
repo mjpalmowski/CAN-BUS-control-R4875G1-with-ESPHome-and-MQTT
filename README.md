@@ -74,7 +74,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Serial Number autodetect**
 - **Scaling Factor auto-set**
 
-## 🔋 Soft-Charge (Staged Charging)  (NEW)
+## 🔋 Soft-Charge [Staged Charging]  (NEW)
 
 A built-in state machine that **automatically steps the charger down through up to four current levels as the battery approaches full**, preventing sudden BMS disconnects caused by cell imbalance and giving the cells ample time to top-balance.
 
