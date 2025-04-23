@@ -111,25 +111,6 @@ disconnects caused by cell imbalance and giving the cells plenty of time to top-
 | Charger holds full current up to BMS cut-off → instant disconnect at 57-59 V | Current tapers from e.g. 25 A → 15 A → 10 A → 5 A. Pack reaches 100 % SOC without disconnects |
 | Cells never see more than a few minutes of balance time | Final stage runs at 3-5 A for a user-set 30-120 min, giving the balancers time to work |
 
-### Configuration snippet  
-
-stage1_threshold: 55.2 V
-stage1_current:   20 A
-stage1_hysteresis: 0.4 V
-
-stage2_threshold: 56.0 V
-stage2_current:   15 A
-stage2_hysteresis: 0.3 V
-
-stage3_threshold: 56.5 V
-stage3_current:   10 A
-stage3_hysteresis: 0.2 V
-
-stage4_threshold: 56.8 V
-stage4_current:    5 A       # balance current
-stage4_hysteresis: 0.1 V
-stage4_duration:  60 min     # balance time
-
 
 ## Use Cases
 This setup is ideal for charging common 15s and 16s LiFePO4 packs and 14s NMC batteries, making it useful for home battery systems that store solar or off-peak power. It is particularly useful when backing up solar setups with a generator. Additionally, it can serve as a powerful DC bench power supply when paired with a robust [adjustable](https://github.com/mjpalmowski/esphome-juntek-DPM8650-mqtt-http-tool) buck/boost converter, as an onboard fast-charger for boats that encounter different supply voltages or as a rapid charger for Ebikes, [here is a guy that runs his HAM radio amp equippment](https://qsl.net/zl1rs/old/r4875g1.html) with it (clean DC indeed). And for those who want to play along at home, here is a guy that has an innovative approach to use four R4875G1s to create a double conversion system (he is basically planning to run his entire grid import through these rectifiers straight to his batteries, so as far as the grid is concerned he is just using a battery charger, very cool), removing the need for clunky high current relays (changeover switches, ATS), removing the worry about grid backfeed. [His story is unfolding here](https://diysolarforum.com/threads/diy-chargenectifier.56329/page-29#post-1281632).  
