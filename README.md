@@ -81,11 +81,10 @@ disconnects caused by cell imbalance and giving the cells plenty of time to top-
 
 ### Why you want it  
 * **No more “BMS high-current disconnect” surprises** – the charger backs off
-  smoothly instead of slamming into the BMS’s cut-off.  
+  smoothly instead of slamming into the BMS’s cut-off when a single cell goes overvoltage.  
 * **Adjustable balance phase** – set both the *current* and the *duration* of the
   final stage to match your pack’s balance current.  
-* **Works with any R48xx unit** – no hardware changes; everything happens over
-  the CAN bus.  
+* **Auto Hibernate** – Charger automatically shuts off after balanancing time is up.
 
 ### How it works  
 | Stage | Trigger voltage<sup>*</sup> | Charging current | Exit condition |
@@ -95,20 +94,20 @@ disconnects caused by cell imbalance and giving the cells plenty of time to top-
 | 3     | `stage3_threshold`         | `stage3_current` | Hysteresis drop |
 | 4     | `stage4_threshold`         | `stage4_current` | *Timer* or hysteresis drop |
 
-\* Each stage also has an independent hysteresis setting to avoid chatter.
+\* Each stage also has an independent hysteresis setting. Hysteresis = drop in V required to re-arm the trigger. so If the stage trigger voltage is set to 55V and hysteresis is set to 2.5V, once the battery reaches 52.5V the algorythm is reset.
 
-* On every 5 s tick the firmware  
+* Every 5s the firmware  
   1. Checks the pack voltage and (de)activates stages.  
   2. Tracks how long Stage 4 has been active.  
-  3. Computes the commanded current (highest active stage wins).  
-  4. Pushes a new current limit over CAN **only if it changed by ≥ 0.5 A**.  
+  3. Computes the commanded current.  
+  4. Pushes a new current limit over CAN  
 * When Stage 4’s timer expires, the charger is told to turn *off* and will not
   re-enter Stage 4 until the pack voltage has dropped below the hysteresis band.
 
 ### Typical results  
 | Before Soft-Charge | After Soft-Charge |
 |--------------------|-------------------|
-| Charger holds full current up to BMS cut-off → instant disconnect at 57-59 V | Current tapers from e.g. 25 A → 15 A → 10 A → 5 A. Pack reaches 100 % SOC without disconnects |
+| Charger holds full current up to BMS cut-off → instant disconnect at 55-58 V | Current tapers from e.g. 25 A → 15 A → 10 A → 5 A. Pack reaches 100 % SOC without disconnects |
 | Cells never see more than a few minutes of balance time | Final stage runs at 3-5 A for a user-set 30-120 min, giving the balancers time to work |
 
 
