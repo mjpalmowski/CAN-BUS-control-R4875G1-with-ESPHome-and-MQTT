@@ -113,9 +113,6 @@ disconnects caused by cell imbalance and giving the cells plenty of time to top-
 
 ### Configuration snippet  
 
-```yaml
-soft_charge_enable: true  # master switch
-
 stage1_threshold: 55.2 V
 stage1_current:   20 A
 stage1_hysteresis: 0.4 V
@@ -131,7 +128,7 @@ stage3_hysteresis: 0.2 V
 stage4_threshold: 56.8 V
 stage4_current:    5 A       # balance current
 stage4_hysteresis: 0.1 V
-stage4_duration:  60 min     # balance time```
+stage4_duration:  60 min     # balance time
 
 
 ## Use Cases
