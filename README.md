@@ -197,7 +197,7 @@ If you are looking to [go BIG](https://www.youtube.com/watch?v=OHAXydKthXM), or 
 
 # Pre-compiled `.BIN` files are available for direct upload to an ESP32 board if you do not wish to modify the YAML file:
 
-[latest release 0.9.6 with "Fan Control"](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.96)
+[latest release 0.9.7 with "Soft-Charge"](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.97)
 
 https://web.esphome.io/?dashboard_wizard to upload the .bin
 
