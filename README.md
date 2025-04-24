@@ -87,13 +87,13 @@ A built-in state machine that **automatically steps the charger down through up 
 
 | Stage | Trigger voltage*     | Charging current | Exit condition              |
 |-------|----------------------|------------------|-----------------------------|
-| 1     | `stage1_threshold`   | `stage1_current` | Hysteresis drop             |
-| 2     | `stage2_threshold`   | `stage2_current` | Hysteresis drop             |
-| 3     | `stage3_threshold`   | `stage3_current` | Hysteresis drop             |
-| 4     | `stage4_threshold`   | `stage4_current` | Timer expiry *or* hysteresis drop |
+| 1     | `stage1_threshold`   | `stage1_current` | Stage reset voltage             |
+| 2     | `stage2_threshold`   | `stage2_current` | Stage reset voltage            |
+| 3     | `stage3_threshold`   | `stage3_current` | Stage reset voltage             |
+| 4     | `stage4_threshold`   | `stage4_current` | Timer expiry *or* Stage reset voltage |
 
 \* Each stage has its own hysteresis setting — the voltage drop required before the trigger is re-armed.  
-  For example, if the "Trigger voltage" is 55 V and the hysteresis is 2.5 V, the stage resets once the battery falls below 52.5 V.
+  For example, if the "Trigger voltage" is 55 V and the Stage reset voltage is 53.5 V, all stages resets once the battery falls below 53.5 V.
 
 The new firmware:  
 1. Checks the output voltage and (de)activates stages.  
