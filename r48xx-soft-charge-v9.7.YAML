@@ -19,8 +19,8 @@ logger:
     component: ERROR   # only show E lines from tag “component”; hide W
 
 web_server:
-  js_include: "./www/www.js"
-  js_url: ""
+#  js_include: "./www/www.js"
+#  js_url: ""
   version: 3
 
 # Uncomment api: block if you are using Home Assistant (also remve the above web_server: block)
