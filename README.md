@@ -46,7 +46,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Set Maximum Output Current**
 - **Set Maximum Output Voltage**
 - **Output Temperature**
-- **FAN-RPM** (NEW)
+- **FAN-RPM** (NEW) (not available on all models)
 - **Total Operating Hours** (NEW)
 
 
@@ -56,8 +56,8 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Fallback Amp Set**
 - **Fallback Voltage Set**
 - **Simple Daily Charge Timer**
-- **CAN MAX AC Amp Set** (NEW)
-- **Cooling FAN PWM Control** (NEW)
+- **CAN MAX AC Amp Set** (NEW) (not available on all models)
+- **Cooling FAN PWM Control** (NEW) (not available on all models)
 - **LOW and HIGH Voltage Set for auto Wake/Hibernate**
 
 ### Control Buttons
