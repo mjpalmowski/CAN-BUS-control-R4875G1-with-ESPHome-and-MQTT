@@ -83,29 +83,7 @@ A built-in state machine that **automatically steps the charger down through up 
 * **Adjustable balance phase** – set both the *current* and the *duration* of the final stage to match your pack’s balancing capability.  
 * **Auto-hibernate** – the charger switches off automatically once the balancing period has finished.  
 
-### How it works  
-
-| Stage | Trigger voltage*     | Charging current | Exit condition              |
-|-------|----------------------|------------------|-----------------------------|
-| 1     | `stage1_threshold`   | `stage1_current` | Stage reset voltage             |
-| 2     | `stage2_threshold`   | `stage2_current` | Stage reset voltage            |
-| 3     | `stage3_threshold`   | `stage3_current` | Stage reset voltage             |
-| 4     | `stage4_threshold`   | `stage4_current` | Timer expiry *or* Stage reset voltage |
-
-\* Each stage has its own hysteresis setting — the voltage drop required before the trigger is re-armed.  
-  For example, if the "Trigger voltage" is 55 V and the Stage reset voltage is 53.5 V, all stages resets once the battery falls below 53.5 V.
-
-The new firmware:  
-1. Checks the output voltage and (de)activates stages.  
-2. Tracks how long Stage 4 has been active.  
-3. Calculates the commanded current.  
-4. Sends an updated current limit over CAN.  
-
-When the Stage-4 timer expires the charger is turned *off* and will not re-enter Stage 4 until the pack voltage drops below the hysteresis band.
-
-### Typical results  
-
-| Before Soft-Charge                                                        | After Soft-Charge                                                                                          |
+| Without Soft-Charge                                                        | Soft-Charge                                                                                          |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | Charger delivers full current as battery approaches FULL → risk of repeated high current disconnect | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A, allowing the pack to reach 100 % SOC avoiding high current discconnect |
 | Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 2 A max for a user-defined 30–120 min, giving the balancers time to work                 |
