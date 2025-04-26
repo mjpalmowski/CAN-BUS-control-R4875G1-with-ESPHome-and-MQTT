@@ -20,22 +20,22 @@ This module is 97% efficient, provides up to 4kW of DC power, and includes short
 ## Key Features
 The ESPHome firmware for this project is built for an ESP32 development board, which natively supports CAN BUS. **[The ESP32](https://www.aliexpress.com/w/wholesale-esp32-wroom-32.html) connects to the R48xx via a [VP230 CAN-BUS transceiver](https://www.aliexpress.com/w/wholesale-sn65hvd230-can-bus.html)**. Below are the main features:
 
-### Supported Hardware:
+### Supported Hardware
 - **R4875G**
 - **R4850G**
 - **R4830G**
 
-### Up to three units are supported to run in parallel with one controller:
+---
 
-   **1) tie CAN-H bus lines together**
-   
-   **2) tie CAN-L lines together**
-   
-   **3) parallel connect DC-output**
-   
+### Parallel Operation&nbsp;(up&nbsp;to&nbsp;three&nbsp;units&nbsp;with&nbsp;one&nbsp;controller)
+1. Connect **CAN-H** bus lines together.  
+2. Connect **CAN-L** bus lines together.  
+3. Wire the **DC outputs** in parallel.  
+
+---
 
 ### Supported Sensors
-- **Power State ON/Hibernate/Error**
+- **Power State — ON / Hibernate / Error**
 - **AC Power In**
 - **DC Power Out**
 - **Grid Frequency**
@@ -46,9 +46,10 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Set Maximum Output Current**
 - **Set Maximum Output Voltage**
 - **Output Temperature**
-- **FAN-RPM** (NEW) (not available on all models)
-- **Total Operating Hours** (NEW)
+- **FAN RPM** 🆕 *(not on all models)*
+- **Total Operating Hours** 🆕  
 
+---
 
 ### Configuration Settings
 - **CAN Voltage Set**
@@ -56,35 +57,46 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Fallback Amp Set**
 - **Fallback Voltage Set**
 - **Simple Daily Charge Timer**
-- **CAN MAX AC Amp Set** (NEW) (not available on all models)
-- **Cooling FAN PWM Control** (NEW) (not available on all models)
-- **LOW and HIGH Voltage Set for auto Wake/Hibernate**
+- **CAN Max AC Amp Set** 🆕 *(not on all models)*
+- **Cooling Fan PWM Control** 🆕 *(not on all models)*
+- **Low / High Voltage Set** (auto wake / hibernate)
+
+---
 
 ### Control Buttons
-- **CAN ON Button** (Wake-up feature)
-- **CAN OFF Button** (Hibernate feature)
-- **Fan Full Speed Button**
-- **Fan Auto Mode Button**
+- **CAN ON** (wake-up)
+- **CAN OFF** (hibernate)
+- **Fan Full Speed**
+- **Fan Auto Mode**
+
+---
 
 ### Additional Features
-- **Over-temperature Shutdown** (Configurable in YAML, does not require Home Assistant or Node-RED)
-- **Daily kWh Energy Meter** for AC input and DC output, monitors energy consumption
-- **Board-Type autodetect** (Detects specific R48xxGx variety)
-- **Manufacturing Date autodetect**
-- **Serial Number autodetect**
-- **Scaling Factor auto-set**
+- **Over-Temperature Shutdown**  
+  *Configurable in YAML — does not require Home Assistant or Node-RED*
+- **Daily kWh Energy Meter** (AC in & DC out)  
+  *Tracks cumulative energy usage*
+- **Board-Type Auto-Detect**
+- **Manufacturing Date Auto-Detect**
+- **Serial Number Auto-Detect**
+- **Scaling Factor Auto-Set**
 
-### 🔋 Soft-Charge [Staged Charging]  (NEW)
+---
 
-* **No more “BMS high-current disconnect” surprises** – the charger eases back smoothly instead of hitting the BMS cut-off when a single cell goes over-voltage.  
-* **Adjustable balance phase** – set both the *current* and the *duration* of the final stage to match your pack’s balancing capability.  
-* **Auto-hibernate** – the charger switches off automatically once the balancing period has finished.  
+### 🔋 Soft-Charge *(Balance Charging)* 🆕
+- **No more BMS high-current disconnects** – charging tapers smoothly as the battery reaches full, reducing stress on both the pack and BMS.  
+- **Adjustable balance phase** – set the *current* **and** *duration* of the final stage to suit your balancer’s capability.  
+- **Auto-hibernate** – the charger switches off automatically when balancing is complete.  
 
-| Without Soft-Charge                                                        | Soft-Charge                                                                                          |
-|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| Charger delivers full current as battery approaches FULL → risk of repeated high current disconnect | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A, allowing the pack to reach 100 % SOC avoiding high current disconnect |
-| Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 0.5 A max for up to 300 min, giving the balancers time to work                 |
+| **Conventional Charging** | **Soft-Charge** |
+| --- | --- |
+| Delivers full current right up to 100 % SOC → frequent high-current disconnects | Current tapers smoothly, e.g. 25 A → 15 A → 10 A → 2 A |
+| Cells get only a few minutes of balance time | Final stage runs at e.g. 0.5 A for up to 300 min, giving balancers time to work |
 
+
+
+
+Sources
 
 
 ## Use Cases
