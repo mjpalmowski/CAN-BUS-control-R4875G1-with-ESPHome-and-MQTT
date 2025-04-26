@@ -74,7 +74,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 - **Serial Number autodetect**
 - **Scaling Factor auto-set**
 
-## 🔋 Soft-Charge [Staged Charging]  (NEW)
+### 🔋 Soft-Charge [Staged Charging]  (NEW)
 
 * **No more “BMS high-current disconnect” surprises** – the charger eases back smoothly instead of hitting the BMS cut-off when a single cell goes over-voltage.  
 * **Adjustable balance phase** – set both the *current* and the *duration* of the final stage to match your pack’s balancing capability.  
