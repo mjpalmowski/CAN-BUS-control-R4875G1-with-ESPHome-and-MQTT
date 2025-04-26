@@ -82,7 +82,7 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 
 | Without Soft-Charge                                                        | Soft-Charge                                                                                          |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| Charger delivers full current as battery approaches FULL → risk of repeated high current disconnect | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A, allowing the pack to reach 100 % SOC avoiding high current discconnect |
+| Charger delivers full current as battery approaches FULL → risk of repeated high current disconnect | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A, allowing the pack to reach 100 % SOC avoiding high current disconnect |
 | Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 0.5 A max for up to 300 min, giving the balancers time to work                 |
 
 
