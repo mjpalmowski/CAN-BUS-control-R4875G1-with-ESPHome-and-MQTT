@@ -106,7 +106,7 @@ Supply via USB or a 60 V → 5 V buck regulator if the battery is permanently co
 ---
 
 ### Quick Start
-Flash the latest pre-compiled **.bin** from the releases page using the ESPHome web-flasher, power up, and follow the on-device wizard.
+Flash the latest pre-compiled **.bin** from the [releases page using the ESPHome web-flasher, power up, and follow the on-device wizard.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.97)
 
 ---
 
