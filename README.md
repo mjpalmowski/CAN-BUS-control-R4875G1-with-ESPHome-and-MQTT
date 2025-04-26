@@ -76,9 +76,6 @@ The ESPHome firmware for this project is built for an ESP32 development board, w
 
 ## 🔋 Soft-Charge [Staged Charging]  (NEW)
 
-A built-in state machine that **automatically steps the charger down through up to four current levels as the battery approaches full**, preventing sudden BMS disconnects caused by cell imbalance and giving the cells ample time to top-balance.
-
-### Why you want it  
 * **No more “BMS high-current disconnect” surprises** – the charger eases back smoothly instead of hitting the BMS cut-off when a single cell goes over-voltage.  
 * **Adjustable balance phase** – set both the *current* and the *duration* of the final stage to match your pack’s balancing capability.  
 * **Auto-hibernate** – the charger switches off automatically once the balancing period has finished.  
@@ -86,7 +83,7 @@ A built-in state machine that **automatically steps the charger down through up 
 | Without Soft-Charge                                                        | Soft-Charge                                                                                          |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | Charger delivers full current as battery approaches FULL → risk of repeated high current disconnect | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A, allowing the pack to reach 100 % SOC avoiding high current discconnect |
-| Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 2 A max for a user-defined 30–120 min, giving the balancers time to work                 |
+| Cells may receive only a few minutes of balance time                          | Final stage runs at e.g. 0.5 A max for up to 300 min, giving the balancers time to work                 |
 
 
 
