@@ -79,7 +79,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board (buil
 
 ## Use Cases
 
-Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. For large solar arrays that must achieve zero export, see the Node-RED flow that modulates charge power based on grid export.
+Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. For large solar arrays that must achieve zero export, see the [Node-RED flow that modulates charge power based on grid export.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8)
 
 Commercial products such as the **EG4 Chargeverter** are essentially two telecom rectifiers in a box—this project offers an open, automation-friendly alternative.
 
