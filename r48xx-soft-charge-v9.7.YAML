@@ -18,16 +18,16 @@ logger:
   logs:
     component: ERROR   # only show E lines from tag “component”; hide W
 
-web_server:
+#web_server:
 #  js_include: "./www/www.js"
 #  js_url: ""
-  version: 3
+#  version: 3
 
 # Uncomment api: block if you are using Home Assistant (also remve the above web_server: block)
 #######
-#api:
-# encryption:
-#   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 #######
 
  # Uncomment this mqtt: block if you plan to use it.
@@ -265,6 +265,7 @@ switch:
   - platform: template
     name: "Soft Charge Enable"
     id: soft_charge_enable
+    icon: "mdi:scale-balance"
     restore_mode: RESTORE_DEFAULT_ON
     optimistic: true
     turn_on_action:
@@ -571,22 +572,27 @@ text_sensor:
   - platform: template
     name: "Info: Board Type"
     id: board_type_sensor_1
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "Info: Barcode"
     id: barcode_sensor_1
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "Info: Item Number"
     id: item_no_sensor_1
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "Info: Description"
     id: description_sensor_1
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "Info: Manufacturing Date"
     id: manufactured_sensor_1
+    icon: "mdi:information-outline"
 
   # ------------------ NEW LOCAL TIME TEXT SENSOR ------------------
   - platform: template
@@ -624,7 +630,7 @@ sensor:
     update_interval: never    
 
   - platform: template
-    name: "20 Max Current Capability"
+    name: "Info: Max Current Capability"
     id: max_current_sensor
     unit_of_measurement: "A"
     icon: "mdi:information-outline"
@@ -703,7 +709,7 @@ sensor:
     icon: "mdi:current-dc"
 
   - platform: template
-    name: "07b Operating Hours"
+    name: "Info: Operating Hours"
     id: operating_hours
     unit_of_measurement: "h"
     state_class: "measurement"
@@ -711,7 +717,7 @@ sensor:
     filters:
       - lambda: |-
           return x;
-    icon: "mdi:current-dc"
+    icon: "mdi:information-outline"
 
   - platform: template
     name: "04 Input AC Grid Voltage"
@@ -1121,111 +1127,120 @@ number:
     max_value: 58.00
     mode: BOX
     step: 0.01
+    icon: "mdi:restore"
     optimistic: true
     initial_value: 53.2
 # ================= STAGE 1
 
   - platform: template
-    name: "Stage 1 Threshold"
+    name: "Stage Threshold 1"
     id: stage1_threshold
-    min_value: 40
-    max_value: 60
+    min_value: 45
+    max_value: 58
     step: 0.01
     unit_of_measurement: "V"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-1-circle"
     optimistic: true
     initial_value: 55.2  # from Node-RED
 
   - platform: template
-    name: "Stage 1 Current"
+    name: "Stage Current 1"
     id: stage1_current
-    min_value: 1
+    min_value: 0
     max_value: 75
     step: 0.1
     unit_of_measurement: "A"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-1-circle-outline"
     optimistic: true
     initial_value: 31    # from Node-RED
 
 # ================= STAGE 2
   - platform: template
-    name: "Stage 2 Threshold"
+    name: "Stage Threshold 2"
     id: stage2_threshold
-    min_value: 40
-    max_value: 60
+    min_value: 45
+    max_value: 58
     step: 0.01
     unit_of_measurement: "V"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-2-circle"
     optimistic: true
     initial_value: 55.3
 
   - platform: template
-    name: "Stage 2 Current"
+    name: "Stage Current 2"
     id: stage2_current
-    min_value: 1
+    min_value: 0
     max_value: 75
     step: 0.1
     unit_of_measurement: "A"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-2-circle-outline"
     optimistic: true
     initial_value: 10
 
 # ================= STAGE 3
   - platform: template
-    name: "Stage 3 Threshold"
+    name: "Stage Threshold 3"
     id: stage3_threshold
-    min_value: 40
-    max_value: 60
+    min_value: 45
+    max_value: 58
     step: 0.01
     unit_of_measurement: "V"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-3-circle"
     optimistic: true
     initial_value: 55.4
 
   - platform: template
-    name: "Stage 3 Current"
+    name: "Stage Current 3"
     id: stage3_current
-    min_value: 1
+    min_value: 0
     max_value: 75
     step: 0.1
     unit_of_measurement: "A"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-3-circle-outline"
     optimistic: true
     initial_value: 6
 
 # ================= STAGE 4
   - platform: template
-    name: "Stage 4 Threshold"
+    name: "Stage Threshold 4 Balance"
     id: stage4_threshold
-    min_value: 40
-    max_value: 60
+    min_value: 45
+    max_value: 58
     step: 0.01
     unit_of_measurement: "V"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-4-circle"
     optimistic: true
     initial_value: 55.5
 
   - platform: template
-    name: "Stage 4 Balance Current"
+    name: "Stage Current 4 Balance"
     id: stage4_current
-    min_value: 1
+    min_value: 0
     max_value: 75
     step: 0.1
     unit_of_measurement: "A"
     mode: BOX
     restore_value: true
+    icon: "mdi:numeric-4-circle-outline"
     optimistic: true
     initial_value: 2.5
 
   - platform: template
-    name: "Stage 4 Balancing Time"
+    name: "Stage Time Balance"
     id: stage4_duration
     min_value: 1
     max_value: 300
@@ -1233,6 +1248,7 @@ number:
     unit_of_measurement: "min"
     mode: BOX
     restore_value: true
+    icon: "mdi:timer-play"
     initial_value: 60
     optimistic: true
 
@@ -1287,6 +1303,7 @@ button:
 # Define a button component for setting the fan to full speed
   - platform: template
     name: "Fan Full Speed Button"
+    icon: "mdi:fan"
     on_press:
       then:
         - canbus.send:
@@ -1297,6 +1314,7 @@ button:
 # Define a button component for setting the fan to auto mode
   - platform: template
     name: "Fan Auto Mode Button"
+    icon: "mdi:fan"
     on_press:
       then:
         - canbus.send:
@@ -1307,6 +1325,7 @@ button:
   - platform: template
     name: "Soft Charge 16s LFP defaults"
     id: restart_staged_charge_button
+    icon: "mdi:upload"
     on_press:
       then:
         - lambda: |-
@@ -1349,6 +1368,7 @@ button:
   - platform: template
     name: "Soft Charge 15s LFP defaults"
     id: restart_staged_charge_button2
+    icon: "mdi:upload"
     on_press:
       then:
         - lambda: |-
@@ -1389,6 +1409,7 @@ button:
 
   - platform: template
     name: "Soft Charge ⭳ Save"
+    icon: "mdi:content-save-outline"
     on_press:
       then:
         - lambda: |-
@@ -1416,6 +1437,7 @@ button:
 
   - platform: template
     name: "Soft Charge ⭱ Load"
+    icon: "mdi:upload"
     on_press:
       then:
         - lambda: |-
