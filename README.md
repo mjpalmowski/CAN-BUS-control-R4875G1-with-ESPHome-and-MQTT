@@ -21,7 +21,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board (buil
 - **R4850G**
 - **R4830G**
 
-### Parallel Operation (up to three units, one controller)
+### Parallel Operation (up to three r48xx units, one ESP32 controller)
 1. Join **CAN-H** lines  
 2. Join **CAN-L** lines  
 3. Wire **DC outputs** in parallel  
