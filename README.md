@@ -156,7 +156,7 @@ Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmows
 `can-bus01/button/can_off_button/command` — Hibernate  
 `can-bus01/button/fan_full_speed_button/command` — Fan 100 %
 
-### Text-Sensor Commands  
+### Number Commands  
 `can-bus01/number/10_set_voltage_limit/command` — 49 – 58 V  
 `can-bus01/number/14_set_ac_current_limit/command` — 0 – 21 A  
 *etc.*
