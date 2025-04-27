@@ -66,7 +66,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board (buil
 - **Scaling-Factor Auto-Set**
 
 ### 🔋 Soft-Charge *(balance charging)*
-- Charges taper smoothly to avoid high-current BMS trips  
+- Charger tapers max current smoothly to avoid high-current BMS trips  
 - Balance phase current **and** duration are adjustable  
 - Auto-hibernate once balancing completes  
 
