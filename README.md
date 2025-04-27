@@ -6,7 +6,7 @@ Up-cycling industrial equipment provides a sustainable way to reuse highly relia
 
 ![R4875G1 on test bench](https://github.com/user-attachments/assets/448e4e05-493c-419a-ae62-c0d2bb7430c3)
 
-This project centres on the **Huawei R4875G1 48 V Rectifier Module**. Designed to power base-station loads and battery banks, it can be trimmed from 45 V to 58 V and happily tolerates a “dirty” AC generator or weak grid. The module is **97 % efficient**, delivers up to **4 kW**, includes short-circuit and surge protection, speaks **CAN bus**, and boasts an MTBF of **500 000 h**. It supports dynamic current control plus hibernate/wake-up functions.
+This project centres on the **Huawei R4875G1 48 V Rectifier Module**. Designed to power base-station loads and battery banks, it can be trimmed from 45 V to 58 V and happily tolerates a “dirty” AC generator or weak grid. The module is **97 % efficient**, delivers up to **4 kW**, includes short-circuit and surge protection, speaks **CAN bus**, and boasts an MTBF of **500 000 h**. It supports dynamic current control plus hibernate/wake-up functions (In hibernate R4875G1's sensors report normally, is silent, uses less than 3W, no high-current relais required).
 
 [View the R4875G1 datasheet](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
@@ -79,7 +79,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board (buil
 
 ## Use Cases
 
-Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. For large solar arrays that must achieve zero export, see the [Node-RED flow that modulates charge power based on grid export.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8)
+Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. [Turn your ESS into a double conversion UPS and achieve true zero grid backfeed](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4). Eliminate the need for a transfer switch. [Here is Node-RED flow that modulates R48XX charge power depending on surplus solar power.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8)
 
 Commercial products such as the **EG4 Chargeverter** are essentially two telecom rectifiers in a box—this project offers an open, automation-friendly alternative.
 
@@ -127,6 +127,7 @@ Flash the latest pre-compiled **.bin** from the [releases page using the ESPHome
 Create a new ESPHome device in Home Assistant (or use standalone web control). Uncomment the **mqtt:**, **api:** or **webserver:** blocks as required. Multi-unit and three-phase YAML examples are provided in the repo.
 
 Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/r48xx-soft-charge-v9.7.YAML)**
+2x R4875G1 YAML sample: **[R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
 ---
 
