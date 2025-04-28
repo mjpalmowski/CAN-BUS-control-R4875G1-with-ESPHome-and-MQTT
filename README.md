@@ -138,7 +138,7 @@ Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmows
 <summary>Click to expand topic listings</summary>
 
 ### Text Sensors
-`can-bus01/text_sensor/charger_power_state/state` — Charger ON/OFF/Error  
+`r48xx-off-grid/sensor/003_power_state/state` — Charger ON/OFF/Error  
 `can-bus01/text_sensor/charger_power_state2/state`
 
 ### Sensors  
