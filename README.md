@@ -152,8 +152,8 @@ Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmows
 *etc.*
 
 ### Buttons (send the string **PRESS** to command topic)  
-`can-bus01/button/can_on_button/command` — Wake-up  
-`can-bus01/button/can_off_button/command` — Hibernate  
+`can-bus01/button/001_can_on_button/command` — Wake-up  
+`can-bus01/button/002_can_off_button/command` — Hibernate  
 `can-bus01/button/fan_full_speed_button/command` — Fan 100 %
 
 ### Number Commands  
