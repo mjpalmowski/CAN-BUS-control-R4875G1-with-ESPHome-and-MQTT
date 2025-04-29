@@ -6,7 +6,7 @@ Up-cycling industrial equipment provides a sustainable way to reuse highly relia
 
 ![R4875G1 on test bench](https://github.com/user-attachments/assets/448e4e05-493c-419a-ae62-c0d2bb7430c3)
 
-This project centres on the **Huawei R4875G1 48 V Rectifier Module**. Designed to power base-station loads and battery banks, it can be trimmed from 45 V to 58 V and happily tolerates a “dirty” AC generator or weak grid. The module is **97 % efficient**, delivers up to **4 kW**, includes short-circuit and surge protection, speaks **CAN bus**, and boasts an MTBF of **500 000 h**. It supports dynamic current control plus hibernate/wake-up functions (In hibernate R4875G1's sensors report normally, is silent, uses less than 3W, no high-current relays required).
+This project centres on the **Huawei R4875G1 48 V Rectifier Module**. Designed to power base-station loads and battery banks, it can be trimmed from 45 V to 58 V and happily tolerates a “dirty” AC generator or weak grid. The module is **97 % efficient**, delivers up to **4 kW**, includes short-circuit and surge protection, speaks **CAN bus**, and boasts an MTBF of **500 000 h**.
 
 [View the R4875G1 datasheet](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
