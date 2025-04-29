@@ -133,6 +133,8 @@ Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmows
 
 2x R4875G1 YAML sample: **[R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
+[Ready-compiled .BIN files to upload to the ESP32 are here.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.97)
+
 ---
 
 ## MQTT Topics
