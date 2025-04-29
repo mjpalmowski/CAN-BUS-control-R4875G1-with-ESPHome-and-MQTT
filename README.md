@@ -10,7 +10,7 @@ This project centres on the **Huawei R4875G1 48 V Rectifier Module**. Designed t
 
 [View the R4875G1 datasheet](https://github.com/user-attachments/files/17574446/R4975G1.Datasheet.pdf)
 
-The ESPHome firmware presented here runs on an **ESP32** development board (built-in CAN peripheral) linked to the rectifier through a **VP230 (SN65HVD230) CAN-bus transceiver**.
+The ESPHome firmware presented here runs on an **ESP32** development board linked to the rectifier through a **VP230 (SN65HVD230) CAN-bus transceiver**.
 
 ---
 
