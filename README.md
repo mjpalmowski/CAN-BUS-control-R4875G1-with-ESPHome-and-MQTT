@@ -70,7 +70,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board (buil
 - Balance phase current **and** duration are adjustable  
 - Auto-hibernate once balancing completes  
 
-| Conventional charging | Soft-Charge |
+| Conventional charging an unbalanced pack | Soft-Charge an unbalanced pack |
 | --- | --- |
 | Full current right up to 100 % SOC → repeated disconnects | Current tapers, e.g. 25 A → 15 A → 10 A → 2 A |
 | Cells get only minutes of balance time | Final stage at e.g. 0.5 A for up to 300 min |
