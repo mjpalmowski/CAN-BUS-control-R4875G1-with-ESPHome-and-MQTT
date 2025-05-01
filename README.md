@@ -80,6 +80,10 @@ The ESPHome firmware presented here runs on an **ESP32** development board linke
 
 ---
 
+![Screenshot 2025-04-26 123037](https://github.com/user-attachments/assets/7927d538-de9b-440c-9909-e9dbcc36aaae)
+
+
+
 ## Use Cases
 
 Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. [Turn your ESS into a double conversion UPS and achieve true zero grid backfeed](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4). Eliminate the need for a transfer switch. [Here is Node-RED flow that modulates R48XX charge power depending on surplus solar power.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8)
