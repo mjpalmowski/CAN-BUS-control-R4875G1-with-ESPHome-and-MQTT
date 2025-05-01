@@ -61,7 +61,7 @@ The ESPHome firmware presented here runs on an **ESP32** development board linke
 
 ### Additional Features
 - **Over-temperature Shutdown** — YAML-configurable, no Home Assistant required  
-- **Daily kWh Energy Meter** for AC in & DC out  
+- **Daily kWh Energy Meter** supplied DC energy  
 - **Board-Type Auto-Detect**  
 - **Manufacturing-Date Auto-Detect**  
 - **Serial-Number Auto-Detect**  
