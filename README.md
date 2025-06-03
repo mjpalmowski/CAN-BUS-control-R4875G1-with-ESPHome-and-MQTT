@@ -78,6 +78,20 @@ The ESPHome firmware presented here runs on an **ESP32** development board linke
 | Cells get only minutes of balance time | Final stage at e.g. 0.5 A for up to 300 min |
 | Bad vibes & stress to BMS and Battery | Safely restore pack balance |
 
+The voltages in the "soft-charge" section act as triggers that reduce the charge current when the battery approaches full capacity.
+
+The actual final charge voltage is set here: "10 Set Voltage Limit".
+
+For example, if you set 54.75V as your "Set Voltage Limit", the charger will work towards that voltage at the configured current (12 Set DC Current Limit).
+
+As the output voltage approaches the steep end of the voltage curve, it triggers the "soft-charge" algorithm at the specified voltages to gradually reduce the charge current.
+
+The final trigger also starts a timer, allowing you to define how long the battery should remain in the balancing phase. Once that period has elapsed, the charger switches off.
+
+It is important to note that drawing power from the battery during soft charge is not ideal. While it won’t damage the battery, it is recommended to disable soft-charge if the battery is in use while charging.
+
+For optimal results, perform soft charging when the battery is not under load.
+
 ---
 
 ![Screenshot 2025-04-26 123037](https://github.com/user-attachments/assets/7927d538-de9b-440c-9909-e9dbcc36aaae)
@@ -123,7 +137,7 @@ Flash the latest pre-compiled **.bin** from the [releases page using the ESPHome
 
 - **Pin 1 → Pin 5**  
 - **Pin 1 → Pins 11 & 12** (connect to DC-)  
-- **Pin 9 ↔ Pin 10** enables the full **75 A** limit (otherwise limited to 50 A)
+- **Pin 9 ↔ Pin 10** enables the full **75 A** limit (otherwise limited to 53 A)
 
 [PCB adapter reference](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
 
@@ -138,6 +152,8 @@ Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmows
 2x R4875G1 YAML sample: **[R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
 [Ready-compiled .BIN files to upload to the ESP32 are here.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.97)
+
+If you are totally off-grid, no wifi, no cellular connection, no internet, use [this version.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/9)
 
 ---
 
