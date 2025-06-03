@@ -136,7 +136,7 @@ Flash the latest pre-compiled **.bin** from the [releases page using the ESPHome
 ![Edge-connector pinout](https://github.com/user-attachments/assets/ae93452b-a830-4199-a4b6-3352d014ca55)
 
 - **Pin 1 → Pin 5**  
-- **Pin 1 → Pins 11 & 12** (connect to DC-)  
+- **Pin 1 → Pins 11 & 12** (connect Pin 11 and Pin 12 to DC-)  
 - **Pin 9 ↔ Pin 10** connecting these two pins enables the full **75 A** limit (otherwise limited to 53 A)
 
 [PCB adapter reference](https://endless-sphere.com/sphere/threads/rectifier-huawei-r4850g2-48v-42-58v-3000w.86038/post-1732290)
