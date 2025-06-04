@@ -1,0 +1,2063 @@
+esphome:
+  name: "r48xx-off-grid"
+  friendly_name: "R48xx-off-grid"
+
+  on_boot:
+
+    - priority: 600
+      then:
+        - delay: 15s
+        - script.execute: setup_sequence
+
+    - priority: 800
+      then:
+        - delay: 3s
+        - text.set: { id: t_broker, value: !lambda 'return id(g_broker).c_str();' }
+        - text.set: { id: t_user,   value: !lambda 'return id(g_user).c_str();' }
+        - text.set: { id: t_pass,   value: !lambda 'return id(g_pass).c_str();' }
+        - text.set: { id: t_port,   value: !lambda 'return std::to_string(id(g_port));' }
+
+    - priority: 900
+      then:
+        - delay: 6s
+        - wait_until:             # make sure Wi-Fi is ready first
+            condition: wifi.connected
+            timeout: 20s
+        - if:
+            condition:
+              lambda: |-
+                return !id(g_broker).empty()      &&
+                       id(g_port) > 0;
+            then:
+              - logger.log:
+                  tag: "config"
+                  level: INFO
+                  format: "All MQTT credentials look good – auto-connecting…"
+              - script.execute: mqtt_reconnect
+            else:
+              - logger.log:
+                  tag: "config"
+                  level: INFO
+                  format: "MQTT credentials incomplete – skipping auto-connect"
+      
+
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+  level: INFO
+  logs:
+    component: ERROR          # only E lines from tag “component”
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "R48xx"
+    password: "12345678"
+
+captive_portal:
+
+ota:
+  - platform: esphome
+
+web_server:
+  js_include: "./www/www.js"
+  js_url: ""
+  version: 3
+
+
+# ────────────────────── MQTT skeleton (always disabled at boot) ─────────────
+mqtt:
+  id: mqtt_client
+  broker: ""                  # placeholder – updated at run-time
+  enable_on_boot: false
+  reboot_timeout: 0s          # never auto-reboot; we handle errors ourselves
+
+  # ────────────── MQTT connected ──────────────
+  on_connect:
+    then:
+      - text_sensor.template.publish:
+          id: ts_mqtt_status
+          state: "🟢 Connected"
+      - lambda: |-
+          id(g_mqtt_failures) = 0;         // reset the counter
+      - logger.log:
+          tag: "config"
+          level: INFO
+          format: "MQTT connected – counter reset, status → green"
+
+  # ────────────── MQTT disconnected / failed connect ──────────────
+  on_disconnect:
+    then:
+      # 1️⃣ update status & bump failure counter
+      - text_sensor.template.publish:
+          id: ts_mqtt_status
+          state: "🔴 Disconnected"
+      - lambda: |-
+          id(g_mqtt_failures)++;
+      - logger.log:
+          tag: "mqtt"
+          level: WARN
+          format: "MQTT disconnect #%d"
+          args: [ 'id(g_mqtt_failures)' ]
+
+      # 2️⃣ after 3 failures, wipe creds, disable MQTT, reboot
+      - if:
+          condition:
+            lambda: 'return id(g_mqtt_failures) >= 3;'
+          then:
+            - logger.log:
+                tag: "mqtt"
+                level: ERROR
+                format: "Giving up after 3 failures – clearing credentials and rebooting"
+
+            - logger.log:
+                tag: "mqtt"
+                level: INFO
+                format: "Node will restart now; reload the web page in ~10 s to reconnect"
+
+            # stop further retries
+            - mqtt.disable:
+
+            # clear UI fields
+            - text.set: { id: t_broker, value: "" }
+            - text.set: { id: t_user,   value: "" }
+            - text.set: { id: t_pass,   value: "" }
+            - text.set: { id: t_port,   value: "" }
+
+            # clear stored values & reset port
+            - lambda: |-
+                id(g_broker).clear();
+                id(g_user).clear();
+                id(g_pass).clear();
+                id(g_port) = 1883;
+
+            # short pause, then reboot via hidden button
+            - delay: 1s
+            - button.press: sys_restart
+# ───────────────────────── helpers the user edits in the UI ─────────────────
+text:
+  - platform: template
+    id: t_broker
+    name: "MQTT Broker IP address"
+    mode: text
+    icon: mdi:lan
+    max_length: 16
+    restore_value: true
+    set_action:
+      then:
+        - lambda: id(g_broker) = x;
+        - logger.log:
+            tag: "config"
+            level: INFO
+            format: "MQTT broker entered: %s"
+            args: [ 'id(g_broker).c_str()' ]
+
+  - platform: template
+    id: t_user
+    name: "MQTT User (optional)"
+    mode: text
+    icon: mdi:lan
+    max_length: 16
+    restore_value: true
+    set_action:
+      then:
+        - lambda: id(g_user) = x;
+        - logger.log:
+            tag: "config"
+            level: INFO
+            format: "MQTT username entered: %s"
+            args: [ 'id(g_user).c_str()' ]
+
+  - platform: template
+    id: t_pass
+    name: "MQTT Password (optional)"
+    mode: password
+    icon: mdi:lan
+    max_length: 16
+    restore_value: true
+    internal: False
+    set_action:
+      then:
+        - lambda: id(g_pass) = x;
+        - logger.log:
+            tag: "config"
+            level: INFO
+            format: "MQTT password entered (len %d)"
+            args: [ 'id(g_pass).size()' ]
+
+  - platform: template
+    id: t_port
+    name: "MQTT Port (1883 if empty)"
+    mode: text
+    icon: mdi:lan
+    max_length: 8
+    restore_value: true
+    set_action:
+      then:
+        # 🆕 interpret an empty string as “revert to the default (1883)”
+        - lambda: |-
+            if (x.empty()) {                         // user cleared the field
+              id(g_port) = 1883;                     // …so fall back to the standard port
+              ESP_LOGI("config",
+                       "MQTT port cleared – reverting to default 1883");
+            } else {
+              int port = atoi(x.c_str());
+              if (port > 0 && port <= 65535) {       // valid numeric entry
+                id(g_port) = port;
+                ESP_LOGI("config",
+                         "MQTT port entered: %d",
+                         port);
+              } else {                               // not a number or out of range
+                ESP_LOGW("config",
+                         "Invalid MQTT port “%s” – keeping previous value (%d)",
+                         x.c_str(), id(g_port));
+              }
+            }
+
+# ─────────────────────────── globals that survive reboot ────────────────────
+globals:
+
+  - id: g_mqtt_failures          # counts consecutive disconnects
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: g_broker
+    type: std::string
+    restore_value: true
+    initial_value: "\"\""
+
+  - id: g_user
+    type: std::string
+    restore_value: true
+    initial_value: "\"\""
+
+  - id: g_pass
+    type: std::string
+    restore_value: true
+    initial_value: "\"\""
+
+  - id: g_port
+    type: int
+    restore_value: true
+    initial_value: '1883'
+
+  - id: amp_scaling_factor
+    type: float
+    restore_value: true
+    initial_value: "19.6923"
+    
+  - id: voltage_scaling_factor
+    type: int
+    initial_value: "1024"
+    restore_value: true
+
+  - id: max_amp_limit
+    type: float
+    initial_value: "75"
+    restore_value: true
+
+  - id: max_current_found_board_1
+    type: bool
+    initial_value: "false"
+
+  - id: search_counter_board_1
+    type: int
+    restore_value: no
+    initial_value: "0"
+
+  - id: data_found_board_1
+    type: bool
+    initial_value: "false"
+
+  - id: daily_schedule_disabled
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  # Stores the running total of Watt-hours
+  - id: consumed_wh
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: frame_counter_bp1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: frame_counter_msg_start1
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: search_attempts
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: board_properties
+    type: std::string
+    initial_value: '""'
+
+  - id: board_properties_complete
+    type: bool
+    initial_value: "false"
+
+  - id: barcode_found
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  - id: last_staged_current
+    type: float
+    restore_value: no
+    initial_value: "40.0"
+
+
+  - id: stage1_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  - id: stage2_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  - id: stage3_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  - id: stage4_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  - id: pre_stage_amp
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: prev_any_stage_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  # How many seconds Stage 4 has been active so far (this session).
+  - id: stage4_elapsed_s
+    type: int
+    restore_value: no
+    initial_value: "0"
+
+  # If we have forcibly turned Stage 4 off once the time is up,
+  # we won't re-activate it again in the same voltage condition.
+  - id: stage4_forced_off
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  # Custom Stage 1
+  - id: custom_stage1_threshold
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: custom_stage1_current
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  # Custom Stage 2
+  - id: custom_stage2_threshold
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: custom_stage2_current
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  # Custom Stage 3
+  - id: custom_stage3_threshold
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: custom_stage3_current
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  # Custom Stage 4
+  - id: custom_stage4_threshold
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  - id: custom_stage4_current
+    type: float
+    restore_value: no
+    initial_value: "0.0"
+
+  # 0-7 = T1,C1,T2,C2,T3,C3,T4,C4
+  - id: custom_stage
+    type: float[9]
+    restore_value: yes
+    initial_value: '{0,0,0,0,0,0,0,0,0}'
+
+  # ------------------ NEW CLOCK GLOBALS -------------------
+  - id: current_hour       # The current hour (0–23)
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: current_minute     # The current minute (0–59)
+    type: int
+    restore_value: no
+    initial_value: '0'
+#  - id: on_hour            # Hour when device will automatically switch ON
+#    type: int
+#    restore_value: no
+#    initial_value: '0'
+#  - id: on_minute          # Minute when device will automatically switch ON
+#    type: int
+#    restore_value: no
+#    initial_value: '0'
+#  - id: off_hour           # Hour when device will automatically switch OFF
+#    type: int
+#    restore_value: no
+#    initial_value: '-1'
+#  - id: off_minute         # Minute when device will automatically switch OFF
+#    type: int
+#    restore_value: no
+#    initial_value: '-1'
+
+  - id: on_time_countdown
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: off_time_countdown
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: g_last_on_delta
+    type: int
+    restore_value: no
+    initial_value: '-1'
+  - id: g_last_off_delta
+    type: int
+    restore_value: no
+    initial_value: '-1'
+
+  - id: g_schedule_disabled_prev
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: g_show_schedule_update_log
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+
+switch:
+  - platform: template
+    name: "Soft Charge Enable"
+    id: soft_charge_enable
+    icon: "mdi:scale-balance"
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - script.execute: soft_charge_reset
+    turn_off_action:
+      - script.execute: soft_charge_reset
+
+
+# ----------------------------------------------------------
+#                      SCRIPTS
+# ----------------------------------------------------------
+script:
+  # ───────────────────────── helper script (debounced connect) ──────────────
+  - id: mqtt_reconnect
+    mode: restart
+    then:
+      # Debounce: delay 2 s so multiple edits don’t trigger back-to-back connects
+      - delay: 2s
+
+      # Check all fields are present and sensible
+      - lambda: |-
+          if (id(g_broker).empty() || id(g_port) <= 0) {
+            ESP_LOGW("config", "MQTT broker IP missing – aborting connect");
+            return;
+          }
+
+      # Print the final parameters
+      - logger.log:
+          tag: "config"
+          level: INFO
+          format: "Connecting to %s:%d as %s (pw len %d)…"
+          args: [ 'id(g_broker).c_str()', 'id(g_port)', 'id(g_user).c_str()', 'id(g_pass).size()' ]
+
+      # Stop current session (if any)
+      - mqtt.disable:
+      - wait_until:
+          condition:
+            not: mqtt.connected
+          timeout: 2s
+      - delay: 300ms
+
+      # Apply new parameters
+      - lambda: |-
+          id(mqtt_client).set_broker_address(id(g_broker));
+          id(mqtt_client).set_broker_port(id(g_port));
+
+          if (id(g_user).empty() && id(g_pass).empty()) {
+            id(mqtt_client).set_username("");
+            id(mqtt_client).set_password("");
+            ESP_LOGI("config", "MQTT: connecting anonymously");
+
+          } else if (!id(g_user).empty() && !id(g_pass).empty()) {
+            id(mqtt_client).set_username(id(g_user));
+            id(mqtt_client).set_password(id(g_pass));
+            ESP_LOGI("config", "MQTT: connecting as %s (pw len %d)",
+                     id(g_user).c_str(), id(g_pass).size());
+
+          } else {
+            ESP_LOGW("config", "MQTT: username or password missing – aborting connect");
+            return;
+          }
+
+      # Kick it off
+      - mqtt.enable:
+
+
+
+  - id: setup_sequence
+    mode: single
+    then:
+      # Detect Data Board-1
+      - script.execute: detect_data_board_1
+      - delay: 1s
+
+  - id: detect_data_board_1
+    then:
+      - lambda: |-
+          id(max_current_found_board_1) = false; // Reset the flag before starting
+          id(search_counter_board_1) = 0;        // Initialize a fail-safe counter
+      - while:
+          condition:
+            lambda: |-
+              // Continue while board_1 not found and counter < 10
+              return !id(max_current_found_board_1) && id(search_counter_board_1) < 10;
+          then:
+            - canbus.send:
+                can_id: 0x108150fe
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - canbus.send:
+                can_id: 0x1081D2FE
+                use_extended_id: true
+                data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            - delay: 1s
+            - lambda: |-
+                id(search_counter_board_1) += 1; // Increment the fail-safe counter
+      - delay: 1s
+      - lambda: |-
+          if (id(search_counter_board_1) >= 10) {
+            ESP_LOGW("canbus", "Fail-safe triggered: Loop stopped after 10 attempts.");
+          }
+
+  - id: soft_charge_reset
+    mode: restart
+    then:
+      - lambda: |-
+          ESP_LOGI("SOFT_CHARGE", "Switch toggled → resetting staged‑charge state");
+          id(stage1_active)        = false;
+          id(stage2_active)        = false;
+          id(stage3_active)        = false;
+          id(stage4_active)        = false;
+          id(stage4_forced_off)    = false;
+          id(stage4_elapsed_s)     = 0;
+          id(prev_any_stage_active)= false;
+          // Align currents with user slider so no stale value is sent
+          id(last_staged_current)  = id(can_amp_input).state;
+          id(pre_stage_amp)        = id(can_amp_input).state;
+
+# ----------------------------------------------------------
+#                      CANBUS
+# ----------------------------------------------------------
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO19
+    rx_pin: GPIO21
+    can_id: 0xE5F32E5
+    bit_rate: 125kbps
+    use_extended_id: True
+    rx_queue_len: 32
+    on_frame:
+      - can_id: 0x1081407F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() >= 8) {
+                const uint8_t byte_0 = static_cast<uint8_t>(x[0]);
+                const uint8_t byte_1 = static_cast<uint8_t>(x[1]);
+                const uint32_t value = (static_cast<uint32_t>(x[4]) << 24) | 
+                                       (static_cast<uint32_t>(x[5]) << 16) | 
+                                       (static_cast<uint32_t>(x[6]) << 8) | 
+                                       static_cast<uint32_t>(x[7]);
+                switch (byte_0) {
+                  case 0x01:
+                    switch (byte_1) {
+                      case 0x70: id(ac_power_in_sensor).publish_state(value); break;
+                      case 0x71: id(grid_frequency_sensor).publish_state(value); break;
+                      case 0x72: id(input_current_sensor).publish_state(value); break;
+                      case 0x73: id(dc_power_out_sensor).publish_state(value); break;
+                      case 0x75: id(output_voltage_sensor).publish_state(value); break;
+                      case 0x76: id(set_max_output_current_sensor).publish_state(value); break;
+                      case 0x78: id(input_grid_voltage_sensor).publish_state(value); break;
+                      case 0x7F: id(output_temperature_sensor).publish_state(value); break;
+                      case 0x81: id(output_current_sensor).publish_state(value); break;
+                      case 0x80: id(input_temperature_sensor).publish_state(value); break;
+                      case 0x0E: id(operating_hours).publish_state(value); break;
+                    }
+                    break;
+                }
+              }
+
+      - can_id: 0x1001117E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static uint16_t last_alt_amp_value_1 = 0;
+              static std::string last_power_state_1 = "";
+              if (x.size() == 8) {
+                const uint8_t state_byte = x[3];
+                const uint8_t error_byte = x[4];
+                const uint16_t alt_amp_value =
+                  (static_cast<uint16_t>(x[6]) << 8) |
+                  static_cast<uint16_t>(x[7]);
+
+                // Publish alt AMP value only if changed
+                if (alt_amp_value != last_alt_amp_value_1) {
+                  id(alt_amp_sensor).publish_state(alt_amp_value);
+                  last_alt_amp_value_1 = alt_amp_value;
+                }
+
+                // Determine the new power state
+                std::string new_power_state;
+                if (error_byte == 1) {
+                  new_power_state = "ERROR";
+                } else if (state_byte == 0) {
+                  new_power_state = "ON";
+                } else {
+                  new_power_state = "OFF";
+                }
+
+                // Publish power state only if changed
+                if (new_power_state != last_power_state_1) {
+                  id(power_state_sensor1).publish_state(new_power_state.c_str());
+                  last_power_state_1 = new_power_state;
+                }
+              }
+
+      - can_id: 0x1081507F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (id(max_current_found_board_1)) {
+                return; // Skip if already found
+              }
+              uint8_t packet_number = x.data()[1];
+              uint8_t packet_data[8];
+              memcpy(packet_data, x.data(), 8);
+              if (packet_number == 1) {
+                uint8_t max_current_raw = packet_data[5];
+                float max_current = max_current_raw / 2.0; // Adjust scaling factor if needed
+                ESP_LOGI("canbus", "Board 1 Max current capability: %.1f A", max_current);
+                id(max_current_sensor).publish_state(max_current);
+                id(max_current_found_board_1) = true;
+
+                // Calculate and update amp_scaling_factor
+                if (max_current > 0) {
+                  id(amp_scaling_factor) = 1024.0f / max_current;
+                  ESP_LOGI("canbus", "New amp_scaling_factor: %.5f", id(amp_scaling_factor));
+                  id(sf_value).publish_state(id(amp_scaling_factor));
+                } else {
+                  ESP_LOGW("canbus", "Max current is zero. Cannot calculate amp_scaling_factor.");
+                }
+              }
+
+      - can_id: 0x1081827E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              if (x.size() >= 8) {
+                // Check that the first two bytes match 0x01 and 0x87
+                const uint8_t reg_byte0 = static_cast<uint8_t>(x[0]);
+                const uint8_t reg_byte1 = static_cast<uint8_t>(x[1]);
+                if (reg_byte0 == 0x01 && reg_byte1 == 0x87) {
+                  // Decode the three 16-bit big-endian values:
+                  // - Bytes 2-3: duty1 raw value
+                  // - Bytes 4-5: duty set raw value
+                  // - Bytes 6-7: RPM
+                  uint16_t duty1_raw = (static_cast<uint8_t>(x[2]) << 8) | static_cast<uint8_t>(x[3]);
+                  uint16_t duty_set_raw = (static_cast<uint8_t>(x[4]) << 8) | static_cast<uint8_t>(x[5]);
+                  uint16_t rpm = (static_cast<uint8_t>(x[6]) << 8) | static_cast<uint8_t>(x[7]);
+
+                  // Convert raw duty cycle values to percentages (raw/25600 * 100)
+                  float duty1 = (static_cast<float>(duty1_raw) / 25600.0f) * 100.0f;
+                  float duty_set = (static_cast<float>(duty_set_raw) / 25600.0f) * 100.0f;
+
+                  // Publish the sensor states
+                  id(rpm_sensor).publish_state(rpm);
+                }
+              }
+
+
+      # Handle board properties message start
+      - can_id: 0x1081D27F
+        use_extended_id: true
+        then:
+          - lambda: |-
+              static bool message_started = false;
+
+              if (x.size() == 8) {
+                if ((uint8_t)x[0] == 0x00 && (uint8_t)x[1] == 0x01) {
+                  id(board_properties) = "";  // Clear existing string
+                  id(board_properties_complete) = false;
+                  message_started = true;
+                  id(frame_counter_msg_start1) = 0;  // Reset global frame counter
+                  ESP_LOGI("board_properties", "Message Start Detected");
+                }
+
+                if (message_started) {
+                  // Extract and append all payload bytes starting from x[2]
+                  std::string frame_data((char*)&x[2], 6);  // 6 bytes of payload
+                  id(board_properties) += frame_data;
+
+                  // Increment global frame counter
+                  id(frame_counter_msg_start1)++;
+
+                  // Log for debugging purposes
+                  ESP_LOGD("board_properties", "Captured Frame #%d: %s", id(frame_counter_msg_start1), frame_data.c_str());
+                }
+              }
+
+      # Signal end of board properties message
+      - can_id: 0x1081D27E
+        use_extended_id: true
+        then:
+          - lambda: |-
+              // Check if this frame contains additional payload data
+              if (x.size() > 2) {  // Payload starts at x[2], so size must be > 2
+                std::string frame_data((char*)&x[2], x.size() - 2);
+                ESP_LOGI("board_properties", "End Message Frame Data: %s", frame_data.c_str());
+
+                // Append any remaining data to board_properties
+                id(board_properties) += frame_data;
+              }
+              ESP_LOGI("board_properties", "Total Frames Captured: %d", id(frame_counter_msg_start1));
+              ESP_LOGI("board_properties", "Final Board Properties: %s", id(board_properties).c_str());
+
+              auto extract_value = [](const std::string &data, const std::string &key) -> std::string {
+                size_t start = data.find(key);
+                if (start == std::string::npos) return "";
+                start += key.size();
+                size_t end = data.find_first_of("\r\n", start);
+                if (end == std::string::npos) {
+                  end = data.size();
+                }
+                return data.substr(start, end - start);
+              };
+
+              struct KeySensorPair {
+                const char* key;
+                esphome::template_::TemplateTextSensor* sensor;
+                bool* flag;
+              };
+
+              KeySensorPair mappings[] = {
+                {"BoardType=", id(board_type_sensor_1), nullptr},
+                {"BarCode=", id(barcode_sensor_1), nullptr},
+                {"Item=", id(item_no_sensor_1), nullptr},
+                {"Description=", id(description_sensor_1), nullptr},
+                {"Manufactured=", id(manufactured_sensor_1), &id(board_properties_complete)}
+              };
+
+              bool all_keys_found = true;
+
+              for (const auto& mapping : mappings) {
+                std::string value = extract_value(id(board_properties), mapping.key);
+                if (!value.empty()) {
+                  ESP_LOGI("board_properties", "Extracted %s: %s", mapping.key, value.c_str());
+                  mapping.sensor->publish_state(value.c_str());
+                  if (mapping.flag) {
+                    *(mapping.flag) = true;
+                  }
+                } else {
+                  ESP_LOGW("board_properties", "Key %s not found or empty", mapping.key);
+                  all_keys_found = false;
+                  if (mapping.flag) {
+                    *(mapping.flag) = false; // Reset the flag for missing keys
+                  }
+                }
+              }
+
+              if (all_keys_found) {
+                id(board_properties_complete) = true; // Mark completion only if all keys are found
+                ESP_LOGI("board_properties", "All required keys found. Marking as complete.");
+              } else {
+                id(board_properties_complete) = false; // Explicitly reset the flag if keys are missing
+                ESP_LOGI("board_properties", "Not all keys found. Will continue processing.");
+              }
+
+# ----------------------------------------------------------
+#           TEXT SENSOR & NUMERIC TEMPLATE SENSORS
+# ----------------------------------------------------------
+# ─────────────────────────── MQTT status indicator ──────────────────────────
+text_sensor:
+
+  - platform: template
+    id: ts_mqtt_status               # <-- this ID is what automations refer to
+    name: "MQTT Status"
+    icon: mdi:lan
+    entity_category: diagnostic
+    # No lambda or update-interval needed – we’ll set the text from automations
+
+  # Power state from your existing code
+  - platform: template
+    id: power_state_sensor1
+    name: "003 Power State"
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Info: Board Type"
+    id: board_type_sensor_1
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Info: Barcode"
+    id: barcode_sensor_1
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Info: Item Number"
+    id: item_no_sensor_1
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Info: Description"
+    id: description_sensor_1
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Info: Manufacturing Date"
+    id: manufactured_sensor_1
+    icon: "mdi:information-outline"
+
+  # ------------------ NEW LOCAL TIME TEXT SENSOR ------------------
+  - platform: template
+    name: "Local Time (Off-Grid)"
+    id: local_time_display
+    update_interval: 15s
+    icon: "mdi:clock"
+    lambda: |-
+      // Build a string like "HH:MM"
+      char buff[6];
+      sprintf(buff, "%02d:%02d", id(current_hour), id(current_minute));
+      return std::string(buff);
+
+  - platform: template
+    name: "Minutes Until Next On"
+    id: next_on_text
+    update_interval: 15s
+    icon: "mdi:timer-sand"
+    lambda: |-
+      if (id(daily_schedule_disabled)) {
+        // Return a std::string rather than a raw C string
+        return std::string("Disabled");
+      } else {
+        char buff[16];
+        sprintf(buff, "%d min", id(on_time_countdown));
+        return std::string(buff);
+      }
+
+sensor:
+  - platform: template
+    name: "19 Scaling Factor"
+    id: sf_value
+    accuracy_decimals: 4
+    icon: "mdi:information-outline"
+    update_interval: never    
+
+  - platform: template
+    name: "Info: Max Current Capability"
+    id: max_current_sensor
+    unit_of_measurement: "A"
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "Amp Scaling Factor"
+    lambda: |-
+      return id(amp_scaling_factor);
+    update_interval: 10s
+    internal: true
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "06a Output DC Current alt"
+    id: alt_amp_sensor
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(amp_scaling_factor);
+    icon: "mdi:current-dc"
+
+  - platform: template
+    name: "01 Input AC Power"
+    id: ac_power_in_sensor
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "05 Output DC Power"
+    id: dc_power_out_sensor
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:flash"
+
+  - platform: template
+    name: "02 Input Grid AC Frequency"
+    id: grid_frequency_sensor
+    unit_of_measurement: "Hz"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:transmission-tower-import"
+
+  - platform: template
+    name: "03 Input AC Current"
+    id: input_current_sensor
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:current-ac"
+
+  - platform: template
+    name: "07 Output DC Voltage"
+    id: output_voltage_sensor
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:current-dc"
+
+  - platform: template
+    name: "Info: Operating Hours"
+    id: operating_hours
+    unit_of_measurement: "h"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          return x;
+    icon: "mdi:information-outline"
+
+  - platform: template
+    name: "04 Input AC Grid Voltage"
+    id: input_grid_voltage_sensor
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:sine-wave"
+
+  - platform: template
+    name: "08 Output Temperature"
+    id: output_temperature_sensor
+    unit_of_measurement: "°C"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "08a Input Temperature"
+    id: input_temperature_sensor
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    update_interval: 3s
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);  
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "06 Output DC Current"
+    id: output_current_sensor
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(voltage_scaling_factor);
+    icon: "mdi:current-dc"
+
+  - platform: template
+    name: "09 Max Output DC Current"
+    id: set_max_output_current_sensor
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: |-
+          return x / id(amp_scaling_factor);
+    icon: "mdi:current-ac"  
+
+  - platform: template
+    name: "Minutes Until Next Off"
+    id: next_off_sensor
+    unit_of_measurement: "min"
+    accuracy_decimals: 0
+    lambda: |-
+      return id(off_time_countdown);
+    update_interval: 15s
+    icon: "mdi:timer-sand"
+
+  # Displays the accumulated Wh in the UI
+  - platform: template
+    name: "Wh Meter Consumed Wh"
+    id: consumed_wh_sensor
+    unit_of_measurement: "Wh"
+    icon: "mdi:transmission-tower-import"
+    accuracy_decimals: 1
+    lambda: |-
+      // Just return the global
+      return id(consumed_wh);
+    update_interval: 30s
+
+  - platform: template
+    name: "FAN RPM"
+    id: rpm_sensor
+    unit_of_measurement: "RPM"
+    accuracy_decimals: 0
+    icon: "mdi:fan"
+# ----------------------------------------------------------
+#                       NUMBER INPUTS
+# ----------------------------------------------------------
+number:
+
+  - platform: template
+    name: "Fan Minimum Speed"
+    id: can_fan_speed_input
+    min_value: 0
+    max_value: 100
+    step: 1
+    unit_of_measurement: "%"
+    optimistic: true
+    mode: SLIDER
+    restore_value: true
+    icon: "mdi:fan"
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is updated
+        - lambda: |-
+            float fan_value = id(can_fan_speed_input).state;
+            ESP_LOGI("custom", "Received fan speed: %.0f%%", fan_value);
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              // Set register identifier for fan duty cycle
+              can_data[0] = 0x01;
+              can_data[1] = 0x14;
+              // Calculate the scaled fan duty cycle (fan_value * 256)
+              int scaled_value = (int)(id(can_fan_speed_input).state * 256);
+              // Insert the 16-bit scaled value in big-endian format at bytes 2 and 3
+              can_data[2] = (scaled_value >> 8) & 0xFF;  // High byte
+              can_data[3] = scaled_value & 0xFF;         // Low byte
+              // Bytes 4 to 7 remain 0x00
+              return can_data;
+
+  - platform: template
+    name: "10 Set Voltage Limit"
+    id: can_voltage_input
+    min_value: 49
+    max_value: 58
+    step: 0.1
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:sine-wave"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float voltage_value = id(can_voltage_input).state;
+            ESP_LOGI("custom", "Received voltage: %.1fV", voltage_value);
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;  // Identifier byte
+              int scaled_value = (int)(id(can_voltage_input).state * id(voltage_scaling_factor));
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+  - platform: template
+    name: "11 Set Fallback Voltage Limit"
+    id: fallback_voltage_input
+    min_value: 49
+    max_value: 58
+    step: 0.1
+    unit_of_measurement: "V"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:sine-wave"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float fallback_voltage_value = id(fallback_voltage_input).state;
+            ESP_LOGI("custom", "Fallback Voltage: %.1fV", fallback_voltage_value);
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              can_data[0] = 0x01;
+              can_data[1] = 0x01;  // Fallback marker
+              int fallback_scaled_value = (int)(id(fallback_voltage_input).state * id(voltage_scaling_factor));
+              can_data[6] = (fallback_scaled_value >> 8) & 0xFF;
+              can_data[7] = fallback_scaled_value & 0xFF;
+              return can_data;
+
+  - platform: template
+    name: "14 Set AC Current Limit"
+    id: can_current_limit_input
+    min_value: 0
+    max_value: 21
+    step: 0.1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: True
+    icon: "mdi:current-ac"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float current_value = id(can_current_limit_input).state;
+            float max_current = 10.0; // default
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_current = 17.0;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_current = 21.0;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_current = 13.0;
+            }
+            if (current_value > max_current) {
+              ESP_LOGW("custom", "Entered Current %.1f exceeds model limit %.1f, resetting.", current_value, max_current);
+              id(can_current_limit_input).publish_state(max_current);
+              current_value = max_current;
+            }
+            if (current_value == 0) {
+              ESP_LOGI("custom", "AC Current Limit disabled.");
+            } else {
+              ESP_LOGI("custom", "AC Current Limit set to %.1fA.", current_value);
+            }
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(can_current_limit_input).state * id(voltage_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x09;
+              can_data[3] = (id(can_current_limit_input).state > 0) ? 0x01 : 0x00; 
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+  - platform: template
+    name: "12 Set DC Current Limit"
+    id: can_amp_input
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float amp_value = id(can_amp_input).state;
+            float max_amps = 75.0; 
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_amps = 50.0;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_amps = 30.0;
+            }
+            if (amp_value > max_amps) {
+              ESP_LOGW("custom", "Entered Amp %.1f exceeds limit %.1f, resetting.", amp_value, max_amps);
+              id(can_amp_input).publish_state(max_amps);
+              amp_value = max_amps;
+            }
+            ESP_LOGI("custom", "DC Current Limit set to %.1fA.", amp_value);
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x03;
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+  - platform: template
+    name: "13 Set Fallback DC Current Limit"
+    id: fallback_amp_input
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    optimistic: true
+    mode: BOX
+    restore_value: true
+    icon: "mdi:current-dc"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            float fallback_amp_value = id(fallback_amp_input).state;
+            float max_amps = 75.0;
+            if (id(amp_scaling_factor) >= 18 && id(amp_scaling_factor) <= 22) {
+              max_amps = 50.0;
+            } else if (id(amp_scaling_factor) >= 13 && id(amp_scaling_factor) <= 15) {
+              max_amps = 75;
+            } else if (id(amp_scaling_factor) >= 25 && id(amp_scaling_factor) <= 35) {
+              max_amps = 30.0;
+            }
+            if (fallback_amp_value > max_amps) {
+              ESP_LOGW("custom", "Fallback Amp %.1f exceeds limit %.1f, resetting.", fallback_amp_value, max_amps);
+              id(fallback_amp_input).publish_state(max_amps);
+              fallback_amp_value = max_amps;
+            }
+            ESP_LOGI("custom", "Fallback DC Current Limit set to %.1fA.", fallback_amp_value);
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: !lambda |-
+              std::vector<uint8_t> can_data(8, 0x00);
+              int scaled_value = (int)(id(fallback_amp_input).state * id(amp_scaling_factor));
+              can_data[0] = 0x01;
+              can_data[1] = 0x04;
+              can_data[6] = (scaled_value >> 8) & 0xFF;
+              can_data[7] = scaled_value & 0xFF;
+              return can_data;
+
+  # ------------------- NEW CLOCK INPUTS -------------------
+  - platform: template
+    name: "Set Current Hour"
+    min_value: 0
+    max_value: 23
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:clock"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            id(current_hour) = (int) x;
+
+  - platform: template
+    name: "Set Current Minute"
+    min_value: 0
+    max_value: 59
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:clock"
+    on_value:
+      then:
+        - delay: 0.01s
+        - lambda: |-
+            id(current_minute) = (int) x;
+
+  - platform: template
+    name: "Set ON Hour"
+    id: on_hour
+    min_value: 0
+    max_value: 23
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:timer-play"
+    on_value:
+      then:
+        - lambda: |-
+            id(g_show_schedule_update_log) = true;
+
+  - platform: template
+    name: "Set ON Minute"
+    id: on_minute
+    min_value: 0
+    max_value: 59
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:timer-play"
+    on_value:
+      then:
+        - lambda: |-
+            id(g_show_schedule_update_log) = true;
+
+  - platform: template
+    name: "Set OFF Hour"
+    id: off_hour
+    min_value: 0
+    max_value: 23
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:timer-off"
+    on_value:
+      then:
+        - lambda: |-
+            id(g_show_schedule_update_log) = true;
+
+  - platform: template
+    name: "Set OFF Minute"
+    id: off_minute
+    min_value: 0
+    max_value: 59
+    step: 1
+    mode: BOX
+    optimistic: true
+    restore_value: true
+    icon: "mdi:timer-off"
+    on_value:
+      then:
+        - lambda: |-
+            id(g_show_schedule_update_log) = true;
+
+  - platform: template          
+    name: "Stage reset voltage"
+    id: stage_reset_voltage
+    unit_of_measurement: "V"
+    min_value: 48.00          # pick limits that make sense for your pack
+    max_value: 58.00
+    mode: BOX
+    step: 0.01
+    icon: "mdi:restore"
+    optimistic: true
+    initial_value: 53.2
+# ================= STAGE 1
+
+  - platform: template
+    name: "Stage Threshold 1"
+    id: stage1_threshold
+    min_value: 45
+    max_value: 58
+    step: 0.01
+    unit_of_measurement: "V"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-1-circle"
+    optimistic: true
+    initial_value: 55.2  # from Node-RED
+
+  - platform: template
+    name: "Stage Current 1"
+    id: stage1_current
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-1-circle-outline"
+    optimistic: true
+    initial_value: 31    # from Node-RED
+
+# ================= STAGE 2
+  - platform: template
+    name: "Stage Threshold 2"
+    id: stage2_threshold
+    min_value: 45
+    max_value: 58
+    step: 0.01
+    unit_of_measurement: "V"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-2-circle"
+    optimistic: true
+    initial_value: 55.3
+
+  - platform: template
+    name: "Stage Current 2"
+    id: stage2_current
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-2-circle-outline"
+    optimistic: true
+    initial_value: 10
+
+# ================= STAGE 3
+  - platform: template
+    name: "Stage Threshold 3"
+    id: stage3_threshold
+    min_value: 45
+    max_value: 58
+    step: 0.01
+    unit_of_measurement: "V"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-3-circle"
+    optimistic: true
+    initial_value: 55.4
+
+  - platform: template
+    name: "Stage Current 3"
+    id: stage3_current
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-3-circle-outline"
+    optimistic: true
+    initial_value: 6
+
+# ================= STAGE 4
+  - platform: template
+    name: "Stage Threshold 4 Balance"
+    id: stage4_threshold
+    min_value: 45
+    max_value: 58
+    step: 0.01
+    unit_of_measurement: "V"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-4-circle"
+    optimistic: true
+    initial_value: 55.5
+
+  - platform: template
+    name: "Stage Current 4 Balance"
+    id: stage4_current
+    min_value: 0
+    max_value: 75
+    step: 0.1
+    unit_of_measurement: "A"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:numeric-4-circle-outline"
+    optimistic: true
+    initial_value: 2.5
+
+  - platform: template
+    name: "Stage Time Balance"
+    id: stage4_duration
+    min_value: 1
+    max_value: 300
+    step: 1
+    unit_of_measurement: "min"
+    mode: BOX
+    restore_value: true
+    icon: "mdi:timer-play"
+    initial_value: 60
+    optimistic: true
+
+# ----------------------------------------------------------
+#                       BUTTONS
+# ----------------------------------------------------------
+button:
+
+  # 1️⃣ built-in restart button (hidden from the UI)
+  - platform: restart          # <— this is provided by ESPHome itself
+    id: sys_restart
+    name: "Restart node"
+    internal: true             # keeps it out of the web UI / HA unless you want it
+    
+
+  # 2️⃣ user-facing “apply MQTT” button
+  - platform: template
+    id: b_apply_mqtt
+    name: "MQTT Apply settings & reboot"
+    icon: "mdi:connection"
+    on_press:
+      - script.execute: mqtt_reconnect
+      - delay: 1s
+      - logger.log:
+          tag: "config"
+          level: INFO
+          format: "Rebooting to lock-in new MQTT settings… wait 10 seconds and then reload the page please"
+      - button.press: sys_restart   # ← press the hidden restart button
+
+  - platform: template
+    name: "001 CAN ON Button"
+    icon: "mdi:power"
+    id: can_on_button
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "CAN ON Button pressed => sending ON message...");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  - platform: template
+    name: "002 CAN OFF Button"
+    icon: "mdi:power"
+    id: can_off_button
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("custom", "CAN OFF Button pressed => sending OFF message...");
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+
+  - platform: template
+    name: "18 SETUP this Charger:"
+    icon: "mdi:magnify-scan"
+    on_press:
+      then:
+        - script.execute: setup_sequence
+
+  # Reset the Wh counter back to 0
+  - platform: template
+    name: "Wh Meter RESET"
+    icon: "mdi:play"
+    on_press:
+      then:
+        - lambda: |-
+            ESP_LOGI("WH_RESET", "Resetting Wh meter to 0");
+            id(consumed_wh) = 0.0;
+
+# Define a button component for setting the fan to full speed
+  - platform: template
+    name: "Fan Full Speed Button"
+    icon: "mdi:fan"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+
+# Define a button component for setting the fan to auto mode
+  - platform: template
+    name: "Fan Auto Mode Button"
+    icon: "mdi:fan"
+    on_press:
+      then:
+        - canbus.send:
+            use_extended_id: true
+            can_id: 0x108080FE
+            data: [0x01, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  - platform: template
+    name: "Soft Charge 16s LFP defaults"
+    id: restart_staged_charge_button
+    icon: "mdi:upload"
+    on_press:
+      then:
+        - lambda: |-
+            // === 16s LFP "Preset" Defaults ===
+            // Stage1
+            id(stage1_threshold).publish_state(55.2);
+            id(stage1_current).publish_state(30);
+
+            // Stage2
+            id(stage2_threshold).publish_state(55.3);
+            id(stage2_current).publish_state(10);
+
+            // Stage3
+            id(stage3_threshold).publish_state(55.4);
+            id(stage3_current).publish_state(6.0);
+
+            // Stage4
+            id(stage4_threshold).publish_state(55.5);
+            id(stage4_current).publish_state(2.5);
+
+            id(stage_reset_voltage).publish_state(53.5);
+
+            // === Force all stages inactive ===
+            id(stage1_active) = false;
+            id(stage2_active) = false;
+            id(stage3_active) = false;
+            id(stage4_active) = false;
+
+            // If you are using any "Stage4 forced off" logic, reset it too:
+            id(stage4_forced_off) = false;
+            id(stage4_elapsed_s) = 0;
+
+            // === Sync last_staged_current to user’s current input ===
+            // so we don’t immediately overwrite the user’s chosen setting.
+            id(last_staged_current) = id(can_amp_input).state;
+
+            ESP_LOGI("STAGED_LOGIC", "Staged charge logic RESET to 16s LFP defaults; next interval will re-evaluate stages.");
+
+
+  - platform: template
+    name: "Soft Charge 15s LFP defaults"
+    id: restart_staged_charge_button2
+    icon: "mdi:upload"
+    on_press:
+      then:
+        - lambda: |-
+            // === 15s LFP "Preset" Defaults ===
+            // Stage1
+            id(stage1_threshold).publish_state(51.75);
+            id(stage1_current).publish_state(30);
+
+            // Stage2
+            id(stage2_threshold).publish_state(51.85);
+            id(stage2_current).publish_state(20);
+
+            // Stage3
+            id(stage3_threshold).publish_state(51.94);
+            id(stage3_current).publish_state(12);
+
+            // Stage4
+            id(stage4_threshold).publish_state(52.03);
+            id(stage4_current).publish_state(5);
+            
+            id(stage_reset_voltage).publish_state(50.16);
+
+            // === Force all stages inactive ===
+            id(stage1_active) = false;
+            id(stage2_active) = false;
+            id(stage3_active) = false;
+            id(stage4_active) = false;
+
+            // If you are using any "Stage4 forced off" logic, reset it too:
+            id(stage4_forced_off) = false;
+            id(stage4_elapsed_s) = 0;
+
+            // === Sync last_staged_current to user’s current input ===
+            // so we don’t immediately overwrite the user’s chosen setting.
+            id(last_staged_current) = id(can_amp_input).state;
+
+            ESP_LOGI("STAGED_LOGIC", "Staged charge logic RESET to 15s LFP defaults; next interval will re-evaluate stages.");
+
+  - platform: template
+    name: "Soft Charge ⭳ Save"
+    icon: "mdi:content-save-outline"
+    on_press:
+      then:
+        - lambda: |-
+            float src_thr[4] = {
+              id(stage1_threshold).state,
+              id(stage2_threshold).state,
+              id(stage3_threshold).state,
+              id(stage4_threshold).state };
+
+            float src_cur[4] = {
+              id(stage1_current).state,
+              id(stage2_current).state,
+              id(stage3_current).state,
+              id(stage4_current).state };
+
+            for (int i = 0; i < 4; i++) {
+              id(custom_stage)[2*i]     = src_thr[i];
+              id(custom_stage)[2*i + 1] = src_cur[i];
+            }
+
+            /*** NEW: save Stage-reset voltage ***/
+            id(custom_stage)[8] = id(stage_reset_voltage).state;
+
+            ESP_LOGI("PRESET", "Custom settings SAVED");
+
+  - platform: template
+    name: "Soft Charge ⭱ Load"
+    icon: "mdi:upload"
+    on_press:
+      then:
+        - lambda: |-
+            auto &a = id(custom_stage);   // alias
+
+            id(stage1_threshold).publish_state(a[0]);
+            id(stage1_current).publish_state( a[1]);
+            id(stage2_threshold).publish_state(a[2]);
+            id(stage2_current).publish_state( a[3]);
+            id(stage3_threshold).publish_state(a[4]);
+            id(stage3_current).publish_state( a[5]);
+            id(stage4_threshold).publish_state(a[6]);
+            id(stage4_current).publish_state( a[7]);
+
+            /*** NEW: restore Stage-reset voltage ***/
+            id(stage_reset_voltage).publish_state(a[8]);
+
+            // Clear any active stages so logic re-evaluates cleanly
+            id(stage1_active) = id(stage2_active) =
+            id(stage3_active) = id(stage4_active) = false;
+
+            ESP_LOGI("PRESET", "Custom settings LOADED");
+
+
+
+# ----------------------------------------------------------
+#                       INTERVALS
+# ----------------------------------------------------------
+interval:
+  # first CAN poll
+  - interval: 867ms
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108040FE
+          data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  # same period, phase–shifted by 433 ms
+  - interval: 867ms
+    startup_delay: 433ms     # <─ one-time delay that establishes the offset
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108182FE
+          data: [0x01, 0x87, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+  - interval: 30s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108180FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);
+            can_data[0] = 0x01;
+            int scaled_value = (int)(id(can_voltage_input).state * id(voltage_scaling_factor));
+            can_data[6] = (scaled_value >> 8) & 0xFF;
+            can_data[7] = scaled_value & 0xFF;
+            return can_data;
+
+  - interval: 30s
+    then:
+      - canbus.send:
+          use_extended_id: true
+          can_id: 0x108180FE
+          data: !lambda |-
+            std::vector<uint8_t> can_data(8, 0x00);
+            can_data[0] = 0x01;
+            can_data[1] = 0x03;
+            int scaled_value = (int)(id(can_amp_input).state * id(amp_scaling_factor));
+            can_data[6] = (scaled_value >> 8) & 0xFF;
+            can_data[7] = scaled_value & 0xFF;
+            return can_data;
+
+  # ------------- NEW LOCAL CLOCK "TICK" -------------
+
+
+  - interval: 60s
+    then:
+      - lambda: |-
+          ///////////////////////////
+          // 1) Check if disabled
+          ///////////////////////////
+          bool disabled = false;
+          if (((int)id(on_hour).state == (int)id(off_hour).state) && ((int)id(on_minute).state == (int)id(off_minute).state)) {
+            disabled = true;
+            id(on_time_countdown) = 0;
+            id(off_time_countdown) = 0;
+          }
+          id(daily_schedule_disabled) = disabled;
+
+          // Only log when the disabled state changes
+          if (disabled != id(g_schedule_disabled_prev)) {
+            if (disabled) {
+              ESP_LOGI("CLOCK", "Daily ON/OFF times are the same => schedule disabled.");
+            } else {
+              ESP_LOGI("CLOCK", "Daily ON/OFF times set => schedule enabled.");
+            }
+            id(g_schedule_disabled_prev) = disabled;
+          }
+
+          ///////////////////////////
+          // 2) Increment the clock
+          ///////////////////////////
+          id(current_minute)++;
+          if (id(current_minute) >= 60) {
+            id(current_minute) = 0;
+            id(current_hour)++;
+            if (id(current_hour) >= 24) {
+              id(current_hour) = 0;
+            }
+          }
+
+          ///////////////////////////
+          // 3) Skip if disabled
+          ///////////////////////////
+          if (!disabled) {
+            // Calculate minutes to next ON
+            int now_total = id(current_hour)*60 + id(current_minute);
+            int on_total = ((int)id(on_hour).state)*60 + ((int)id(on_minute).state);
+            int on_delta = on_total - now_total;
+            if (on_delta < 0) {
+              on_delta += 24*60;
+            }
+            id(on_time_countdown) = on_delta;
+
+            // Calculate minutes to next OFF
+            int off_total = ((int)id(off_hour).state)*60 + ((int)id(off_minute).state);
+            int off_delta = off_total - now_total;
+            if (off_delta < 0) {
+              off_delta += 24*60;
+            }
+            id(off_time_countdown) = off_delta;
+
+            // Only log when the user changes ON/OFF times
+            if (id(g_show_schedule_update_log)) {
+              // Format ON time as HH:MM:SS
+              int on_hours = on_delta / 60;
+              int on_minutes = on_delta % 60;
+              int on_seconds = 0;
+              // Format OFF time as HH:MM:SS
+              int off_hours = off_delta / 60;
+              int off_minutes = off_delta % 60;
+              int off_seconds = 0;
+
+              ESP_LOGI("CLOCK",
+                "Time %02d:%02d => Next ON in %02d:%02d:%02d, Next OFF in %02d:%02d:%02d",
+                id(current_hour), id(current_minute),
+                on_hours, on_minutes, on_seconds,
+                off_hours, off_minutes, off_seconds
+              );
+              id(g_show_schedule_update_log) = false;
+            }
+
+            // Time ON
+            if ((id(current_hour) == (int)id(on_hour).state) && (id(current_minute) == (int)id(on_minute).state)) {
+              ESP_LOGI("CLOCK", "Daily schedule => sending CAN ON");
+              id(can_on_button).press();
+            }
+
+            // Time OFF
+            if (((int)id(off_hour).state >= 0) && ((int)id(off_minute).state >= 0)) {
+              if ((id(current_hour) == (int)id(off_hour).state) && (id(current_minute) == (int)id(off_minute).state)) {
+                ESP_LOGI("CLOCK", "Daily schedule => sending CAN OFF");
+                id(can_off_button).press();
+              }
+            }
+          }
+
+  # Every 60 seconds, add (Power * 1 minute) to the total
+  - interval: 60s
+    then:
+      - lambda: |-
+          // 1) Grab your real-time power from your chosen sensor (in Watts)
+          float power_w = id(dc_power_out_sensor).state;  // or use ac_power_in_sensor, etc.
+
+          // 2) Convert W to Wh over the last 60s:
+          //    Wh added = Power (W) * (time in hours)
+          //    Time in hours for 60s = 60/3600 = 0.0167 hours
+          float wh_increment = power_w * (60.0f / 3600.0f);
+
+          // 3) Accumulate
+          id(consumed_wh) += wh_increment;
+
+          // 4) Optional log for debugging
+          ESP_LOGD("WH_METER", "Added %.2f Wh. Total now: %.2f Wh",
+                   wh_increment, id(consumed_wh));
+                
+
+  ########################################################################
+  # Main logic loop – runs every 5 seconds
+  ########################################################################
+  - interval: 5s
+    then:
+      # 1) Run staged-charging logic only when Soft-Charge is ENABLED
+      - if:
+          condition:
+            lambda: 'return id(soft_charge_enable).state;'
+          then:
+            ##################################################################
+            # 2) Stage activation / deactivation, global reset & timers
+            ##################################################################
+            - lambda: |-
+                const float vbat = id(output_voltage_sensor).state;
+
+                // --- Global reset: one slider ends every stage -------------
+                if (vbat < id(stage_reset_voltage).state) {
+                  id(stage1_active) = false;
+                  id(stage2_active) = false;
+                  id(stage3_active) = false;
+                  id(stage4_active) = false;
+                  id(stage4_elapsed_s) = 0;        // clear Stage-4 timer too
+                }
+
+                // --- Stage 1 ------------------------------------------------
+                if (!id(stage1_active) && vbat >= id(stage1_threshold).state)
+                  id(stage1_active) = true;
+
+                // --- Stage 2 ------------------------------------------------
+                if (!id(stage2_active) && vbat >= id(stage2_threshold).state)
+                  id(stage2_active) = true;
+
+                // --- Stage 3 ------------------------------------------------
+                if (!id(stage3_active) && vbat >= id(stage3_threshold).state)
+                  id(stage3_active) = true;
+
+                // --- Stage 4 (suppressed if forced-off) ---------------------
+                if (!id(stage4_forced_off)) {
+                  if (!id(stage4_active) && vbat >= id(stage4_threshold).state)
+                    id(stage4_active) = true;
+                }
+
+                // Track whether *any* stage is active
+                const bool any_stage_active =
+                    (id(stage1_active) || id(stage2_active) ||
+                     id(stage3_active) || id(stage4_active));
+
+                // Transition logging & amp restore
+                if (!id(prev_any_stage_active) && any_stage_active) {
+                  id(pre_stage_amp) = id(can_amp_input).state;
+                  ESP_LOGI("STAGED_DROP",
+                           "Entering staged charge → storing %.1f A",
+                           id(pre_stage_amp));
+                } else if (id(prev_any_stage_active) && !any_stage_active) {
+                  ESP_LOGI("STAGED_DROP",
+                           "No stages active → restoring %.1f A",
+                           id(pre_stage_amp));
+                  id(can_amp_input).publish_state(id(pre_stage_amp));
+                  id(last_staged_current) = id(pre_stage_amp);
+                }
+                id(prev_any_stage_active) = any_stage_active;
+
+                // --- Stage-4 elapsed timer (5 s ticks) ----------------------
+                if (id(stage4_active) && !id(stage4_forced_off))
+                  id(stage4_elapsed_s) += 5;
+                else
+                  id(stage4_elapsed_s) = 0;
+
+            ##################################################################
+            # 3) Time-out Stage-4 if it exceeds its duration
+            ##################################################################
+            - if:
+                condition:
+                  lambda: |-
+                    int limit_s =
+                        (int)(id(stage4_duration).state * 60);  // min → s
+                    return (id(stage4_active) && !id(stage4_forced_off) &&
+                            (id(stage4_elapsed_s) >= limit_s));
+                then:
+                  - lambda: |-
+                      ESP_LOGI("STAGED_DROP",
+                               "Stage-4 timed-out (%.0f min) → sending OFF",
+                               id(stage4_duration).state);
+                  - canbus.send:
+                      use_extended_id: true
+                      can_id: 0x108080FE
+                      data: [0x01, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
+                  - lambda: |-
+                      id(stage4_active)     = false;
+                      id(stage4_forced_off) = true;
+
+            ##################################################################
+            # 4) Compute the commanded charging current
+            ##################################################################
+            - lambda: |-
+                bool any_active = (id(stage1_active) || id(stage2_active) ||
+                                   id(stage3_active) || id(stage4_active));
+                float commanded = id(can_amp_input).state;  // default = user
+
+                if (any_active) {
+                  if (id(stage1_active)) commanded = id(stage1_current).state;
+                  if (id(stage2_active)) commanded = id(stage2_current).state;
+                  if (id(stage3_active)) commanded = id(stage3_current).state;
+                  if (id(stage4_active)) commanded = id(stage4_current).state;
+                }
+
+                if (fabsf(commanded - id(last_staged_current)) >= 0.5f) {
+                  id(last_staged_current) = commanded;
+                  ESP_LOGI("STAGED_DROP",
+                           "VBAT=%.2f V ⇒ current %.1f A",
+                           id(output_voltage_sensor).state, commanded);
+                }
+
+            ##################################################################
+            # 5) Push a CAN frame if the set-point changed ≥ 0.5 A
+            ##################################################################
+            - if:
+                condition:
+                  lambda: |-
+                    return fabsf(id(last_staged_current) -
+                                 id(can_amp_input).state) >= 0.5f;
+                then:
+                  - lambda: |-
+                      id(can_amp_input).publish_state(id(last_staged_current));
+                  - canbus.send:
+                      can_id: 0x108080FE
+                      use_extended_id: true
+                      data: !lambda |-
+                        const uint16_t scaled =
+                            (uint16_t)(id(last_staged_current) *
+                                       id(amp_scaling_factor));
+                        static std::vector<uint8_t> frame{
+                            0x01, 0x03, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00};
+                        frame[6] = (scaled >> 8) & 0xFF;  // MSB
+                        frame[7] =  scaled       & 0xFF;  // LSB
+                        return frame;
+
+
+
+
+
