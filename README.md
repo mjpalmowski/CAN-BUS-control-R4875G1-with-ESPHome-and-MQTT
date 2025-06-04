@@ -154,7 +154,7 @@ Latest YAML sample: **[v0.98.YAML](https://github.com/mjpalmowski/CAN-BUS-contro
 
 2x R4875G1 YAML sample: **[R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
-[Ready-compiled .BIN files to upload to the ESP32 are here.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.98)
+[The easy way: Ready-compiled .BIN file and instructions on how to upload to the ESP32 are here.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v0.98)
 
 If you are totally off-grid, no wifi, no cellular connection, no internet, use [this version.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/9)
 
