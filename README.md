@@ -150,7 +150,7 @@ Flash the latest pre-compiled **.bin** from the [releases page using the ESPHome
 
 Create a new ESPHome device in Home Assistant (or use standalone web control). Uncomment the **mqtt:**, **api:** or **webserver:** blocks as required. Multi-unit and three-phase YAML examples are provided in the repo.
 
-Latest YAML sample: **[r48xx-soft-charge-v9.7.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/v0.98.yaml)**
+Latest YAML sample: **[v0.98.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/v0.98.yaml)**
 
 2x R4875G1 YAML sample: **[R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/blob/main/R48xx_autoSet_fullFanCTRL_AC_currentCTRL.YAML)**
 
