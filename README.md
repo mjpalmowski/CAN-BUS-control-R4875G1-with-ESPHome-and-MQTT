@@ -18,6 +18,8 @@ The ESPHome firmware presented here runs on an **ESP32** development board linke
 
 ## Key Features
 
+NEW: MQTT support in web-app see latest release
+
 ### Supported Hardware
 - **R4875G**
 - **R4850G**
