@@ -96,7 +96,8 @@ For optimal results, perform soft charging when the battery is not under load.
 
 ---
 
-![Screenshot 2025-04-26 123037](https://github.com/user-attachments/assets/7927d538-de9b-440c-9909-e9dbcc36aaae)
+
+![Screenshot 2025-06-04 205431](https://github.com/user-attachments/assets/71c405c2-0ec9-4059-be26-4d138a0b29a6)
 
 
 
