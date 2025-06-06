@@ -65,8 +65,8 @@ ota:
   - platform: esphome
 
 web_server:
-  js_include: "./www/www.js"
-  js_url: ""
+#  js_include: "./www/www.js"
+#  js_url: ""
   version: 3
 
 
