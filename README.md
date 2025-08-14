@@ -158,6 +158,7 @@ Latest YAML sample: **[v0.98.YAML](https://github.com/mjpalmowski/CAN-BUS-contro
 
 If you are totally off-grid, no wifi, no cellular connection, no internet, use [this version.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v001-SHTF-offgrid-edition)
 
+If you are developing a portable fast charger, [this version](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/releases/tag/v001-SHTF-offgrid-edition) is also suitable.
 ---
 
 ## MQTT Topics
