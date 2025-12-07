@@ -917,7 +917,7 @@ sensor:
     name: "06a Output DC Current alt"
     id: alt_amp_sensor
     unit_of_measurement: "A"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(amp_scaling_factor);
@@ -928,7 +928,7 @@ sensor:
     id: ac_power_in_sensor
     unit_of_measurement: "W"
     state_class: "measurement"
-    accuracy_decimals: 2
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -939,7 +939,7 @@ sensor:
     id: dc_power_out_sensor
     unit_of_measurement: "W"
     state_class: "measurement"
-    accuracy_decimals: 2
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -950,7 +950,7 @@ sensor:
     id: grid_frequency_sensor
     unit_of_measurement: "Hz"
     state_class: "measurement"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -961,7 +961,7 @@ sensor:
     id: input_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -972,7 +972,7 @@ sensor:
     id: output_voltage_sensor
     unit_of_measurement: "V"
     state_class: "measurement"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -994,7 +994,7 @@ sensor:
     id: input_grid_voltage_sensor
     unit_of_measurement: "V"
     state_class: "measurement"
-    accuracy_decimals: 2
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -1005,7 +1005,7 @@ sensor:
     id: output_temperature_sensor
     unit_of_measurement: "°C"
     state_class: "measurement"
-    accuracy_decimals: 0
+    accuracy_decimals: 1
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -1015,7 +1015,7 @@ sensor:
     name: "08a Input Temperature"
     id: input_temperature_sensor
     unit_of_measurement: "°C"
-    accuracy_decimals: 0
+    accuracy_decimals: 1
     update_interval: 3s
     filters:
       - lambda: |-
@@ -1027,7 +1027,7 @@ sensor:
     id: output_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(voltage_scaling_factor);
@@ -1038,7 +1038,7 @@ sensor:
     id: set_max_output_current_sensor
     unit_of_measurement: "A"
     state_class: "measurement"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     filters:
       - lambda: |-
           return x / id(amp_scaling_factor);
@@ -1060,7 +1060,7 @@ sensor:
     id: consumed_wh_sensor
     unit_of_measurement: "Wh"
     icon: "mdi:transmission-tower-import"
-    accuracy_decimals: 1
+    accuracy_decimals: 3
     lambda: |-
       // Just return the global
       return id(consumed_wh);
