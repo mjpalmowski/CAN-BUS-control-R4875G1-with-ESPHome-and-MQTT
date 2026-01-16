@@ -103,7 +103,7 @@ For optimal results, perform soft charging when the battery is not under load.
 
 ## Use Cases
 
-Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. [Turn your ESS into a double conversion UPS and achieve true zero grid backfeed](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4). Eliminate the need for a transfer switch. [Here is Node-RED flow that modulates R48XX charge power depending on surplus solar power.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8)
+Ideal for 15 s/16 s LiFePO₄ and 14 s NMC home battery systems, generator-backed solar, fast e-bike charging, marine DC systems and even clean-supply HAM-radio amplifiers. [Turn your ESS into a double conversion UPS and achieve true zero grid backfeed](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/4). Eliminate the need for a transfer switch. [Here is Node-RED flow that modulates R48XX charge power depending on surplus solar power.](https://github.com/mjpalmowski/CAN-BUS-control-R4875G1-with-ESPHome-and-MQTT/discussions/8) The R4875G can also accept high voltage DC (~400VDC) as input voltage, so could be used to feed a 48V inverter from a high voltage traction battery. The project could also be used as a starting point for an EVSE-facing onboard charger.
 
 Commercial products such as the **EG4 Chargeverter** are essentially two telecom rectifiers in a box—this project offers an open, automation-friendly alternative.
 
