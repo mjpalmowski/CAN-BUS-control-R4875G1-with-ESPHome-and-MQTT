@@ -105,7 +105,7 @@ mqtt:
           format: "MQTT disconnect #%d"
           args: [ 'id(g_mqtt_failures)' ]
 
-      # 2️⃣ after 3 failures, wipe creds, disable MQTT, reboot
+      # 2️⃣ after 3 failures, disable MQTT and retry in 300s
       - if:
           condition:
             lambda: 'return id(g_mqtt_failures) >= 3;'
@@ -113,32 +113,32 @@ mqtt:
             - logger.log:
                 tag: "mqtt"
                 level: ERROR
-                format: "Giving up after 3 failures – clearing credentials and rebooting"
+                format: "3 failures reached – disabling MQTT, will retry in 300 s"
+
+            - text_sensor.template.publish:
+                id: ts_mqtt_status
+                state: "🟡 Retrying in 300s"
+
+            # stop further retries temporarily
+            - mqtt.disable:
+
+            # wait 300 seconds before trying again
+            - delay: 300s
 
             - logger.log:
                 tag: "mqtt"
                 level: INFO
-                format: "Node will restart now; reload the web page in ~10 s to reconnect"
+                format: "Retrying MQTT connection…"
 
-            # stop further retries
-            - mqtt.disable:
-
-            # clear UI fields
-            - text.set: { id: t_broker, value: "" }
-            - text.set: { id: t_user,   value: "" }
-            - text.set: { id: t_pass,   value: "" }
-            - text.set: { id: t_port,   value: "" }
-
-            # clear stored values & reset port
+            # reset failure counter and re-enable
             - lambda: |-
-                id(g_broker).clear();
-                id(g_user).clear();
-                id(g_pass).clear();
-                id(g_port) = 1883;
+                id(g_mqtt_failures) = 0;
 
-            # short pause, then reboot via hidden button
-            - delay: 1s
-            - button.press: sys_restart
+            - text_sensor.template.publish:
+                id: ts_mqtt_status
+                state: "🟡 Reconnecting…"
+
+            - mqtt.enable:
 # ───────────────────────── helpers the user edits in the UI ─────────────────
 text:
   - platform: template
@@ -2056,7 +2056,6 @@ interval:
                         frame[6] = (scaled >> 8) & 0xFF;  // MSB
                         frame[7] =  scaled       & 0xFF;  // LSB
                         return frame;
-
 
 
 
